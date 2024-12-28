@@ -5,13 +5,19 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <Text>Página Inicial</Text>
-      <Button
-        title="Ir para Questionário"
-        onPress={() => router.push("./components/questionario")}
-      />
-    </View>
+    <>
+      <View style={styles.container}>
+        <Text>Página Inicial</Text>
+        <Button
+          title="Ir para Questionário"
+          onPress={() => router.push("./components/questionario")}
+        />
+        <Button
+          title="Ir para Navbar"
+          onPress={() => router.push("./components/navbar")}
+        />
+      </View>
+    </>
   );
 }
 

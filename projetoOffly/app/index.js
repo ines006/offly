@@ -7,10 +7,19 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <Text>Página Inicial</Text>
-      <Button
-        title="Ir para Questionário"
-        onPress={() => router.push("./questionario")}
-      />
+      <View style={styles.buttonSpacing}>
+        <Button
+          title="Ir para Questionário"
+          onPress={() => router.push("./questionario")}
+        />
+      </View>
+
+      <View style={styles.buttonSpacing}>
+        <Button
+          title="Ir para UploadScreenTime"
+          onPress={() => router.push("./components/UploadScreenTime")}
+        />
+      </View>
     </View>
   );
 }
@@ -20,5 +29,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  buttonSpacing: {
+    marginBottom: 10,
   },
 });

@@ -9,7 +9,7 @@ export default function Index() {
       <Text>Página Inicial</Text>
       <Button
         title="Ir para Questionário"
-        onPress={() => router.push("./components/questionario")}
+        onPress={() => router.push("./questionario")}
       />
     </View>
   );

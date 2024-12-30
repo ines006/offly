@@ -13,8 +13,16 @@ export default function Index() {
           onPress={() => router.push("./components/questionario")}
         />
         <Button
+          title="Ir para pontuacao"
+          onPress={() => router.push("./components/pontuacaoEquipa")}
+        />
+        <Button
           title="Ir para Navbar"
           onPress={() => router.push("./components/navbar")}
+        />
+        <Button
+          title="Ir para shake"
+          onPress={() => router.push("./components/shake")}
         />
       </View>
     </>

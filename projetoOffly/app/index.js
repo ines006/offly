@@ -24,6 +24,10 @@ export default function Index() {
           title="Ir para shake"
           onPress={() => router.push("./components/shake")}
         />
+        <Button
+          title="Ir para Pódio"
+          onPress={() => router.push("./components/leaderboard/podio")}
+        />
       </View>
     </>
   );

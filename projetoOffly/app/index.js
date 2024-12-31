@@ -20,6 +20,13 @@ export default function Index() {
           onPress={() => router.push("./components/UploadScreenTime")}
         />
       </View>
+
+      <View style={styles.buttonSpacing}>
+        <Button
+          title="Ir para PaginaPrincipal"
+          onPress={() => router.push("./PaginaPrincipal")}
+        />
+      </View>
     </View>
   );
 }

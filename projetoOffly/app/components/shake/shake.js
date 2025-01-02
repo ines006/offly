@@ -79,7 +79,7 @@ export default function Shake() {
   };
 
   const navigateToCards = () => {
-    router.push("./cartas");
+    router.push("../shake/cartas");  //alterar caminho para editar individualemente
   };
 
   const animatedMainCardStyle = useAnimatedStyle(() => ({

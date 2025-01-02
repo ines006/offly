@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useFonts } from "expo-font";
 import { Svg, Path } from "react-native-svg";
 import { Image, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import ProgressBar, {
   Container,
@@ -34,6 +35,7 @@ export default function Questionario() {
   const [iniciarQuestionario, setIniciarQuestionario] = useState(false);
   const [mostrarSVG, setMostrarSVG] = useState(true);
   const [mostrarFinal, setMostrarFinal] = useState(false);
+  const router = useRouter();
 
   const perguntas = [
     {
@@ -88,6 +90,12 @@ export default function Questionario() {
   const iniciarQuestionarioHandler = () => {
     setIniciarQuestionario(true); // Atualiza o estado para iniciar o questionário
     setMostrarSVG(false);
+  };
+
+  const submeterQuestionario = () => {
+    return(
+      router.push("./components/navbar")
+    )
   };
 
   return (
@@ -166,7 +174,7 @@ export default function Questionario() {
               Cria a tua própria equipa e convida os teus amigos. Não tens uma
               equipa? Junta-te a uma existente.
             </TextoCaixaFinal>
-            <BotaoIniciarQuestionario>
+            <BotaoIniciarQuestionario onPress={submeterQuestionario}>
               <TextoBotaoComecar>Vamos lá</TextoBotaoComecar>
             </BotaoIniciarQuestionario>
           </CaixaQuestionario2>

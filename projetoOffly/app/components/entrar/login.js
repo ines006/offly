@@ -48,7 +48,7 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log("Login realizado com sucesso!");
-      router.push("../navbar");
+      router.push("../../questionario");
     } catch (err) {
       setError("Falha ao fazer login: " + err.message);
     }

@@ -10,7 +10,7 @@ export default function Index() {
         <Text>Página Inicial</Text>
         <Button
           title="Ir para Questionário"
-          onPress={() => router.push("./components/questionario")}
+          onPress={() => router.push("./questionario")}
         />
         <Button
           title="Ir para pontuacao"
@@ -29,7 +29,7 @@ export default function Index() {
           onPress={() => router.push("./components/leaderboard/podio")}
         />
         <Button
-          title="Ir para login/registo"
+          title="Ver fluxo atual"
           onPress={() => router.push("./components/entrar/login")}
         />
         <Button

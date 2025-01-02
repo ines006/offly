@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     },
     tabBarContainer: {
       position: 'absolute',
-      bottom: 0,
+      bottom: 30,
       width: '100%',
       backgroundColor: 'transparent',
       zIndex: 10,

@@ -49,7 +49,7 @@ export default function Cards() {
     if (selectedCard) {
       const selectedIndex = cards.indexOf(selectedCard);
       router.push({
-        pathname: "./cartaSelecionada",
+        pathname: "../shake/cartaSelecionada",  //alterar caminho para editar individualemente
         params: { card: JSON.stringify(selectedCard), cardNumber: selectedIndex + 1 },
       });
     }

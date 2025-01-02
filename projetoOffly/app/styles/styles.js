@@ -3,7 +3,7 @@ import styled from "styled-components/native";
 // Container principal do questionário
 export const Container = styled.View`
   flex: 1;
-  padding: 80px;
+  padding: 60px;
   align-items: center;
   background-color: #263a83;
 `;
@@ -44,7 +44,7 @@ export const CaixaQuestionario = styled.View`
   border-radius: 20px;
   background-color: #fff;
   padding: 20px;
-  margin-top: 69.61px;
+  margin-top: 29.61px;
   justify-content: space-between;
   shadow-color: #000;
   shadow-offset: 0px 2px;
@@ -55,13 +55,9 @@ export const CaixaQuestionario = styled.View`
 
 // Texto das perguntas
 export const PerguntaTexto = styled.Text`
-  width: 269px;
   font-family: "Poppins-Regular";
   color: #414141;
   font-size: 14px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: normal;
 `;
 
 // Texto selecionar resposta
@@ -70,9 +66,6 @@ export const SelecionaResposta = styled.Text`
   text-align: justify;
   font-family: "Poppins-Regular";
   font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
   height: 34px;
   margin-top: 6px;
   margin-bottom: 20px;
@@ -106,9 +99,7 @@ export const ButtonText = styled.Text`
   height: 18px;
   color: #959595;
   font-size: 12px;
-  font-style: normal;
   font-weight: 400;
-  line-height: normal;
   text-align: center;
 `;
 
@@ -116,7 +107,6 @@ export const PerguntaContador = styled.Text`
   color: white;
   text-align: justify;
   font-size: 15px;
-  font-style: normal;
   font-weight: 400;
   line-height: 25px;
   margin-bottom: 36px;
@@ -137,22 +127,24 @@ export const BotaoOpcao = styled.TouchableOpacity`
   margin-bottom: 21px;
 `;
 
-// Círculo que representa a seleção
+// Círculo do botão
 export const Circulo = styled.View`
   width: 20px;
   height: 20px;
   border-radius: 50%;
   margin-right: 10px;
-  border: ${(props) => (props.selecionado ? "0.5px solid #263A83" : "#9B9B9B")};
+  align-items: center;
+  justify-content: center;
+  background-color: ${(props) => (props.selecionado ? "#263A83" : "#fff")};
+  border: ${(props) =>
+    props.selecionado ? "1px solid #263A83" : "1px solid #ccc"};
 `;
 
 // Texto do botão de opção
 export const TextoBotao = styled.Text`
-  color: ${(props) => (props.selecionado ? "#fff" : "#9B9B9B")};
+  color: ${(props) => (props.selecionado ? "#263A83" : "#9B9B9B")};
   font-family: "Poppins-Regular";
   font-size: 12px;
-  font-weight: 500;
-  text-align: left;
 `;
 
 // Container para os botões de navegação (Voltar e Seguinte)
@@ -185,3 +177,69 @@ export const TextoBotaoNavegacao = styled.Text`
 `;
 
 //-------------------------
+
+// Caixa do questionário
+export const CaixaQuestionario2 = styled.View`
+  width: 329px;
+  border-radius: 20px;
+  background-color: #fff;
+  margin-top: 29.61px;
+  shadow-color: #000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.25;
+  shadow-radius: 3.84px;
+
+  elevation: 5;
+  margin-top: 190px;
+  height: 430px;
+  align-items: center;
+`;
+
+export const TituloCaixa = styled.Text`
+  color: #263a83;
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: 77px;
+  line-height: 33px;
+  width: 257px;
+  padding-left: 16px;
+  padding-right: 16px;
+`;
+
+export const TextoCaixa = styled.Text`
+  color: #9b9b9b;
+  font-size: 14px;
+  font-weight: 400;
+  margin-top: 29px;
+  line-height: 21px;
+  width: 263px;
+  padding-left: 16px;
+  padding-right: 16px;
+`;
+
+export const BotaoIniciarQuestionario = styled.TouchableOpacity`
+  display: flex;
+  width: 240px;
+  height: 39px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  background: #263a83;
+  margin-top: 23px;
+`;
+
+export const TextoBotaoComecar = styled.Text`
+  color: #fff;
+  font-size: 15px;
+`;
+
+export const TextoCaixaFinal = styled.Text`
+  color: #9b9b9b;
+  font-size: 14px;
+  font-weight: 400;
+  margin-top: 29px;
+  line-height: 21px;
+  width: 263px;
+  padding-left: 16px;
+  padding-right: 16px;
+`;

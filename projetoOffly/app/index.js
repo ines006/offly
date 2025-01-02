@@ -32,6 +32,10 @@ export default function Index() {
           title="Ir para login/registo"
           onPress={() => router.push("./components/entrar/login")}
         />
+        <Button
+          title="Ir para UploadScreenTime"
+          onPress={() => router.push("./components/UploadScreenTime")}
+        />
       </View>
     </>
   );
@@ -42,5 +46,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  buttonSpacing: {
+    marginBottom: 10,
   },
 });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase/firebaseApi";
+import { db } from "../../firebase/firebaseApi";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window"); 
 

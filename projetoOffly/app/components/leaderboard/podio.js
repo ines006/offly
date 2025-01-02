@@ -4,8 +4,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
 import { useRouter } from "expo-router";
 
-
-const PodioPontuacao = ({ navigation }) => {
+const PodioPontuacao = () => {
   const [teams, setTeams] = useState([]);
   const router = useRouter();
 
@@ -16,6 +15,7 @@ const PodioPontuacao = ({ navigation }) => {
         name: doc.id,
         points: doc.data().pontos,
         acquired: doc.data().adquiridos,
+        imageUrl: doc.data().imagem, // Adiciona a URL da imagem
       }));
 
       setTeams(teamsData.sort((a, b) => b.points - a.points));
@@ -24,91 +24,84 @@ const PodioPontuacao = ({ navigation }) => {
     return () => unsubscribe();
   }, []);
 
-  const Podium = () => {
-    return (
-      <View style={styles.podiumContainer}>
-        {/* 2nd Place */}
-        <View style={[styles.podiumSection, styles.secondPlaceSection]}>
-          <Image
-            source={require("../../imagens/1.png")} 
-            style={styles.teamImage}
-          />
-          <Text style={styles.podiumTeam}>{teams[1]?.name || "-"}</Text>
-          <Text style={styles.podiumPoints}>{teams[1]?.points || "-"} P</Text>
-        </View>
-
-        {/* 1st Place */}
-        <View style={[styles.podiumSection, styles.firstPlaceSection]}>
-          <Image
-            source={require("../../imagens/1.png")} 
-            style={styles.teamImage}
-          />
-          <Text style={styles.podiumTeam}>{teams[0]?.name || "-"}</Text>
-          <Text style={styles.podiumPoints}>{teams[0]?.points || "-"} P</Text>
-        </View>
-
-        {/* 3rd Place */}
-        <View style={[styles.podiumSection, styles.thirdPlaceSection]}>
-          <Image
-            source={require("../../imagens/1.png")} 
-            style={styles.teamImage}
-          />
-          <Text style={styles.podiumTeam}>{teams[2]?.name || "-"}</Text>
-          <Text style={styles.podiumPoints}>{teams[2]?.points || "-"} P</Text>
-        </View>
+  const Podium = () => (
+    <View style={styles.podiumContainer}>
+      {/* 2nd Place */}
+      <View style={[styles.podiumSection, styles.secondPlaceSection]}>
+        <Image
+          source={{ uri: teams[1]?.imageUrl || "https://default-image-url.png" }}
+          style={styles.teamImage}
+        />
+        <Text style={styles.podiumTeam}>{teams[1]?.name || "-"}</Text>
+        <Text style={styles.podiumPoints}>{teams[1]?.points || "-"} P</Text>
       </View>
-    );
-  };
 
-  const RemainingTeams = () => {
-    return (
-      <FlatList
-        data={teams.slice(3)}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() =>
-              router.push({
-                pathname: "./detalhesEquipa",
-                params: { teamId: item.id },
-              })
-            }
+      {/* 1st Place */}
+      <View style={[styles.podiumSection, styles.firstPlaceSection]}>
+        <Image
+          source={{ uri: teams[0]?.imageUrl || "https://default-image-url.png" }}
+          style={styles.teamImage}
+        />
+        <Text style={styles.podiumTeam}>{teams[0]?.name || "-"}</Text>
+        <Text style={styles.podiumPoints}>{teams[0]?.points || "-"} P</Text>
+      </View>
+
+      {/* 3rd Place */}
+      <View style={[styles.podiumSection, styles.thirdPlaceSection]}>
+        <Image
+          source={{ uri: teams[2]?.imageUrl || "https://default-image-url.png" }}
+          style={styles.teamImage}
+        />
+        <Text style={styles.podiumTeam}>{teams[2]?.name || "-"}</Text>
+        <Text style={styles.podiumPoints}>{teams[2]?.points || "-"} P</Text>
+      </View>
+    </View>
+  );
+
+  const RemainingTeams = () => (
+    <FlatList
+      data={teams.slice(3)}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item, index }) => (
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() =>
+            router.push({
+              pathname: "./detalhesEquipa",
+              params: { teamId: item.id },
+            })
+          }
+        >
+          <View style={styles.rankCircle}>
+            <Text style={styles.rankText}>{index + 4}</Text>
+          </View>
+
+          <Image
+            source={{ uri: item.imageUrl || "https://default-image-url.png" }}
+            style={styles.teamIcon}
+          />
+          <View style={styles.info}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.points}>{item.points} pontos</Text>
+          </View>
+
+          <Text
+            style={[
+              styles.acquired,
+              { color: item.acquired >= 0 ? "#1D9A6C" : "#D32F2F" },
+            ]}
           >
-            <View style={styles.rankCircle}>
-              <Text style={styles.rankText}>{index + 4}</Text>
-            </View>
-
-            <Image
-              source={require("../../imagens/1.png")} 
-              style={styles.teamIcon}
-            />
-            <View style={styles.info}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.points}>{item.points} pontos</Text>
-            </View>
-
-            <Text
-              style={[
-                styles.acquired,
-                { color: item.acquired >= 0 ? "#1D9A6C" : "#D32F2F" },
-              ]}
-            >
-              {item.acquired >= 0 ? `+${item.acquired}` : item.acquired} {" "}
-              {item.acquired >= 0 ? "▲" : "▼"}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-    );
-  };
+            {item.acquired >= 0 ? `+${item.acquired}` : item.acquired} {" "}
+            {item.acquired >= 0 ? "▲" : "▼"}
+          </Text>
+        </TouchableOpacity>
+      )}
+    />
+  );
 
   return (
     <View style={styles.container}>
-    
       <Text style={styles.title}>Torneio XPTO</Text>
-
-      
       <Podium />
 
       <ImageBackground
@@ -117,7 +110,6 @@ const PodioPontuacao = ({ navigation }) => {
         imageStyle={styles.podiumImage}
       />
 
-      {/* Container azul bebê para as equipes restantes */}
       <View style={styles.remainingTeamsContainer}>
         <RemainingTeams />
       </View>
@@ -256,5 +248,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
 
 export default PodioPontuacao;

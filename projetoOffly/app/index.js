@@ -14,7 +14,7 @@ export default function Index() {
         />
         <Button
           title="Ir para pontuacao"
-          onPress={() => router.push("./components/pontuacaoEquipa")}
+          onPress={() => router.push("./components/leaderboard/pontuacaoEquipa")}
         />
         <Button
           title="Ir para Navbar"
@@ -22,11 +22,15 @@ export default function Index() {
         />
         <Button
           title="Ir para shake"
-          onPress={() => router.push("./components/shake")}
+          onPress={() => router.push("./components/shake/shake")}
         />
         <Button
           title="Ir para Pódio"
           onPress={() => router.push("./components/leaderboard/podio")}
+        />
+        <Button
+          title="Ir para login/registo"
+          onPress={() => router.push("./components/entrar/login")}
         />
       </View>
     </>

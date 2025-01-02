@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, Image } from "react-native";
 import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase/firebaseApi";
+import { db } from "../../firebase/firebaseApi";
 
 const PontuacaoEquipa = () => {
   const [teams, setTeams] = useState([]);
@@ -32,7 +32,7 @@ const PontuacaoEquipa = () => {
           </View>
 
           <Image
-            source={require("../imagens/1.png")}
+            source={require("../../imagens/1.png")}
             style={styles.teamIcon}
           />
           <View style={styles.info}>

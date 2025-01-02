@@ -4,6 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import PodioPontuacao from './leaderboard/podio';
+import Shake from './shake/shake';
 
 const Tab = createBottomTabNavigator();
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -103,13 +105,13 @@ const HomeScreen = () => (
 
   const TorneioScreen = () => (
     <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-      <Text>Torneio Screen</Text>
+      <PodioPontuacao/>
     </View>
   );
 
 const ShakeScreen = () => (
   <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-    <Text>Shake Screen</Text>
+    <Shake/>
   </View>
 );
 

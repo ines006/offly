@@ -36,6 +36,11 @@ export default function Index() {
           title="Ir para UploadScreenTime"
           onPress={() => router.push("./components/UploadScreenTime")}
         />
+
+        <Button
+          title="Ir para caderneta"
+          onPress={() => router.push("./components/caderneta/caderneta")}
+        />
       </View>
     </>
   );

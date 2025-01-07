@@ -20,6 +20,11 @@ const DetalhesEquipa = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const handlePress = () => {
+    // Navega para a página da Caderneta
+    router.push('../caderneta/caderneta'); // Supondo que a página se chame 'caderneta.js'
+  };
+
   useEffect(() => {
     const fetchTeamDetails = async () => {
       try {
@@ -99,7 +104,7 @@ const DetalhesEquipa = () => {
 
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => console.log("Ir para Caderneta")}>
+      <TouchableOpacity style={styles.button} onPress={handlePress}>
           <Text style={styles.buttonText}>Ver Caderneta</Text>
         </TouchableOpacity>
 

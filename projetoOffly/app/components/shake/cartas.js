@@ -1,55 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { getDocs, collection } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get("window"); 
+const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 
 export default function Cards() {
-  const [cards, setCards] = useState([]); 
-  const [selectedCard, setSelectedCard] = useState(null); 
-  const [scaleAnimations, setScaleAnimations] = useState([]); 
-  const router = useRouter(); 
+  const [cards, setCards] = useState([]);
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [scaleAnimations, setScaleAnimations] = useState([]);
+  const router = useRouter();
 
-  // Buscar as cartas ao firebase/firestore 
   useEffect(() => {
     async function fetchCards() {
       const querySnapshot = await getDocs(collection(db, "cartas"));
-      const fetchedCards = querySnapshot.docs.map((doc) => doc.data());
+      const fetchedCards = querySnapshot.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id, // Inclui o ID do documento
+      }));
 
-      // Escolher aleatóriamente 3 cartas ds cartas que estão no firestore (adicionar mais se preciso só para experiencias)
       const shuffledCards = fetchedCards.sort(() => 0.5 - Math.random()).slice(0, 3);
       setCards(shuffledCards);
-      setSelectedCard(shuffledCards[0]); // Exibir a primeira carta que for escolhida aleatóriamente 
+      setSelectedCard(shuffledCards[0]);
 
-      
       setScaleAnimations(shuffledCards.map(() => new Animated.Value(1)));
     }
 
     fetchCards();
   }, []);
 
-  // Função para selecionar uma carta
   const handleCardSelect = (index) => {
     setSelectedCard(cards[index]);
-
-   
     scaleAnimations.forEach((anim, i) => {
       Animated.timing(anim, {
-        toValue: i === index ? 1.1 : 1, // Escala para a carta quando está selecionada ficar maior 
+        toValue: i === index ? 1.1 : 1,
         duration: 300,
         useNativeDriver: true,
       }).start();
     });
   };
 
-  // Função para confirmar a seleção e navegar
   const handleSelectButton = () => {
     if (selectedCard) {
       const selectedIndex = cards.indexOf(selectedCard);
       router.push({
-        pathname: "../shake/cartaSelecionada",  //alterar caminho para editar individualemente
+        pathname: "./cartaSelecionada",
         params: { card: JSON.stringify(selectedCard), cardNumber: selectedIndex + 1 },
       });
     }
@@ -57,65 +53,58 @@ export default function Cards() {
 
   return (
     <View style={styles.background}>
-    <View style={styles.container}>
-      {/* Informação inicial */}
-      <Text style={styles.infoText}>Três cartas, um desafio</Text>
-      <Text style={styles.questionText}>Qual vais escolher?</Text>
+      <View style={styles.container}>
+        <Text style={styles.infoText}>Três cartas, um desafio</Text>
+        <Text style={styles.questionText}>Qual vais escolher?</Text>
 
-      {/* Cartas no topo */}
-      <View style={styles.topCards}>
-        {cards.map((card, index) => (
-          <TouchableOpacity key={index} onPress={() => handleCardSelect(index)}>
-            <Animated.View
-              style={[
-                styles.smallCard,
-                { transform: [{ scale: scaleAnimations[index] || 1 }] },
-              ]}
-            >
-              <Text style={styles.cardText}>Carta {index + 1}</Text>
-            </Animated.View>
-          </TouchableOpacity>
-        ))}
-      </View>
-      
-
-      {/* Carta principal */}
-      {selectedCard && (
-        <View style={styles.mainCard}>
-          <Text style={styles.mainTitle}>{selectedCard.titulo}</Text>
-          <Text style={styles.mainDescription}>{selectedCard.carta}</Text>
+        <View style={styles.topCards}>
+          {cards.map((card, index) => (
+            <TouchableOpacity key={index} onPress={() => handleCardSelect(index)}>
+              <Animated.View
+                style={[
+                  styles.smallCard,
+                  { transform: [{ scale: scaleAnimations[index] || 1 }] },
+                ]}
+              >
+                <Text style={styles.cardText}>Carta {index + 1}</Text>
+              </Animated.View>
+            </TouchableOpacity>
+          ))}
         </View>
-      )}
 
-      {/* Botão selecionar */}
-      <TouchableOpacity style={styles.selectButton} onPress={handleSelectButton}>
-        <Text style={styles.selectButtonText}>Selecionar</Text>
-      </TouchableOpacity>
-    </View>
+        {selectedCard && (
+          <View style={styles.mainCard}>
+            <Text style={styles.mainTitle}>{selectedCard.titulo}</Text>
+            <Text style={styles.mainDescription}>{selectedCard.carta}</Text>
+          </View>
+        )}
 
+        <TouchableOpacity style={styles.selectButton} onPress={handleSelectButton}>
+          <Text style={styles.selectButtonText}>Selecionar</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   background: {
-    ...StyleSheet.absoluteFillObject, 
-    backgroundColor: "#BFE0FF", 
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#BFE0FF",
   },
   container: {
     flex: 1,
     justifyContent: "space-around",
     alignItems: "center",
     backgroundColor: "#E3F1FF",
-    height: screenHeight, 
-    width: screenWidth, 
+    height: screenHeight,
+    width: screenWidth,
   },
   infoText: {
     fontSize: 16,
     color: "#4C4B49",
     fontWeight: "bold",
     marginTop: 60,
-  
   },
   questionText: {
     fontSize: 24,

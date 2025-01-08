@@ -36,6 +36,11 @@ export default function Index() {
           title="Ir para UploadScreenTime"
           onPress={() => router.push("./components/UploadScreenTime")}
         />
+
+        <Button
+          title="Upload do Tempo de Ecrã"
+          onPress={() => router.push("./components/uploadScreenTime/UploadScreen")}
+        />
       </View>
     </>
   );

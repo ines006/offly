@@ -260,9 +260,7 @@ export const Titulos = styled.Text`
   font-family: "Poppins-Regular";
   color: #414141;
   font-size: 22px;
-  
   font-weight: 600;
-  line-height: 23px;
   align-self: flex-start;
 `;
 
@@ -272,9 +270,7 @@ export const Sub_Titulos = styled.Text`
   text-align: justify;
   font-family: Poppins-regular;
   font-size: 15px;
-  
   font-weight: 400;
-  line-height: 25px;
   align-self: flex-start;
 `;
 
@@ -303,13 +299,12 @@ text-align: justify;
 font-family: poppins-regular;
 font-size: 15px;
 font-weight: 400;
-line-height: 25px;
 `;
 
 export const Caixa_de_texto = styled.TextInput`
-width: 280px;
+min-width: 280px;
 height: 33px;
-flex-shrink: 0;
+ 
 border-radius: 10px;
 border: 1px solid black;
 padding: 10px;
@@ -319,12 +314,10 @@ text-align: justify;
 font-family: Poppins-regular;
 font-size: 12px;
 font-weight: 400;
-line-height: 25px;
 `;
 
 
 export const Titulos_Criar_Equipa = styled.Text`
-height: 16px;
 color: #414141;
 font-family: Poppins-regular;
 font-size: 15px;
@@ -332,50 +325,50 @@ font-weight: 400;
 margin-top:20px;
 `;
 
-// export const DropdownContainer = styled.View`
-//   width: 150px;
-// `;
+export const DropdownContainer = styled.View`
+  width: 150px;
+`;
 
-// export const DropdownButton = styled.TouchableOpacity`
-//   width: 62px;
-//   height: 25px;
-//   margin-top: 10px;
-//   border: 1px solid #263a83;
-//   border-radius: 8px;
-//   justify-content: center;
-//   align-items: center;
-//   background-color: white;
-// `;
-
-// export const DropdownButtonText = styled.Text`
-//   color: #263a83;
-//   font-size: 16px;
-// `;
-
-// export const DropdownStyle = styled.View`
-//   width: 150px;
-//   border: 1px solid #263a83;
-//   border-radius: 8px;
-//   background-color: white;
-//   position: absolute;
-//   top: 40px; /* Adjust to push the dropdown below the button */
-// `;
-
-// export const DropdownItemText = styled.Text`
-//   color: #414141;
-//   font-size: 16px;
-//   padding: 10px;
-//   text-align: center;
-// `;
-
-export const Definir_visibilidade_btn = styled.TouchableOpacity`
-  width: 114px;
-  height: 33px;
-  display: flex;
-  padding: 7px 34px;
+export const DropdownButton = styled.TouchableOpacity`
+  width: 62px;
+  height: 25px;
+  margin-top: 10px;
+  border: 1px solid #263a83;
+  border-radius: 8px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  background-color: white;
+`;
+
+export const DropdownButtonText = styled.Text`
+  color: #263a83;
+  font-size: 16px;
+`;
+
+export const DropdownStyle = styled.View`
+  width: 150px;
+  border: 1px solid #263a83;
+  border-radius: 8px;
+  background-color: white;
+  position: absolute;
+  top: 40px; /* Adjust to push the dropdown below the button */
+`;
+
+export const DropdownItemText = styled.Text`
+  color: #414141;
+  font-size: 16px;
+  padding: 10px;
+  text-align: center;
+`;
+
+export const Definir_visibilidade_btn = styled.TouchableOpacity`
+  min-width: 114px;
+  height: 33px;
+  display: flex;
+  padding: 7px;
+  margin-top: -10;
+  justify-content: center;
+  align-items: center;
   border: 1px solid black;
   border-radius:  10px;
   background: transparent;
@@ -392,10 +385,11 @@ height: 49px;
 padding: 7px 15px;
 align-items: center;
 gap: 10px;
-flex-shrink: 0;
+ 
 border-radius: 10px;
 border: 1px solid #263A83;
 margin-top: 24px;
+margin-bottom: 29px;
 `;
 
 export const SearchInput = styled.TextInput`

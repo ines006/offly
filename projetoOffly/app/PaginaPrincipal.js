@@ -3,7 +3,10 @@ import React, { useState } from "react";
 import { Modal, View } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
 import { Svg, Path } from "react-native-svg";
-import Navbar from "./components/Navbar";
+// import Navbar from "./components/Navbar";
+import InfoEquipas from './data/InfoEquipas.json';
+import Card_Equipa from './components/Equipas';
+import { useRouter } from "expo-router";
 
 import {
   Container_Pagina_Pricipal,
@@ -16,18 +19,18 @@ import {
   Texto_Botoes_Pagina_principal_Voltar,
   Caixa_de_texto,
   Titulos_Criar_Equipa,
-  //   DropdownContainer,
-  //   DropdownButton,
-  //   DropdownButtonText,
-  //   DropdownStyle,
-  //   DropdownItemText,
+    DropdownContainer,
+    DropdownButton,
+    DropdownButtonText,
+    DropdownStyle,
+    DropdownItemText,
   Definir_visibilidade_btn,
   SearchInput,
   SearchBarContainer,
   
 } from "./styles/styles";
 
-function Text_Inputs(props) {
+function Caixas_de_Texto_Criar_Equipa(props) {
   return (
     <View>
       <Titulos_Criar_Equipa>{props.titulo}</Titulos_Criar_Equipa>
@@ -55,10 +58,13 @@ export default function PaginaPrincipal() {
     setModalVisible(true);
   };
 
+  const router = useRouter();
+
   const handleNext = () => {
     console.log("Team Name:", NomeEquipa);
     console.log("Descrição:", DescricaoEquipa);
-    setModalVisible(false);
+    router.push("./EquipaCriada");
+    setModalVisible(false)
   };
 
   const [activeButton, setActiveButton] = useState(null);
@@ -66,9 +72,9 @@ export default function PaginaPrincipal() {
     setActiveButton(button);
   };
 
-//   const [selectedValue, setSelectedValue] = useState("3");
+  const [selectedValue, setSelectedValue] = useState("3");
 
-//   const options = ["3", "4", "5"];
+  const options = ["3", "4", "5"];
 
 const SearchIcon = () => (
   <Svg width="18" height="18" viewBox="0 0 24 24" fill="#263A83">
@@ -89,7 +95,17 @@ const SearchIcon = () => (
       <SearchInput placeholder="Pesquisa equipas" placeholderTextColor="rgba(38, 58, 131, 0.5)" />
     </SearchBarContainer>
 
-      <Botoes_Pagina_principal onPress={Criar_Equipa}>
+    {InfoEquipas.map((team, index) => (
+        <Card_Equipa
+          key={index}
+          onPress={() => console.log(`Selected team: ${team.name}`)}
+          icon={team.iconSvg} 
+          teamName={team.name}
+          playerCount={`${team.currentParticipants}/${team.maxParticipants}`}
+        />
+      ))}
+
+      <Botoes_Pagina_principal style={{ marginTop: 45 }} onPress={Criar_Equipa}>
         <Texto_Botoes_Pagina_principal>
           Criar equipa{" "}
         </Texto_Botoes_Pagina_principal>
@@ -108,7 +124,7 @@ const SearchIcon = () => (
           <CaixaQuestionario>
             <Titulos>Criar Equipa</Titulos>
 
-            <Text_Inputs
+            <Caixas_de_Texto_Criar_Equipa
               titulo="Dá um nome à tua equipa"
               placeholder="Exemplo: Os incríveis"
               value={NomeEquipa}
@@ -116,7 +132,7 @@ const SearchIcon = () => (
               editable={true}
             />
 
-            <Text_Inputs
+            <Caixas_de_Texto_Criar_Equipa
               titulo="Adiciona uma descrição"
               placeholder="Exemplo: Vamos ganhar!"
               value={DescricaoEquipa}
@@ -128,7 +144,7 @@ const SearchIcon = () => (
               <Titulos_Criar_Equipa>
                 Define a quantidade de participantes
               </Titulos_Criar_Equipa>
-              {/* <DropdownContainer>
+              <DropdownContainer>
                   <ModalDropdown
                     options={options}
                     defaultValue={selectedValue}
@@ -155,7 +171,7 @@ const SearchIcon = () => (
                       </DropdownItemText>
                     )}
                   />
-                </DropdownContainer> */}
+                </DropdownContainer>
             </View>
 
             <View>
@@ -181,7 +197,7 @@ const SearchIcon = () => (
               </BotaoNavegacaoContainer>
             </View>
 
-            <Text_Inputs
+            <Caixas_de_Texto_Criar_Equipa
               titulo="Convida os teus amigos"
               placeholder="Exemplo: Vamos ganhar!"
               value={Invcode}
@@ -209,7 +225,6 @@ const SearchIcon = () => (
         </View>
       </Modal>
 
-      <Navbar/>
     </Container_Pagina_Pricipal>
 
 

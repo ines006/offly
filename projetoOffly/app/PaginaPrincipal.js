@@ -2,6 +2,8 @@ import { useFonts } from "expo-font";
 import React, { useState } from "react";
 import { Modal, View } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
+import { Svg, Path } from "react-native-svg";
+import Navbar from "./components/Navbar";
 
 import {
   Container_Pagina_Pricipal,
@@ -20,6 +22,9 @@ import {
   //   DropdownStyle,
   //   DropdownItemText,
   Definir_visibilidade_btn,
+  SearchInput,
+  SearchBarContainer,
+  
 } from "./styles/styles";
 
 function Text_Inputs(props) {
@@ -53,7 +58,6 @@ export default function PaginaPrincipal() {
   const handleNext = () => {
     console.log("Team Name:", NomeEquipa);
     console.log("Descrição:", DescricaoEquipa);
-    console.log("invite code:", Invcode);
     setModalVisible(false);
   };
 
@@ -66,10 +70,24 @@ export default function PaginaPrincipal() {
 
 //   const options = ["3", "4", "5"];
 
+const SearchIcon = () => (
+  <Svg width="18" height="18" viewBox="0 0 24 24" fill="#263A83">
+    <Path
+      d="M10.5 2a8.5 8.5 0 1 0 5.53 15.03l3.7 3.7a1.5 1.5 0 1 0 2.12-2.12l-3.7-3.7A8.5 8.5 0 0 0 10.5 2zm0 3a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"
+      fill="#1a237e"
+    />
+  </Svg>
+);
+
   return (
     <Container_Pagina_Pricipal>
       <Titulos>Começa a competir</Titulos>
       <Sub_Titulos>Junta-te a uma equipa</Sub_Titulos>
+
+      <SearchBarContainer>
+      <SearchIcon />
+      <SearchInput placeholder="Pesquisa equipas" placeholderTextColor="rgba(38, 58, 131, 0.5)" />
+    </SearchBarContainer>
 
       <Botoes_Pagina_principal onPress={Criar_Equipa}>
         <Texto_Botoes_Pagina_principal>
@@ -190,6 +208,11 @@ export default function PaginaPrincipal() {
           </CaixaQuestionario>
         </View>
       </Modal>
+
+      <Navbar/>
     </Container_Pagina_Pricipal>
+
+
   );
+
 }

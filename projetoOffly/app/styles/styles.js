@@ -381,3 +381,25 @@ export const Definir_visibilidade_btn = styled.TouchableOpacity`
   background: transparent;
   opacity: ${(props) => (props.disabled ? 0.5 : 1)};
 `;
+
+// PESQUISAR EQUIPAS
+
+export const SearchBarContainer = styled.View`
+  flex-direction: row;
+display: flex;
+width: 330px;
+height: 49px;
+padding: 7px 15px;
+align-items: center;
+gap: 10px;
+flex-shrink: 0;
+border-radius: 10px;
+border: 1px solid #263A83;
+margin-top: 24px;
+`;
+
+export const SearchInput = styled.TextInput`
+  flex: 1;
+  font-size: 16px;
+  color: #1a237e;
+`;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
 import { useRouter } from "expo-router";
@@ -32,49 +32,48 @@ const Caderneta = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>&lt;</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>&lt;</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Caderneta</Text>
         <View style={styles.viewcaderneta}>
-        <Text style={styles.sectionTitle}>Desafios semanais</Text>
-        <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
-        <View style={styles.cardRow}>
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} number={index + 1} />
-          ))}
-        </View>
+          <Text style={styles.sectionTitle}>Desafios semanais</Text>
+          <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
+          <View style={styles.cardRow}>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index} number={index + 1} />
+            ))}
+          </View>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <Text style={styles.sectionTitle}>Desafios diários</Text>
-        <Text style={styles.subtitle}>
-          Consulta os desafios dos teus colegas de equipa
-        </Text>
-        <View style={styles.cardGrid}>
-          {Array.from({ length: 31 }).map((_, index) => {
-            if (index < validatedCards.length) {
-              const card = validatedCards[index];
-              return (
-                <Card
-                  key={card.id}
-                  number={card.id}
-                  title={card.titulo}
-                  content={card.carta}
-                  hasIcon={true}
-                />
-              );
-            }
-            return <Card key={index} number={index + 1} hasIcon={false} />;
-          })}
+          <Text style={styles.sectionTitle}>Desafios diários</Text>
+          <Text style={styles.subtitle}>
+            Consulta os desafios dos teus colegas de equipa
+          </Text>
+          <View style={styles.cardGrid}>
+            {Array.from({ length: 31 }).map((_, index) => {
+              if (index < validatedCards.length) {
+                const card = validatedCards[index];
+                return (
+                  <Card
+                    key={card.id}
+                    number={card.id}
+                    hasIcon={true}
+                    imageUrl={card.imagem} // Passando a URL da imagem
+                  />
+                );
+              }
+              return <Card key={index} number={index + 1} hasIcon={false} />;
+            })}
+          </View>
         </View>
-      </View>
       </View>
     </ScrollView>
   );
 };
 
-const Card = ({ number, title, content, hasIcon }) => {
+const Card = ({ number, imageUrl, hasIcon }) => {
   return (
     <View
       style={[
@@ -82,10 +81,12 @@ const Card = ({ number, title, content, hasIcon }) => {
         hasIcon ? styles.activeCard : styles.inactiveCard,
       ]}
     >
-      {title ? (
-        <>
-          <Text style={styles.cardTitle}>{title}</Text>
-        </>
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.cardImage}
+          resizeMode="cover"
+        />
       ) : (
         <View style={styles.cardContentContainer}>
           <Text style={styles.cardPlaceholder}>?</Text>
@@ -98,7 +99,7 @@ const Card = ({ number, title, content, hasIcon }) => {
 
 const styles = StyleSheet.create({
   scrollViewContent: {
-    flexGrow: 1, 
+    flexGrow: 1,
   },
   container: {
     flex: 1,
@@ -137,42 +138,47 @@ const styles = StyleSheet.create({
   card: {
     width: "22%",
     height: 120,
-    justifyContent: "center",
-    alignItems: "center",
     borderRadius: 8,
-    borderColor: "#263A83",
-    borderWidth: 3,
     marginBottom: 15,
-    padding: 10,
-    
-
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 4, 
-    elevation: 5, 
+    elevation: 5,
   },
   activeCard: {
     backgroundColor: "#D8EAF8",
+    borderRadius: 8,
+    overflow: "hidden", 
   },
   inactiveCard: {
     backgroundColor: "#EDEDF1",
     borderColor: "#263A83",
     borderWidth: 1,
-    borderStyle: "dashed", 
-},
-  cardIcon: {
-    fontSize: 24,
-    marginBottom: 5,
-    color: "#2D2F45",
+    borderStyle: "dashed",
+  },
+  cardWithImage: {
+    overflow: "hidden", 
+    padding: 0, 
+  },
+  cardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  cardContentContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+  },
+  cardPlaceholder: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#C5C6D0",
+    textAlign: "center",
   },
   cardNumber: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#2D2F45",
-    position: "absolute", 
-    left: 20,
-    top: 40,
+    position: "absolute",
+    left: 52,
+    top: 92,
   },
   cardTitle: {
     fontSize: 16,
@@ -191,38 +197,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#263A83",
     marginVertical: 20,
   },
-  cardContentContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardPlaceholder: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#C5C6D0",
-    textAlign: "center",
-  },
-  viewcaderneta:{ 
+  viewcaderneta: {
     top: 60,
   },
   backButton: {
     position: "absolute",
-    top: 40, 
+    top: 40,
     left: 20,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "transparent", 
-    borderWidth: 2, 
-    borderColor: "#263A83", 
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#263A83",
     justifyContent: "center",
     alignItems: "center",
   },
-
   backButtonText: {
-    color: "#263A83", 
+    color: "#263A83",
     fontSize: 30,
     alignItems: "center",
-    marginTop:-4,
+    marginTop: -4,
   },
 });
 

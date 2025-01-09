@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
@@ -10,6 +10,7 @@ export default function Cards() {
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   const [scaleAnimations, setScaleAnimations] = useState([]);
+  const [revealedCards, setRevealedCards] = useState([]); // Estado para controlar se as cartas foram reveladas
   const router = useRouter();
 
   useEffect(() => {
@@ -17,7 +18,7 @@ export default function Cards() {
       const querySnapshot = await getDocs(collection(db, "cartas"));
       const fetchedCards = querySnapshot.docs.map((doc) => ({
         ...doc.data(),
-        id: doc.id, // Inclui o ID do documento
+        id: doc.id,
       }));
 
       const shuffledCards = fetchedCards.sort(() => 0.5 - Math.random()).slice(0, 3);
@@ -25,6 +26,7 @@ export default function Cards() {
       setSelectedCard(shuffledCards[0]);
 
       setScaleAnimations(shuffledCards.map(() => new Animated.Value(1)));
+      setRevealedCards(shuffledCards.map(() => false)); // Inicializa com todas as cartas como não reveladas
     }
 
     fetchCards();
@@ -32,9 +34,15 @@ export default function Cards() {
 
   const handleCardSelect = (index) => {
     setSelectedCard(cards[index]);
+
+    // Revela a carta selecionada
+    setRevealedCards((prev) =>
+      prev.map((isRevealed, i) => (i === index ? true : isRevealed))
+    );
+
     scaleAnimations.forEach((anim, i) => {
       Animated.timing(anim, {
-        toValue: i === index ? 1.1 : 1,
+        toValue: i === index ? 1.2 : 1,
         duration: 300,
         useNativeDriver: true,
       }).start();
@@ -63,10 +71,20 @@ export default function Cards() {
               <Animated.View
                 style={[
                   styles.smallCard,
-                  { transform: [{ scale: scaleAnimations[index] || 1 }] },
+                  {
+                    transform: [{ scale: scaleAnimations[index] || 1 }],
+                    borderColor: selectedCard === card ? "white" : "#535E88",
+                    backgroundColor: revealedCards[index] ? "white" : "#2E3A8C", 
+                  },
                 ]}
               >
-                <Text style={styles.cardText}>Carta {index + 1}</Text>
+                {revealedCards[index] && card.imagem && ( // Só exibe a imagem se a carta for revelada
+                  <Image
+                    source={{ uri: card.imagem }}
+                    style={styles.smallCardImage}
+                    resizeMode="cover"
+                  />
+                )}
               </Animated.View>
             </TouchableOpacity>
           ))}
@@ -74,8 +92,17 @@ export default function Cards() {
 
         {selectedCard && (
           <View style={styles.mainCard}>
-            <Text style={styles.mainTitle}>{selectedCard.titulo}</Text>
-            <Text style={styles.mainDescription}>{selectedCard.carta}</Text>
+            {selectedCard.imagem && (
+              <Image
+                source={{ uri: selectedCard.imagem }}
+                style={styles.cardImage}
+                resizeMode="cover"
+              />
+            )}
+            <View style={styles.cardContent}>
+              <Text style={styles.mainTitle}>{selectedCard.titulo}</Text>
+              <Text style={styles.mainDescription}>{selectedCard.carta}</Text>
+            </View>
           </View>
         )}
 
@@ -96,7 +123,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#E3F1FF",
     height: screenHeight,
     width: screenWidth,
   },
@@ -121,39 +147,53 @@ const styles = StyleSheet.create({
   smallCard: {
     width: 100,
     height: 150,
-    backgroundColor: "#2E3A8C",
+    backgroundColor: "white",
     borderRadius: 10,
+    borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
+  },
+  smallCardImage: {
+    width: "100%",
+    height: "100%",
   },
   mainCard: {
-    width: 200,
-    height: 300,
-    backgroundColor: "#2E3A8C",
+    width: 210,
+    height: 360,
+    backgroundColor: "white",
     borderRadius: 10,
-    justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    justifyContent: "space-between", 
+    padding: 10,
+    overflow: "hidden",
   },
-  cardText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  mainTitle: {
-    color: "#FFF",
-    fontSize: 20,
-    fontWeight: "bold",
+  cardImage: {
+    width: "100%",
+    height: 230,
+    borderRadius: 10,
     marginBottom: 10,
   },
+  cardContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mainTitle: {
+    color: "#2E3A8C",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 5,
+  },
   mainDescription: {
-    color: "#FFF",
-    fontSize: 16,
+    color: "#2E3A8C",
+    fontSize: 12,
     textAlign: "center",
   },
   selectButton: {
     marginTop: 20,
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#2E3A8C",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,

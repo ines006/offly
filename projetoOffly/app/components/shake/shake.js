@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { Accelerometer } from "expo-sensors";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase/firebaseApi";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,14 +17,36 @@ import Animated, {
 
 export default function Shake() {
   const router = useRouter();
-  const scaleAnimation = useSharedValue(1); // Escala da carta principal
-  const rotateAnimation = useSharedValue(0); // Rotação da carta principal
-  const distributeOffset1 = useSharedValue(0); // Posição da primeira carta
-  const distributeOffset2 = useSharedValue(0); // Posição da segunda carta
-  const distributeOffset3 = useSharedValue(0); // Posição da terceira carta
-  const shakeCount = useRef(0); // Contador de movimentos
+  const scaleAnimation = useSharedValue(1);
+  const rotateAnimation = useSharedValue(0);
+  const distributeOffset1 = useSharedValue(0);
+  const distributeOffset2 = useSharedValue(0);
+  const distributeOffset3 = useSharedValue(0);
+  const shakeCount = useRef(0);
   const [isNavigating, setIsNavigating] = useState(false);
   const shakeAnimation = useSharedValue(0);
+  const [imageURL, setImageURL] = useState(null);
+
+  useEffect(() => {
+    // Fetch image from Firestore
+    const fetchImage = async () => {
+      try {
+        const docRef = doc(db, "shakecarta", "shake");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setImageURL(data.imagem); 
+        } else {
+          console.error("Documento não encontrado!");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar a imagem:", error);
+      }
+    };
+
+    fetchImage();
+  }, []);
 
   useEffect(() => {
     shakeAnimation.value = withRepeat(
@@ -60,18 +84,15 @@ export default function Shake() {
     setIsNavigating(true);
     subscription?.remove();
 
-    // Animação de rotação e escala da carta principal
     rotateAnimation.value = withTiming(360, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
-      rotateAnimation.value = 0; // Reseta rotação para próximo uso
+      rotateAnimation.value = 0;
     });
 
     scaleAnimation.value = withTiming(1.5, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
-      // Após a rotação e escala, distribui as cartas
-      distributeOffset1.value = withTiming(-150, { duration: 1500, easing: Easing.out(Easing.ease) }); // Carta 1
-      distributeOffset2.value = withTiming(0, { duration: 1500, easing: Easing.out(Easing.ease) }); // Carta 2
-      distributeOffset3.value = withTiming(150, { duration: 1500, easing: Easing.out(Easing.ease) }); // Carta 3
+      distributeOffset1.value = withTiming(-150, { duration: 1500, easing: Easing.out(Easing.ease) });
+      distributeOffset2.value = withTiming(0, { duration: 1500, easing: Easing.out(Easing.ease) });
+      distributeOffset3.value = withTiming(150, { duration: 1500, easing: Easing.out(Easing.ease) });
 
-      // Retorna a escala normal e navega
       scaleAnimation.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) }, () => {
         runOnJS(navigateToCards)();
       });
@@ -79,13 +100,13 @@ export default function Shake() {
   };
 
   const navigateToCards = () => {
-    router.push("./cartas");  //alterar caminho para editar individualemente
+    router.push("./components/shake/cartas");
   };
 
   const animatedMainCardStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: scaleAnimation.value },
-      { rotate: `${rotateAnimation.value}deg` }, // Rotação em graus
+      { rotate: `${rotateAnimation.value}deg` },
     ],
   }));
 
@@ -115,9 +136,9 @@ export default function Shake() {
 
   const combinedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: shakeAnimation.value }, // Animação de abanar
-      { scale: scaleAnimation.value }, // Escala da carta
-      { rotate: `${rotateAnimation.value}deg` }, // Rotação da carta
+      { translateX: shakeAnimation.value },
+      { scale: scaleAnimation.value },
+      { rotate: `${rotateAnimation.value}deg` },
     ],
   }));
 
@@ -126,7 +147,15 @@ export default function Shake() {
       <View style={styles.container}>
         {/* Carta principal */}
         <Animated.View style={[styles.card, combinedStyle]}>
-          <Text style={styles.cardText}>OFFLY SHAKE ME</Text>
+          {imageURL ? (
+            <Image
+              source={{ uri: imageURL }}
+              style={{ width: "100%", height: "100%", borderRadius: 15 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.cardText}>OFFLY SHAKE ME</Text>
+          )}
         </Animated.View>
 
         {/* Cartas distribuídas */}
@@ -142,7 +171,10 @@ export default function Shake() {
 
         {/* Texto e botão */}
         <Text style={styles.description}>
-          Abana o telemóvel para descobrir o desafio do dia
+          Abana o telemóvel
+        </Text>
+        <Text style={styles.description2}>
+          descobre o desafio do dia
         </Text>
 
         <TouchableOpacity style={styles.shakeButton} onPress={() => triggerCardAnimation()}>
@@ -155,8 +187,8 @@ export default function Shake() {
 
 const styles = StyleSheet.create({
   background: {
-    ...StyleSheet.absoluteFillObject, 
-    backgroundColor: "#BFE0FF", 
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#BFE0FF",
   },
   container: {
     flex: 1,
@@ -165,9 +197,11 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 200,
-    height: 300,
+    height: 320,
     backgroundColor: "#2E3A8C",
     borderRadius: 15,
+    borderColor: "white",
+    borderWidth: 10,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -191,13 +225,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   description: {
-    marginTop: 20,
+    marginTop: 40,
     fontSize: 16,
-    color: "#555",
+    fontWeight: "bold",
+    color: "#4C4B49",
+    textAlign: "center",
+  },
+  description2: {
+    fontSize: 13,
+    color: "#4C4B49",
     textAlign: "center",
   },
   shakeButton: {
-    marginTop: 20,
+    marginTop: 40,
     backgroundColor: "#2E3A8C",
     paddingVertical: 10,
     paddingHorizontal: 20,

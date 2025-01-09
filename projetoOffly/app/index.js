@@ -14,7 +14,9 @@ export default function Index() {
         />
         <Button
           title="Ir para pontuacao"
-          onPress={() => router.push("./components/leaderboard/pontuacaoEquipa")}
+          onPress={() =>
+            router.push("./components/leaderboard/pontuacaoEquipa")
+          }
         />
         <Button
           title="Ir para Navbar"
@@ -35,6 +37,18 @@ export default function Index() {
         <Button
           title="Ir para UploadScreenTime"
           onPress={() => router.push("./components/UploadScreenTime")}
+        />
+
+        <Button
+          title="Ir para caderneta"
+          onPress={() => router.push("./components/caderneta/caderneta")}
+        />
+
+        <Button
+          title="Ir para Página Principal após login"
+          onPress={() =>
+            router.push("./components/pag-principal-lg/pag-principal-lg")
+          }
         />
 
         <Button

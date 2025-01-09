@@ -243,3 +243,204 @@ export const TextoCaixaFinal = styled.Text`
   padding-left: 16px;
   padding-right: 16px;
 `;
+
+//---------------------
+
+//Página Principal
+
+export const CardContainer = styled.View`
+  background-color: #27368f;
+  border-radius: 16px;
+  padding: 16px;
+  width: 90%;
+  align-self: center;
+  margin-vertical: 20px;
+  position: relative;
+`;
+
+export const Header = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+`;
+
+export const IconContainer = styled.View`
+  background-color: #ffffff;
+  border-radius: 50px;
+  height: 32px;
+  width: 32px;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const TeamName = styled.Text`
+  font-size: 17px;
+  color: #27368f;
+  font-weight: bold;
+  background-color: white;
+  padding-horizontal: 12px;
+  padding-vertical: 4px;
+  border-radius: 12px;
+`;
+
+export const Points = styled.Text`
+  font-size: 16px;
+  color: #d4f34a;
+  font-weight: bold;
+`;
+
+export const Stats = styled.View``;
+
+export const StatItem = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  border-radius: 20px;
+  border-color: white;
+  border-width: 2px;
+  padding: 10px;
+  margin: 10px;
+`;
+
+export const StatText = styled.Text`
+  font-size: 14px;
+  color: #ffffff;
+`;
+
+export const StatValue = styled.Text`
+  font-size: 14px;
+  color: #ffffff;
+  flex-direction: row;
+  align-items: center;
+`;
+
+export const Footer = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+`;
+
+export const FooterText = styled.Text`
+  font-size: 12px;
+  color: #ffffff;
+  text-align: right;
+  margin-right: 10px;
+  flex: 1;
+`;
+
+export const BottomCircle = styled.TouchableOpacity`
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  background-color: #27368f;
+  border-width: 4px;
+  border-color: #ffffff;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  bottom: -32px;
+  align-self: center;
+`;
+
+export const TittleTorneio = styled.Text`
+  font-size: 24px;
+  font-weight: 600;
+  color: #263a83;
+  margin-bottom: 10;
+  margin-top: 15;
+  text-align: left;
+  width: 90%;
+  align-self: center;
+`;
+
+export const CardsDesafios = styled.View`
+  background-color: #27368f;
+  border-radius: 16px;
+  padding: 16px;
+  width: 50%;
+  align-self: center;
+  margin-vertical: 20px;
+`;
+
+//exp
+export const DesafioContainer = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  width: 90%;
+  align-self: center;
+  margin-top: 10px;
+`;
+export const DesafioCard = styled.TouchableOpacity`
+  background-color: #27368f;
+  border-radius: 16px;
+  padding: 16px;
+  width: 48%;
+  align-items: center;
+  height: 150px;
+  justify-content: center;
+`;
+export const DesafioIcon = styled.View`
+  margin-bottom: 10px;
+`;
+export const DesafioText = styled.Text`
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 350;
+  text-align: center;
+`;
+
+export const NomeUtilizador = styled.Text`
+  font-size: 19px;
+  font-weight: 600;
+  color: #414141;
+  margin-bottom: 10;
+  margin-top: 15;
+  text-align: left;
+  width: 90%;
+  align-self: center;
+`;
+
+//Perfil pag inicial
+
+export const ProfileContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  padding: 20px;
+  width: 100%;
+  align-self: center;
+`;
+
+export const Avatar = styled.Image`
+  width: 70px;
+  height: 70px;
+  border-radius: 100px;
+  margin-right: 15px;
+`;
+
+export const ProfileTextContainer = styled.View`
+  flex: 1;
+`;
+
+export const UserName = styled.Text`
+  font-size: 19px;
+  font-weight: 600;
+  color: #333;
+`;
+
+export const UserLevel = styled.Text`
+  font-size: 14px;
+  color: #666;
+`;
+
+export const StarsContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-top: 5px;
+`;
+
+export const Star = styled.View`
+  margin-left: 5px;
+`;

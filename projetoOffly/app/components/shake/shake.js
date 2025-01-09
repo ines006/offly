@@ -100,7 +100,7 @@ export default function Shake() {
   };
 
   const navigateToCards = () => {
-    router.push("./components/shake/cartas");
+    router.push("../shake/cartas");
   };
 
   const animatedMainCardStyle = useAnimatedStyle(() => ({

@@ -67,7 +67,7 @@ const PodioPontuacao = () => {
           style={styles.card}
           onPress={() =>
             router.push({
-              pathname: "./components/leaderboard/detalhesEquipa",  // Alterar o caminho para editar componente individualmente
+              pathname: "../leaderboard/detalhesEquipa",  // Alterar o caminho para editar componente individualmente
               params: { teamId: item.id },
             })
           }

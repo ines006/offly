@@ -33,8 +33,13 @@ export default function Home() {
   const router = useRouter();
 
   const handleCirclePress = () => {
-    router.push("../uploadScreenTime/UploadScreen");
+    router.push("./uploadScreenTime/UploadScreen");
   };
+
+  const handleCadernetaPress = (id) => {
+    router.push("./caderneta/caderneta");
+  };
+
 
   return (
     <>
@@ -139,7 +144,7 @@ export default function Home() {
 
       <TittleTorneio>Desafios</TittleTorneio>
       <DesafioContainer>
-        <DesafioCard onPress={() => handleDesafioPress(1)}>
+        <DesafioCard onPress={() => handleCadernetaPress(1)}>
           <DesafioIcon>
             <Svg width="55" height="55" viewBox="0 0 55 55" fill="none">
               {" "}

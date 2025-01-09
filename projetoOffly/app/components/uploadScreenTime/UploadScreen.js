@@ -59,10 +59,7 @@ const UploadScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => router.push("../pag-principal-lg/pag-principal-lg")}
-        >
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle
               cx="18.1351"

@@ -93,7 +93,7 @@ export default function CartaSelecionada() {
           <Text style={styles.backButtonText}>&lt;</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.homeButton} onPress={() => router.push("/")}>
+        <TouchableOpacity style={styles.homeButton} onPress={() => router.push("../navbar")}>
           <Text style={styles.homeButtonText}>X</Text>
         </TouchableOpacity>
 

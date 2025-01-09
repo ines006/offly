@@ -26,7 +26,7 @@ const UploadScreen = () => {
   // Função para fechar a modal
   const handleCloseModal = () => {
     setModalVisible(false);
-    router.push("../navbar");
+    router.push("../pag-principal-lg/pag-principal-lg-disable");
   };
 
   // Função para abrir a galeria e selecionar uma imagem
@@ -61,7 +61,7 @@ const UploadScreen = () => {
       <View style={styles.header}>
         <TouchableOpacity 
         style={styles.backButton}
-        onPress={() => router.push("../navbar")}
+        onPress={() => router.push("../pag-principal-lg/pag-principal-lg")}
         >
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle

@@ -1,4 +1,5 @@
-import React from "react";
+import styled from "styled-components/native";
+import React, { useState, useEffect } from "react";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -32,8 +33,26 @@ import {
 export default function Home() {
   const router = useRouter();
 
-  const handleCirclePress = () => {
-    router.push("../uploadScreenTime/UploadScreen");
+  // Estado do contador
+  const [timeLeft, setTimeLeft] = useState(11 * 60 * 60 + 23 * 60); // Tempo inicial: 11h 23m em segundos
+
+  // Atualizar o contador a cada segundo
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Converter tempo para formato hh:mm:ss
+  const formatTime = (time) => {
+    const hours = Math.floor(time / 3600);
+    const minutes = Math.floor((time % 3600) / 60);
+    const seconds = time % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -47,66 +66,18 @@ export default function Home() {
         <ProfileTextContainer>
           <UserName>Pedro Martins</UserName> <UserLevel>Nível 1</UserLevel>
           <StarsContainer>
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#263A83"
-              />
-            </Svg>
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#BEC4DA"
-              />
-            </Svg>
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#BEC4DA"
-              />
-            </Svg>
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#BEC4DA"
-              />
-            </Svg>
+            {/* Estrelas */}
           </StarsContainer>
         </ProfileTextContainer>
       </ProfileContainer>
+
       <TittleTorneio>Torneio XPTO</TittleTorneio>
       <CardContainer>
         <Header>
           <IconContainer>
             <FontAwesome name="plane" size={20} color="#34459E" />
           </IconContainer>
-
           <TeamName>Equipa K</TeamName>
-
           <Points>
             <FontAwesome name="star" size={12} color="#D4F34A" /> 1200 pontos
           </Points>
@@ -132,9 +103,11 @@ export default function Home() {
           <FontAwesome name="group" size={16} color="#ffffff" />
         </Footer>
 
-        <BottomCircle onPress={handleCirclePress}>
-          <FontAwesome name="image" size={20} color="#ffffff" />
-        </BottomCircle>
+        {/* Novo botão com contador */}
+        <CountdownButton>
+          <FontAwesome name="clock-o" size={20} color="#ffffff" />
+          <CountdownText>{formatTime(timeLeft)}</CountdownText>
+        </CountdownButton>
       </CardContainer>
 
       <TittleTorneio>Desafios</TittleTorneio>
@@ -176,3 +149,26 @@ export default function Home() {
     </>
   );
 }
+
+// Styled Component para o botão
+const CountdownButton = styled.View`
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  background-color: #6876a9;
+  border-width: 4px;
+  border-color: #ffffff;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  bottom: -32px;
+  align-self: center;
+`;
+
+// Estilo do texto do contador
+const CountdownText = styled.Text`
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  margin-top: 4px;
+`;

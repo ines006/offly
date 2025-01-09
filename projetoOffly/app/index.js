@@ -51,10 +51,17 @@ export default function Index() {
           }
         />
 
-        <Button
+        {/* <Button
+          title="Página principal com botão desativado"
+          onPress={() =>
+            router.push("./components/pag-principal-lg/pag-principal-lg-disable")
+          }
+        /> */}
+
+        {/* <Button
           title="Upload do Tempo de Ecrã"
           onPress={() => router.push("./components/uploadScreenTime/UploadScreen")}
-        />
+        /> */}
       </View>
     </>
   );

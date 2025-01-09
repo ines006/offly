@@ -397,3 +397,45 @@ export const SearchInput = styled.TextInput`
   font-size: 16px;
   color: #1a237e;
 `;
+
+// EQUIPA CRIADA
+
+// Container
+export const Container_Pagina_Equipa_Criada = styled.View`
+  display: flex;
+  flex: 1;
+  padding: 60px 27px 27px 27px;
+  align-items: center;
+  background-color: white;
+`;
+
+// Titulos Criar Equipa
+export const Titulos_Equipa_Criada = styled.Text`
+color: #263A83;
+font-family: Poppins-regular;
+font-size: 15px;
+font-weight: 800;
+margin-top:20px;
+ align-self: center;
+`;
+
+// Sub Titulos Criar Equipa
+export const Sub_Titulos_Criar_Equipa = styled.Text`
+  color: #414141;
+  font-family: Poppins-regular;
+  font-size: 15px;
+  font-weight: 400;
+  align-self: center;
+  margin-top: 12;
+`;
+
+// Caixa do questionário
+export const Caixa_Equipa_Criada = styled.View`
+  width: 329px;
+  border-radius: 20px;
+  background-color: #F1F1F1;
+  padding: 20px;
+  margin-top: 29.61px;
+  justify-content: space-between;
+   align-items: center;
+`;

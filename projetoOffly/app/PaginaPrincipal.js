@@ -150,7 +150,7 @@ const SearchIcon = () => (
                     defaultValue={selectedValue}
                     style={{ borderWidth: 0 }} 
                     dropdownStyle={{
-                      width: 150, // Match your DropdownStyle
+                      width: 150,
                       borderWidth: 1,
                       borderColor: "#263a83",
                       borderRadius: 8,

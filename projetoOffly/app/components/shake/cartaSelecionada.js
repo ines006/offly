@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
 import Icon from "react-native-vector-icons/Ionicons";
 
@@ -86,6 +86,18 @@ export default function CartaSelecionada() {
     }
   };
 
+  const handleSaveCard = async () => {
+    const userId = "id_do_utilizador"; // Substitua pelo ID real do utilizador (exemplo: Firebase Auth)
+    try {
+      const userSelectionsRef = doc(db, "selecoes", userId);
+      await setDoc(userSelectionsRef, { selectedCard }, { merge: true });
+      Alert.alert("Sucesso", "A carta foi salva com sucesso no Firestore!");
+    } catch (error) {
+      console.error("Erro ao salvar a carta no Firestore:", error);
+      Alert.alert("Erro", "Não foi possível salvar a carta no Firestore.");
+    }
+  };
+
   return (
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
@@ -129,6 +141,10 @@ export default function CartaSelecionada() {
             <Text style={styles.validateButtonText}>Validar</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity style={styles.saveButton} onPress={handleSaveCard}>
+          <Text style={styles.saveButtonText}>Salvar Carta</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     </View>
   );
@@ -253,6 +269,18 @@ const styles = StyleSheet.create({
   validateButtonText: {
     color: "#FFF",
     fontSize: 18,
+    fontWeight: "bold",
+  },
+  saveButton: {
+    marginTop: 10,
+    backgroundColor: "#4CAF50",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  saveButtonText: {
+    color: "#FFF",
+    fontSize: 16,
     fontWeight: "bold",
   },
 });

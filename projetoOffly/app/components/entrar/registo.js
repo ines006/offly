@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebaseApi";
+import { auth, db } from "../../firebase/firebaseApi";
 import {
   StyleSheet,
   View,
@@ -11,6 +11,7 @@ import {
   Easing,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { doc, setDoc } from "firebase/firestore"; 
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -69,9 +70,18 @@ const Register = () => {
       setError("As senhas não coincidem.");
       return;
     }
-
+  
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      // Salvar dados do usuário no Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        username: username,
+        email: email,
+        createdAt: new Date().toISOString(),
+      });
+  
       console.log("Registo realizado com sucesso!");
       router.push("../navbar");
     } catch (err) {

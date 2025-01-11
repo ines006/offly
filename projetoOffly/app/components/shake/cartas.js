@@ -51,23 +51,23 @@ export default function Cards() {
 
   const handleSelectButton = async () => {
     if (selectedCard) {
-      const user = auth.currentUser; // Obtenha o usuário autenticado
+      const user = auth.currentUser; // aqui obtem-se o id do utilizador autenticado
 
       if (!user) {
         Alert.alert("Erro", "É necessário estar autenticado para salvar a carta.");
         return;
       }
 
-      const userId = user.uid; // ID do usuário autenticado
+      const userId = user.uid; // ID do utilizador autenticado
 
       try {
-        // Referência à subcoleção 'cartas' no Firestore dentro do documento do usuário
+        // Referência à subcoleção 'cartas' no Firestore dentro do documento do utilizador
         const cardRef = doc(db, "users", userId, "cartas", selectedCard.id);
 
         // Salve os dados da carta
         await setDoc(cardRef, selectedCard, { merge: true });
 
-        // Após salvar a carta, redirecione para a página de detalhes
+        // Após salvar a carta, redireciona para a página de detalhes
         const selectedIndex = cards.indexOf(selectedCard);
         router.push({
           pathname: "./cartaSelecionada",

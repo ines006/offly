@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../../firebase/firebaseApi";
+import { auth, db } from "../../firebase/firebaseApi"; // Certifique-se de importar o Firebase Auth e Firestore
 import { useRouter } from "expo-router";
 
 const Caderneta = () => {
@@ -11,7 +11,16 @@ const Caderneta = () => {
   useEffect(() => {
     const fetchValidatedCards = async () => {
       try {
-        const cardsRef = collection(db, "cartas");
+        const user = auth.currentUser; // Obtém o usuário autenticado
+        if (!user) {
+          console.error("Usuário não está autenticado.");
+          return;
+        }
+
+        const userId = user.uid; // Obtém o ID do usuário autenticado
+
+        // Acessa a subcoleção "cartas" do usuário autenticado
+        const cardsRef = collection(db, "users", userId, "cartas");
         const q = query(cardsRef, where("validada", "==", true));
         const querySnapshot = await getDocs(q);
 
@@ -20,7 +29,7 @@ const Caderneta = () => {
           ...doc.data(),
         }));
 
-        setValidatedCards(cards);
+        setValidatedCards(cards); // Atualiza o estado com as cartas validadas
       } catch (error) {
         console.error("Erro ao buscar cartas validadas:", error);
       }
@@ -145,7 +154,7 @@ const styles = StyleSheet.create({
   activeCard: {
     backgroundColor: "#D8EAF8",
     borderRadius: 8,
-    overflow: "hidden", 
+    overflow: "hidden",
   },
   inactiveCard: {
     backgroundColor: "#EDEDF1",
@@ -154,8 +163,8 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
   },
   cardWithImage: {
-    overflow: "hidden", 
-    padding: 0, 
+    overflow: "hidden",
+    padding: 0,
   },
   cardImage: {
     width: "100%",

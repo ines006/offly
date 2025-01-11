@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { doc, updateDoc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "../../firebase/firebaseApi"; 
 import Icon from "react-native-vector-icons/Ionicons";
 
@@ -16,7 +16,13 @@ export default function CartaSelecionada() {
   useEffect(() => {
     const initializeTimer = async () => {
       try {
-        const cardRef = doc(db, "cartas", selectedCard.id);
+        const user = auth.currentUser; 
+        if (!user) {
+          Alert.alert("Erro", "Usuário não autenticado.");
+          return;
+        }
+
+        const cardRef = doc(db, "users", user.uid, "cartas", selectedCard.id);
         const cardSnapshot = await getDoc(cardRef);
 
         if (cardSnapshot.exists()) {
@@ -74,7 +80,13 @@ export default function CartaSelecionada() {
 
   const handleValidate = async () => {
     try {
-      const cardRef = doc(db, "cartas", selectedCard.id);
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert("Erro", "Usuário não autenticado.");
+        return;
+      }
+
+      const cardRef = doc(db, "users", user.uid, "cartas", selectedCard.id);
       await updateDoc(cardRef, { validada: true });
 
       setIsValidated(true);
@@ -85,7 +97,6 @@ export default function CartaSelecionada() {
       Alert.alert("Erro", "Não foi possível validar a carta.");
     }
   };
-
 
   return (
     <View style={styles.background}>

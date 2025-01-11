@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { getDocs, collection } from "firebase/firestore";
-import { db } from "../../firebase/firebaseApi";
+import { getDocs, collection, doc, setDoc } from "firebase/firestore";
+import { db, auth } from "../../firebase/firebaseApi"; // Certifique-se de importar auth corretamente
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 
@@ -49,13 +49,34 @@ export default function Cards() {
     });
   };
 
-  const handleSelectButton = () => {
+  const handleSelectButton = async () => {
     if (selectedCard) {
-      const selectedIndex = cards.indexOf(selectedCard);
-      router.push({
-        pathname: "./cartaSelecionada",
-        params: { card: JSON.stringify(selectedCard), cardNumber: selectedIndex + 1 },
-      });
+      const user = auth.currentUser; // Obtenha o usuário autenticado
+
+      if (!user) {
+        Alert.alert("Erro", "É necessário estar autenticado para salvar a carta.");
+        return;
+      }
+
+      const userId = user.uid; // ID do usuário autenticado
+
+      try {
+        // Referência à subcoleção 'cartas' no Firestore dentro do documento do usuário
+        const cardRef = doc(db, "users", userId, "cartas", selectedCard.id);
+
+        // Salve os dados da carta
+        await setDoc(cardRef, selectedCard, { merge: true });
+
+        // Após salvar a carta, redirecione para a página de detalhes
+        const selectedIndex = cards.indexOf(selectedCard);
+        router.push({
+          pathname: "./cartaSelecionada",
+          params: { card: JSON.stringify(selectedCard), cardNumber: selectedIndex + 1 },
+        });
+      } catch (error) {
+        console.error("Erro ao salvar a carta no Firestore:", error);
+        Alert.alert("Erro", "Não foi possível salvar a carta.");
+      }
     }
   };
 
@@ -74,7 +95,7 @@ export default function Cards() {
                   {
                     transform: [{ scale: scaleAnimations[index] || 1 }],
                     borderColor: selectedCard === card ? "white" : "#535E88",
-                    backgroundColor: revealedCards[index] ? "white" : "#2E3A8C", 
+                    backgroundColor: revealedCards[index] ? "white" : "#2E3A8C",
                   },
                 ]}
               >

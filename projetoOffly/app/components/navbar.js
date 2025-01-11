@@ -1,18 +1,12 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { Dimensions, StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import PodioPontuacao from "./leaderboard/podio";
-import Shake from "./shake/shake";
 import Home from "./pag-principal-lg/pag-principal-lg";
+import PodioPontuacao from "./leaderboard/podio";
+import ShakeScreen from "./shake/shakeScreen";
 
 const Tab = createBottomTabNavigator();
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -114,24 +108,6 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   );
 };
 
-const HomeScreen = () => (
-  <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-    <Home />
-  </View>
-);
-
-const TorneioScreen = () => (
-  <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-    <PodioPontuacao />
-  </View>
-);
-
-const ShakeScreen = () => (
-  <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-    <Shake />
-  </View>
-);
-
 export default function Navbar() {
   return (
     <Tab.Navigator
@@ -147,28 +123,20 @@ export default function Navbar() {
       })}
       tabBar={(props) => <CustomTabBar {...props} />}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Torneio" component={TorneioScreen} />
+      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Torneio" component={PodioPontuacao} />
       <Tab.Screen name="Shake" component={ShakeScreen} />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    bottom: 10,
-  },
   tabBarContainer: {
     position: "absolute",
     bottom: 0,
     width: "100%",
     backgroundColor: "transparent",
     zIndex: 10,
-    padding: 0,
-    margin: 0,
   },
   tabIcons: {
     flexDirection: "row",

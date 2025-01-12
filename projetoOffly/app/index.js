@@ -51,6 +51,13 @@ export default function Index() {
           }
         />
 
+<Button
+          title="Ir para Página Principal"
+          onPress={() =>
+            router.push("../components/pag-principal-lg/pag-principal-lg")
+          }
+        />
+
         {/* <Button
           title="Página principal com botão desativado"
           onPress={() =>

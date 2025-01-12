@@ -50,25 +50,20 @@ export default function Index() {
             router.push("./components/pag-principal-lg/pag-principal-lg")
           }
         />
-
-<Button
+        <Button
           title="Ir para Página Principal"
           onPress={() =>
-            router.push("../components/pag-principal-lg/pag-principal-lg")
+          router.push("../components/pag-principal-lg/pag-principal-lg")
           }
         />
-
-        {/* <Button
-          title="Página principal com botão desativado"
-          onPress={() =>
-            router.push("./components/pag-principal-lg/pag-principal-lg-disable")
-          }
-        /> */}
-
-        {/* <Button
-          title="Upload do Tempo de Ecrã"
-          onPress={() => router.push("./components/uploadScreenTime/UploadScreen")}
-        /> */}
+        <Button
+          title="Ir para perfil"
+          onPress={() => router.push("./perfil")}
+        />
+        <Button
+          title="Ir para onboarding"
+          onPress={() => router.push("./onboarding")}
+        />
       </View>
     </>
   );

@@ -93,7 +93,7 @@ export default function Questionario() {
   };
 
   const submeterQuestionario = () => {
-    return(
+    return (
       router.push("./components/navbar")
     )
   };

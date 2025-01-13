@@ -40,6 +40,10 @@ export default function Index() {
           title="Ir para perfil"
           onPress={() => router.push("./perfil")}
         />
+        <Button
+          title="Ir para onboarding"
+          onPress={() => router.push("./onboarding")}
+        />
       </View>
     </>
   );

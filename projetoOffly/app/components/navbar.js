@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Svg, { Path } from 'react-native-svg';
+import { Svg, Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PodioPontuacao from './leaderboard/podio';
 import Shake from './shake/shake';
@@ -37,7 +37,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   };
 
   return (
-    <View style={[styles.tabBarContainer, { height: "7%"}]}>
+    <View style={[styles.tabBarContainer, { height: "7%" }]}>
       <Svg
         width={SCREEN_WIDTH}
         height={tabBarHeight}
@@ -52,10 +52,10 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             typeof options.tabBarLabel === 'string'
               ? options.tabBarLabel
               : typeof options.title === 'string'
-              ? options.title
-              : typeof route.name === 'string'
-              ? route.name
-              : '';
+                ? options.title
+                : typeof route.name === 'string'
+                  ? route.name
+                  : '';
 
           const isFocused = state.index === index;
 
@@ -71,7 +71,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           };
 
           return (
-            <TouchableOpacity 
+            <TouchableOpacity
               key={index}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
@@ -84,7 +84,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                   <Icon name={options.tabBarIcon} size={40} color="#C0E862" />
                 </View>
               ) : (
-                <View style={[styles.inactiveIcon,  { bottom: tabBarHeight * (-0.15) }]}>
+                <View style={[styles.inactiveIcon, { bottom: tabBarHeight * (-0.15) }]}>
                   <Icon name={options.tabBarIcon} size={30} color="#fff" />
                   {label !== '' && <Text style={styles.iconLabel}>{label}</Text>}
                 </View>
@@ -98,20 +98,20 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
 };
 
 const HomeScreen = () => (
-    <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-      <Text>Home Screen</Text>
-    </View>
-  );
+  <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
+    <Text>Home Screen</Text>
+  </View>
+);
 
-  const TorneioScreen = () => (
-    <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-      <PodioPontuacao/>
-    </View>
-  );
+const TorneioScreen = () => (
+  <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
+    <PodioPontuacao />
+  </View>
+);
 
 const ShakeScreen = () => (
   <View style={[styles.screen, { paddingBottom: SCREEN_HEIGHT * 0.1 }]}>
-    <Shake/>
+    <Shake />
   </View>
 );
 
@@ -125,8 +125,8 @@ export default function Navbar() {
           route.name === 'Home'
             ? 'home'
             : route.name === 'Torneio'
-            ? 'trophy'
-            : 'cellphone',
+              ? 'trophy'
+              : 'cellphone',
       })}
       tabBar={(props) => <CustomTabBar {...props} />}
     >
@@ -138,56 +138,55 @@ export default function Navbar() {
 }
 
 const styles = StyleSheet.create({
-    screen: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      bottom: 0,
-    },
-    tabBarContainer: {
-      position: 'absolute',
-      bottom: 30,
-      width: '100%',
-      backgroundColor: 'transparent',
-      zIndex: 10,
-      padding: 0, 
-      margin: 0,  
-    },
-    svg: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,    
-      right: 0,   
-    },
-    tabIcons: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      width: '100%',
-      height: '100%',
-      position: 'absolute',
-      bottom: 0,
-    },
-    tabIconContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      bottom: 0,
-    },
-    activeCircle: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      backgroundColor: '#263A83',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    inactiveIcon: {
-      alignItems: 'center',
-    },
-    iconLabel: {
-      color: '#fff',
-      fontSize: 12,
-      marginTop: 4,
-    },
-  });
-  
+  screen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    bottom: 0,
+  },
+  tabBarContainer: {
+    position: 'absolute',
+    bottom: 30,
+    width: '100%',
+    backgroundColor: 'transparent',
+    zIndex: 10,
+    padding: 0,
+    margin: 0,
+  },
+  svg: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  tabIcons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    bottom: 0,
+  },
+  tabIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    bottom: 0,
+  },
+  activeCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#263A83',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inactiveIcon: {
+    alignItems: 'center',
+  },
+  iconLabel: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
+});

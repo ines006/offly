@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { React, useState } from 'react';
 import styled from 'styled-components/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { TouchableOpacity, Text, View, Image, Svg, Dimensions, StyleSheet } from 'react-native';

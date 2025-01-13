@@ -304,12 +304,11 @@ font-weight: 400;
 export const Caixa_de_texto = styled.TextInput`
 min-width: 280px;
 height: 33px;
- 
 border-radius: 10px;
-border: 1px solid black;
+border: 1px solid #263a83;
 padding: 10px;
 margin-top:10px;
-color: rgba(38, 58, 131, 0.50);
+color:hsl(0, 0.00%, 0.00%);
 text-align: justify;
 font-family: Poppins-regular;
 font-size: 12px;
@@ -372,9 +371,17 @@ export const Definir_visibilidade_btn = styled.TouchableOpacity`
   border: 1px solid black;
   border-radius:  10px;
   background: transparent;
+  border-color: #263a83;
   opacity: ${(props) => (props.disabled ? 0.5 : 1)};
 `;
 
+export const Texto_Botoes_Definir_Visibilidade = styled.Text`
+color: #263a83;
+text-align: justify;
+font-family: poppins-regular;
+font-size: 15px;
+font-weight: 400;
+`;
 // PESQUISAR EQUIPAS
 
 export const SearchBarContainer = styled.View`

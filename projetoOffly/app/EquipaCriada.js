@@ -20,6 +20,9 @@ export default function EquipaCriada() {
       <Sub_Titulos_Criar_Equipa>Vamos ser a melhor equipa!</Sub_Titulos_Criar_Equipa>
 
       <Caixa_Equipa_Criada>
+
+        
+
         <Botoes_Pagina_principal onPress = { ()=> console.log("ola") }>
         <Texto_Botoes_Pagina_principal>Entrar no Torneio</Texto_Botoes_Pagina_principal>
         </Botoes_Pagina_principal>

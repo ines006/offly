@@ -159,7 +159,7 @@ const screens = [
     logo: false,
     heading: "Bem-vindo à Offly!",
     subheading:
-      "Aqui, vais descobrir como podes reduzir o excesso de tempo de ecrã de forma divertida e em equipa!",
+      "Aqui, vais descobrir como podes reduzir o excesso de tempo de ecrã de forma divertida e em equipa",
     renderContent: () => (
       <Svg
         width="221"

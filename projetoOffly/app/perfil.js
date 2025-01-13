@@ -1,27 +1,158 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { TouchableOpacity, Text, View, Image, Svg, Dimensions, StyleSheet } from 'react-native';
-import avatarperfil from '../assets/images/avatarperfil.png';
 import { Alert } from 'react-native';
-
+import { auth, db } from './firebase/firebaseApi';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { useRouter } from "expo-router";
 
 const ProfileScreen = () => {
-  // States para armazenar os valores dos campos e de edição
-  const [name, setName] = useState('Pedro Martins');
-  const [username, setUsername] = useState('pedro_martins');
-  const [email, setEmail] = useState('pedro.martins@gmail.com');
+  const [userId, setUserId] = useState(null);
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const router = useRouter();
 
-  // Função para finalizar edição
-  const handleSave = (field) => {
-    if (field === 'name') setIsEditingName(false);
-    if (field === 'username') setIsEditingUsername(false);
-    if (field === 'email') setIsEditingEmail(false);
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUserId(currentUser.uid);
+    } else {
+      Alert.alert('Erro', 'Usuário não autenticado.');
+    }
+  }, []);
 
-    Alert.alert('Sucesso', 'Alteração salva!');
+  
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (userId) {
+        try {
+          const userDocRef = doc(db, 'users', userId);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setName(userData.fullName || '');
+            setUsername(userData.username || '');
+          } else {
+            Alert.alert('Erro', 'Usuário não encontrado no Firestore.');
+          }
+        } catch (error) {
+          console.error('Erro ao carregar os dados do usuário:', error);
+          Alert.alert('Erro', 'Falha ao carregar dados do Firestore.');
+        }
+      }
+    };
+
+    loadUserData();
+  }, [userId]);
+
+  
+  const reauthenticateUser = async (currentPassword) => {
+    try {
+      const user = auth.currentUser;
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+      
+      await reauthenticateWithCredential(user, credential);
+      console.log('Reautenticação bem-sucedida!');
+    } catch (error) {
+      console.error('Erro ao reautenticar o usuário:', error);
+      Alert.alert('Erro', 'Senha atual incorreta.');
+      throw error;
+    }
+  };
+
+  
+  const handleSave = async (field) => {
+    if (!userId) return;
+
+    try {
+      const userDocRef = doc(db, 'users', userId);
+
+      if (field === 'password') {
+        
+        Alert.prompt(
+          'Alteração de Senha',
+          'Digita a tua senha atual:',
+          [
+            {
+              text: 'Cancelar',
+              style: 'cancel',
+            },
+            {
+              text: 'OK',
+              onPress: async (currentPassword) => {
+                Alert.prompt(
+                  'Nova Senha',
+                  'Digite a nova senha:',
+                  [
+                    {
+                      text: 'Cancelar',
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'OK',
+                      onPress: async (newPassword) => {
+                        try {
+                          // Reautenticar o usuário
+                          await reauthenticateUser(currentPassword);
+
+                          // Atualizar a senha no Firebase Authentication
+                          await updatePassword(auth.currentUser, newPassword);
+                          Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+                        } catch (error) {
+                          console.error('Erro ao alterar a senha:', error);
+
+                          if (error.code === 'auth/weak-password') {
+                            Alert.alert('Erro', 'A senha precisa ter pelo menos 6 caracteres.');
+                          } else if (error.code === 'auth/wrong-password') {
+                            Alert.alert('Erro', 'A senha atual está incorreta.');
+                          } else {
+                            Alert.alert('Erro', 'Não foi possível alterar a senha. Tente novamente.');
+                          }
+                        }
+                      },
+                    },
+                  ],
+                  'secure-text'
+                );
+              },
+            },
+          ],
+          'secure-text'
+        );
+      } else {
+       
+        const updatedData = {};
+
+        if (field === 'name') {
+          updatedData.fullName = name || '';
+          setIsEditingName(false);
+        } else if (field === 'username') {
+          updatedData.username = username || '';
+          setIsEditingUsername(false);
+        }
+
+        await updateDoc(userDocRef, updatedData);
+        Alert.alert('Sucesso', 'Alterações salvas com sucesso!');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar os dados:', error);
+      Alert.alert('Erro', 'Não foi possível salvar as alterações.');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut(); 
+      router.replace('./components/entrar/login'); 
+    } catch (error) {
+      console.error('Erro ao terminar sessão:', error);
+      Alert.alert('Erro', 'Não foi possível terminar a sessão.');
+    }
   };
 
   return (
@@ -61,7 +192,7 @@ const ProfileScreen = () => {
         </Row>
 
         <Row>
-          <Label>Nome de utilizador</Label>
+          <Label>Nome de Utilizador</Label>
           <InputRow>
             <Input
               value={username}
@@ -76,26 +207,15 @@ const ProfileScreen = () => {
         </Row>
 
         <Row>
-          <Label>Email</Label>
+          <Label>Alterar Password</Label>
           <InputRow>
-            <Input
-              value={email}
-              editable={isEditingEmail}
-              onChangeText={setEmail}
-              style={isEditingEmail ? { borderBottomWidth: 1, borderBottomColor: '#263A83' } : {}}
-            />
-            <EditButton onPress={() => (isEditingEmail ? handleSave('email') : setIsEditingEmail(true))}>
-              <Icon name={isEditingEmail ? 'check' : 'edit'} size={20} color="#263A83" />
+            <EditButton onPress={() => handleSave('password')}>
+              <Icon name="edit" size={20} color="#263A83" /> 
             </EditButton>
           </InputRow>
         </Row>
 
-        <HistoryButton onPress={() => Alert.alert('Histórico de torneios', 'A abrir histórico...')}>
-          <Icon name="folder" size={20} color="#263A83" />
-          <HistoryText>Histórico de torneios</HistoryText>
-        </HistoryButton>
-
-        <LogoutButton onPress={() => Alert.alert('Logout', 'Sessão encerrada!')}>
+        <LogoutButton onPress={handleLogout}>
           <LogoutText>Terminar Sessão</LogoutText>
         </LogoutButton>
       </Form>
@@ -176,18 +296,6 @@ const Input = styled.TextInput`
 `;
 
 const EditButton = styled.TouchableOpacity``;
-
-const HistoryButton = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
-  margin-top: 20px;
-`;
-
-const HistoryText = styled.Text`
-  font-size: 16px;
-  color: #263A83;
-  margin-left: 8px;
-`;
 
 const LogoutButton = styled.TouchableOpacity`
   margin-top: 40px;

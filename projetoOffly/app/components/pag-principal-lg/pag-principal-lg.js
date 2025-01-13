@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -26,11 +26,45 @@ import {
   UserName,
   UserLevel,
   StarsContainer,
-  Star,
 } from "../../styles/styles.js";
+import { TouchableOpacity } from "react-native";
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { app } from "../../firebase/firebaseApi.js"; 
+
 
 export default function Home() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const auth = getAuth(app); 
+        const user = auth.currentUser; 
+
+        if (user) {
+          const firestore = getFirestore(app);
+          const userDoc = doc(firestore, "users", user.uid); 
+          const docSnap = await getDoc(userDoc);
+
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setUsername(userData.username); 
+          } else {
+            console.log("No such document!");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleCirclePress = () => {
     router.push("./uploadScreenTime/UploadScreen");
@@ -40,17 +74,26 @@ export default function Home() {
     router.push("./caderneta/caderneta");
   };
 
+  const handleProfilePress = () => {
+    router.push("../perfil");
+  };
+
+  if (loading) {
+    return <TittleTorneio>Loading...</TittleTorneio>;
+  }
 
   return (
     <>
-      <ProfileContainer>
+      <ProfileContainer style={{ marginTop: 45 }} >
+      <TouchableOpacity onPress={handleProfilePress}>
         <Avatar
           source={{
             uri: "https://celina05.sirv.com/equipas/participante1.png",
           }}
         />
+        </TouchableOpacity>
         <ProfileTextContainer>
-          <UserName>Pedro Martins</UserName> <UserLevel>Nível 1</UserLevel>
+        <UserName>{username || "Guest"}</UserName> <UserLevel>Nível 1</UserLevel>
           <StarsContainer>
             <Svg
               width="13"

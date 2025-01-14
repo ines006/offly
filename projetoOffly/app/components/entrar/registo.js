@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebaseApi";
+import { auth, db } from "../../firebase/firebaseApi"; // Certifique-se de que `db` está configurado no firebaseApi.js
 import {
   StyleSheet,
   View,
@@ -11,14 +11,17 @@ import {
   Easing,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { doc, setDoc } from "firebase/firestore";
 
 const Register = () => {
+  const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [focusField, setFocusField] = useState("");
+  const [fullNameBarWidth] = useState(new Animated.Value(0));
   const [usernameBarWidth] = useState(new Animated.Value(0));
   const [emailBarWidth] = useState(new Animated.Value(0));
   const [passwordBarWidth] = useState(new Animated.Value(0));
@@ -28,7 +31,9 @@ const Register = () => {
 
   const handleFocus = (field) => {
     const animatedWidth =
-      field === "username"
+      field === "fullName"
+        ? fullNameBarWidth
+        : field === "username"
         ? usernameBarWidth
         : field === "email"
         ? emailBarWidth
@@ -46,7 +51,9 @@ const Register = () => {
 
   const handleBlur = (field, value) => {
     const animatedWidth =
-      field === "username"
+      field === "fullName"
+        ? fullNameBarWidth
+        : field === "username"
         ? usernameBarWidth
         : field === "email"
         ? emailBarWidth
@@ -70,8 +77,23 @@ const Register = () => {
       return;
     }
 
+    if (!fullName || !username) {
+      setError("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Salvar fullName e username no Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        fullName: fullName,
+        username: username,
+        email: email,
+        createdAt: new Date(),
+      });
+
       console.log("Registo realizado com sucesso!");
       router.push("../navbar");
     } catch (err) {
@@ -84,6 +106,41 @@ const Register = () => {
       <View style={styles.wrapLogin}>
         <Text style={styles.title}>Criar Conta</Text>
 
+        {/* Nome Completo */}
+        <View style={styles.wrapInput}>
+          <TextInput
+            style={[
+              styles.input,
+              (focusField === "fullName" || fullName) && styles.focusedInput,
+            ]}
+            placeholder="Nome Completo"
+            placeholderTextColor="#adadad"
+            value={fullName}
+            autoCapitalize="words"
+            onChangeText={setFullName}
+            onFocus={() => {
+              setFocusField("fullName");
+              handleFocus("fullName");
+            }}
+            onBlur={() => {
+              setFocusField("");
+              handleBlur("fullName", fullName);
+            }}
+          />
+          <Animated.View
+            style={[
+              styles.bar,
+              {
+                width: fullNameBarWidth.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ["0%", "100%"],
+                }),
+              },
+            ]}
+          />
+        </View>
+
+        {/* Nome de Utilizador */}
         <View style={styles.wrapInput}>
           <TextInput
             style={[
@@ -117,6 +174,7 @@ const Register = () => {
           />
         </View>
 
+        {/* Email */}
         <View style={styles.wrapInput}>
           <TextInput
             style={[
@@ -150,6 +208,7 @@ const Register = () => {
           />
         </View>
 
+        {/* Password */}
         <View style={styles.wrapInput}>
           <TextInput
             style={[
@@ -184,11 +243,13 @@ const Register = () => {
           />
         </View>
 
+        {/* Confirmar Password */}
         <View style={styles.wrapInput}>
           <TextInput
             style={[
               styles.input,
-              (focusField === "confirmPassword" || confirmPassword) && styles.focusedInput,
+              (focusField === "confirmPassword" || confirmPassword) &&
+                styles.focusedInput,
             ]}
             placeholder="Confirmar Password"
             placeholderTextColor="#adadad"
@@ -218,12 +279,15 @@ const Register = () => {
           />
         </View>
 
+        {/* Mensagem de Erro */}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
+        {/* Botão de Registro */}
         <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
           <Text style={styles.loginButtonText}>Registar</Text>
         </TouchableOpacity>
 
+        {/* Link para Login */}
         <View style={styles.textCenter}>
           <Text style={styles.txt1}>Já tens uma conta?</Text>
           <TouchableOpacity onPress={() => router.push("./login")}>

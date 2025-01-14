@@ -9,32 +9,32 @@ export const Container = styled.View`
 `;
 
 // Container da Barra de Progresso
-// const ProgressBarContainer = styled.View`
-//   width: 331px;
-//   height: 9.39px;
-//   background-color: #7f89ad;
-//   border-radius: 34px;
-//   overflow: hidden;
-// `;
+const ProgressBarContainer = styled.View`
+  width: 331px;
+  height: 9.39px;
+  background-color: #7f89ad;
+  border-radius: 34px;
+  overflow: hidden;
+`;
 
 // Barra de Progresso Dinâmica
-// const Progress = styled.View`
-//   width: ${(props) => props.progress}%;
-//   height: 100%;
-//   background-color: ${(props) => props.color || "#76c7c0"};
-//   border-radius: 34px;
-// `;
+const Progress = styled.View`
+  width: ${(props) => props.progress}%;
+  height: 100%;
+  background-color: ${(props) => props.color || "#76c7c0"};
+  border-radius: 34px;
+`;
 
 // Componente de Barra de Progresso
-// const ProgressBar = ({ progress, color }) => {
-//   return (
-//     <ProgressBarContainer>
-//       <Progress progress={progress} color={color} />
-//     </ProgressBarContainer>
-//   );
-// };
+const ProgressBar = ({ progress, color }) => {
+  return (
+    <ProgressBarContainer>
+      <Progress progress={progress} color={color} />
+    </ProgressBarContainer>
+  );
+};
 
-// export default ProgressBar;
+export default ProgressBar;
 
 // --------------------------------------
 
@@ -72,14 +72,14 @@ export const SelecionaResposta = styled.Text`
 `;
 
 // Opções de resposta
-// export const OpcoesContainer = styled.View`
-//   font-family: "Poppins-Regular";
-//   font-size: 5px;
-//   width: 100%;
-//   justify-content: center;
-//   flex-direction: column;
-//   gap: 10px;
-// `;
+export const OpcoesContainer = styled.View`
+  font-family: "Poppins-Regular";
+  font-size: 5px;
+  width: 100%;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+`;
 
 // Botão opções
 export const StyledButton = styled.TouchableOpacity`
@@ -113,32 +113,32 @@ export const PerguntaContador = styled.Text`
 `;
 
 // Botão de opção (com círculo e mudança de cor ao ser selecionado)
-// export const BotaoOpcao = styled.TouchableOpacity`
-//   width: 100%;
-//   flex-direction: row;
-//   align-items: center;
-//   padding: 12px;
-//   font-family: "Poppins-Regular";
-//   font-size: 12px;
-//   background-color: ${(props) => (props.selecionado ? "#E3FC87" : "#fff")};
-//   border: 0.5px solid #9b9b9b;
-//   border-radius: 8px;
-//   justify-content: flex-start;
-//   margin-bottom: 21px;
-// `;
+export const BotaoOpcao = styled.TouchableOpacity`
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px;
+  font-family: "Poppins-Regular";
+  font-size: 12px;
+  background-color: ${(props) => (props.selecionado ? "#E3FC87" : "#fff")};
+  border: 0.5px solid #9b9b9b;
+  border-radius: 8px;
+  justify-content: flex-start;
+  margin-bottom: 21px;
+`;
 
 // Círculo do botão
-// export const Circulo = styled.View`
-//   width: 20px;
-//   height: 20px;
-//   border-radius: 50%;
-//   margin-right: 10px;
-//   align-items: center;
-//   justify-content: center;
-//   background-color: ${(props) => (props.selecionado ? "#263A83" : "#fff")};
-//   border: ${(props) =>
-//     props.selecionado ? "1px solid #263A83" : "1px solid #ccc"};
-// `;
+export const Circulo = styled.View`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+  align-items: center;
+  justify-content: center;
+  background-color: ${(props) => (props.selecionado ? "#263A83" : "#fff")};
+  border: ${(props) =>
+    props.selecionado ? "1px solid #263A83" : "1px solid #ccc"};
+`;
 
 // Texto do botão de opção
 export const TextoBotao = styled.Text`
@@ -635,6 +635,73 @@ export const Sub_Titulos_Criar_Equipa = styled.Text`
   font-weight: 400;
   align-self: center;
   margin-top: 12;
+`;
+
+// Container participantes
+export const Member_Container = styled.View`
+  flex: 1;
+  background-color: #263A83;
+  border-radius: 20px;
+  align-items: center;
+  justify-content: center;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  width: 370px;
+  align-self: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
+`;
+
+export const Member_Card = styled.View`
+  flex-direction: row;
+  padding: 15px;
+  width: 330px;
+  margin-vertical: 8px;
+  margin-horizontal: 10px;
+  background-color: #263A83;
+  border-radius: 20px;
+  align-items: center;
+  text-align: center;
+  align-self: center;
+  shadow-color: #000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.2;
+  shadow-radius: 3px;
+  elevation: 5;
+  height: 75px;
+`;
+
+export const Member_Image = styled.Image`
+  width: 60px;
+  height: 60px;
+`;
+
+export const Member_Text = styled.Text`
+  font-size: 16px;
+  color: #fff;
+  margin-left: 10px;
+  font-weight: bold;
+`;
+
+
+export const NoMember_Container = styled.View`
+  flex: 1;
+  background-color: #E6EAF2;
+  border-radius: 20px;
+  align-items: center;
+  justify-content: center;
+  width: 370px;
+  height: 71px;
+  align-self: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
+`;
+
+export const NoMember_Text = styled.Text`
+  font-size: 30px;
+  color: #263A83;
+  letter-spacing: 5px;
+  font-weight: bold;
 `;
 
 // Caixa do questionário

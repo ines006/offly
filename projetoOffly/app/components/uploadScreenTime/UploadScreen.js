@@ -1,32 +1,77 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Alert } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 
+// Firebase Imports
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase/firebaseApi";
+
 const UploadScreen = () => {
 
   const router = useRouter();
-  const [submitVisible, setSubmitVisible] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
+  const [submitVisible, setSubmitVisible] = useState(false); // var de estado que define a visibilidade do botão "Submeter"
+  const [modalVisible, setModalVisible] = useState(false); // var de estado que define a visibilidade do modal de sucesso
+  const [selectedImage, setSelectedImage] = useState(null); // var de estado que guarda a imagem selecionada
 
+  // Verificação de utilizador logado
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUserId(currentUser.uid);
+    } else {
+      Alert.alert('Erro', 'Nenhum utilizador logado!');
+    }
+  }, []);
 
   // Função para abrir o botão de submeter
   const handleButton = () => {
     setSubmitVisible(true);
   };
 
-  // Função para abrir a modal
-  const handleSubmit = () => {
+  // Função para abrir a modal e submeter dados de upload para a firebase
+  const handleSubmit = async () => {
     setSubmitVisible(false);
     setModalVisible(true);
+
+    try { // Função para verificar e atualizar o Firestore
+    
+      if (userId) {
+      const userDocRef = doc(db, "users", userId); 
+
+      const currentTime = Date.now(); // Timestamp UNIX
+      const today = new Date().toISOString().split("T")[0]; // Data no formato YYYY-MM-DD
+
+      // Verifica se o documento existe
+      const docSnap = await getDoc(userDocRef);
+
+      if (docSnap.exists()) {
+        // Se o documento existir, atualiza os campos
+        await updateDoc(userDocRef, {
+          upload: true,
+          data: today,
+        });
+        console.log("Campos atualizados no Firestore.");
+      } else {
+        // Se o documento não existir, cria o documento com os campos
+        await setDoc(userDocRef, {
+          upload: true,
+          data: today,
+        });
+        console.log("Documento criado no Firestore.");
+      }
+    }
+    } catch (error) {
+      console.error("Erro ao registar upload:", error);
+    }
   };
 
   // Função para fechar a modal
   const handleCloseModal = () => {
     setModalVisible(false);
-    router.push("../pag-principal-lg/pag-principal-lg-disable");
+    router.push("../pag-principal-lg/pag-principal-lg");
   };
 
   // Função para abrir a galeria e selecionar uma imagem
@@ -59,6 +104,7 @@ const UploadScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+      {/* Botão de Voltar atrás */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle
@@ -76,6 +122,7 @@ const UploadScreen = () => {
             />
           </Svg>
         </TouchableOpacity>
+        {/* Título */}
         <Text style={styles.title}>Upload do tempo de ecrã</Text>
       </View>
 
@@ -84,6 +131,7 @@ const UploadScreen = () => {
         {selectedImage ? (
           <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
         ) : (
+          <>
           <TouchableOpacity onPress={handleSelectImage}>
             <Svg width={49} height={49} viewBox="0 0 49 49" fill="none">
             <Path
@@ -104,12 +152,9 @@ const UploadScreen = () => {
             />
           </Svg>
           </TouchableOpacity>
+          <Text style={styles.description}>Faz upload do print do tempo de ecrã</Text>
+          </>
         )}
-        <Text style={styles.description}>
-          {selectedImage
-            ? ""
-            : "Faz upload do print do tempo de ecrã"}
-        </Text>
         
         {/* Botão "Remover" */}
         {selectedImage && (

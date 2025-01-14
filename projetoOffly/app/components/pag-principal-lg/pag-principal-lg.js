@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import styled from "styled-components/native";
+import { Alert } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -26,74 +28,123 @@ import {
   UserName,
   UserLevel,
   StarsContainer,
+  Star,
 } from "../../styles/styles.js";
-import { TouchableOpacity } from "react-native";
-import { getAuth } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { app } from "../../firebase/firebaseApi.js"; 
-
+// Firebase Imports
+import { auth, db } from "../../firebase/firebaseApi";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export default function Home() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(true);
 
+  const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
+  const [isUploadedToday, setIsUploadedToday] = useState(false); // var de estado que define o estado do upload T ou F
+  const [timeRemaining, setTimeRemaining] = useState(0); // var de estado que guarda o tempo restante para novo upload
+
+  // Verificação de utilizador logado
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const auth = getAuth(app); 
-        const user = auth.currentUser; 
-
-        if (user) {
-          const firestore = getFirestore(app);
-          const userDoc = doc(firestore, "users", user.uid); 
-          const docSnap = await getDoc(userDoc);
-
-          if (docSnap.exists()) {
-            const userData = docSnap.data();
-            setUsername(userData.username); 
-          } else {
-            console.log("No such document!");
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user data: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUserId(currentUser.uid);
+      console.log('utilizador logado na pag principal', currentUser)
+    } else {
+      Alert.alert('Erro', 'Nenhum utilizador logado!');
+    }
   }, []);
 
-  const handleCirclePress = () => {
-    router.push("./uploadScreenTime/UploadScreen");
-  };
-
-  const handleCadernetaPress = (id) => {
-    router.push("./caderneta/caderneta");
-  };
-
-  const handleProfilePress = () => {
-    router.push("../perfil");
-  };
-
-  if (loading) {
-    return <TittleTorneio>Loading...</TittleTorneio>;
+  
+// Função para redefinir o status de upload 
+const resetUploadStatus = async () => {
+  try {
+    if (!userId) return; 
+    const userDocRef = doc(db, "users", userId); 
+    await updateDoc(userDocRef, { upload: false }); // Atualiza o campo "upload" para false
+    setIsUploadedToday(false); // Atualiza o estado local
+    console.log("Status de upload redefinido.");
+  } catch (error) {
+    console.error("Erro ao redefinir o status de upload:", error); 
   }
+};
+
+// Função para calcular o tempo restante até a próxima meia-noite
+const calculateNextReset = () => {
+  const now = new Date(); 
+  const resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0); 
+  return resetTime.getTime() - now.getTime();
+};
+
+useEffect(() => {
+  const timeUntilReset = calculateNextReset(); // Calcula o tempo até o próximo reset
+  setTimeRemaining(timeUntilReset); // Define o estado inicial do tempo restante
+
+  // Configura um temporizador para redefinir o status na próxima meia-noite
+  const timer = setTimeout(() => {
+    resetUploadStatus(); // Redefine o status de upload
+    setTimeRemaining(calculateNextReset()); // Atualiza o tempo restante
+  }, timeUntilReset);
+
+  // Atualiza o tempo restante a cada segundo
+  const interval = setInterval(() => {
+    setTimeRemaining((prev) => Math.max(prev - 1000, 0)); // Evita valores negativos
+  }, 1000);
+
+  // Limpa os temporizadores ao desmontar o componente
+  return () => {
+    clearTimeout(timer);
+    clearInterval(interval);
+  };
+}, [userId]); // Executa novamente se userId mudar
+
+
+useEffect(() => {
+  // Função para verificar o status de upload na firebase
+  const checkUploadStatus = async () => {
+    try {
+      if (!userId) return; 
+      const userDocRef = doc(db, "users", userId); 
+      const docSnap = await getDoc(userDocRef); 
+
+      if (docSnap.exists()) {
+        const { upload } = docSnap.data(); // Obtém o campo "upload" do documento
+        setIsUploadedToday(upload || false); // Atualiza o estado com o valor do campo
+      } else {
+        console.log("Documento do utilizador não encontrado.");
+      }
+    } catch (error) {
+      console.error("Erro ao verificar o status de upload:", error);
+    }
+  };
+
+  checkUploadStatus(); // Chama a função ao montar o componente
+}, [userId]); // Executa novamente se userId mudar
+
+
+  // Formato do temporizador
+  const formatTime = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+
+  const handleCirclePress = () => {
+    router.push("../uploadScreenTime/UploadScreen");
+  };
 
   return (
     <>
-      <ProfileContainer style={{ marginTop: 45 }} >
-      <TouchableOpacity onPress={handleProfilePress}>
+      <ProfileContainer>
         <Avatar
           source={{
             uri: "https://celina05.sirv.com/equipas/participante1.png",
           }}
         />
-        </TouchableOpacity>
         <ProfileTextContainer>
-        <UserName>{username || "Guest"}</UserName> <UserLevel>Nível 1</UserLevel>
+          <UserName>Pedro Martins</UserName> <UserLevel>Nível 1</UserLevel>
           <StarsContainer>
             <Svg
               width="13"
@@ -180,14 +231,21 @@ export default function Home() {
           <FontAwesome name="group" size={16} color="#ffffff" />
         </Footer>
 
-        <BottomCircle onPress={handleCirclePress}>
-          <FontAwesome name="image" size={20} color="#ffffff" />
-        </BottomCircle>
+        {isUploadedToday  ? (
+          <CountdownButton>
+            <FontAwesome name="clock-o" size={20} color="#ffffff" />
+            <CountdownText>{formatTime(timeRemaining)}</CountdownText>
+          </CountdownButton>
+        ) : (
+          <BottomCircle onPress={handleCirclePress}>
+            <FontAwesome name="image" size={20} color="#ffffff" />
+          </BottomCircle>
+        )}
       </CardContainer>
 
       <TittleTorneio>Desafios</TittleTorneio>
       <DesafioContainer>
-        <DesafioCard onPress={() => handleCadernetaPress(1)}>
+        <DesafioCard onPress={() => handleDesafioPress(1)}>
           <DesafioIcon>
             <Svg width="55" height="55" viewBox="0 0 55 55" fill="none">
               {" "}
@@ -224,3 +282,26 @@ export default function Home() {
     </>
   );
 }
+
+// Styled Component para o botão
+const CountdownButton = styled.View`
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  background-color: #6876a9;
+  border-width: 4px;
+  border-color: #ffffff;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  bottom: -32px;
+  align-self: center;
+`;
+
+// Estilo do texto do contador
+const CountdownText = styled.Text`
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: bold;
+  margin-top: 4px;
+`;

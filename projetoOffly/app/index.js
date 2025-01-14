@@ -65,6 +65,20 @@ export default function Index() {
           onPress={() => router.push("./onboarding")}
         />
       </View>
+
+      <View style={styles.buttonSpacing}>
+        <Button
+          title="Ir para PaginaPrincipal"
+          onPress={() => router.push("./PaginaPrincipal")}
+        />
+      </View>
+
+      <View style={styles.buttonSpacing}>
+        <Button
+          title="Ir para a pagina EquipaCriada"
+          onPress={() => router.push("./EquipaCriada")}
+        />
+      </View>
     </>
   );
 }

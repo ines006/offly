@@ -34,6 +34,11 @@ export default function Index() {
           title="Ver fluxo atual"
           onPress={() => router.push("./components/entrar/login")}
         />
+        {/*TESTE PARA LOGIN EM MOBILE*/}
+        <Button
+          title="Fazer login"
+          onPress={() => router.push("./components/entrar/login2")}
+        />
         <Button
           title="Ir para UploadScreenTime"
           onPress={() => router.push("./components/UploadScreenTime")}
@@ -71,21 +76,7 @@ export default function Index() {
         />
 
         <Button
-          title="teste pag equipa criada ines"
-          onPress={() => router.push("./EquipaCriada-copy")}
-        />
-      </View>
-
-      <View style={styles.buttonSpacing}>
-        <Button
-          title="Ir para PaginaPrincipal"
-          onPress={() => router.push("./PaginaPrincipal")}
-        />
-      </View>
-
-      <View style={styles.buttonSpacing}>
-        <Button
-          title="Ir para a pagina EquipaCriada"
+          title="pag detalhes equipa criada"
           onPress={() => router.push("./EquipaCriada")}
         />
       </View>

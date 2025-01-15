@@ -6,7 +6,7 @@ import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import Card_Equipa from "./components/Equipas-copy";
 // Firebase Imports
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { getDocs, getDoc, doc, setDoc, updateDoc, collection } from 'firebase/firestore';
 import { auth, db } from "./firebase/firebaseApi";
 import {
   Container_Pagina_Pricipal,
@@ -116,28 +116,90 @@ export default function PaginaPrincipal() {
   }, [searchText, equipas]);
 
 
-// Função para criar a equipa na Firebase
-const criarEquipa = async () => {
-  try {
-    const equipaData = {
-      nome: NomeEquipa,
-      descricao: DescricaoEquipa,
-      numparticipantes: parseInt(selectedValue), // Convertendo o valor selecionado para número
-      visibilidade: activeButton === 'public' ? 'publica' : 'privada', // Verifica a visibilidade com base no botão selecionado
-      adquiridos: 0, // Valor inicial
-      pontos: 0, // Valor inicial
-      imagem: 'https://celina05.sirv.com/equipas/participante1.png', // Imagem padrão
-    };
+  const criarEquipa = async () => {
+    try {
+      console.log("Iniciando criação da equipa...");
+  
+      // Verificação de utilizador logado
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("Nenhum utilizador logado! Não é possível criar equipa.");
+      }
+      console.log("Utilizador logado:", user.uid);
+  
+      // Dados da equipa
+      const equipaData = {
+        nome: NomeEquipa,
+        descricao: DescricaoEquipa,
+        numparticipantes: parseInt(selectedValue),
+        visibilidade: activeButton === 'public' ? 'publica' : 'privada',
+        adquiridos: 0,
+        pontos: 1000,
+        imagem: 'https://celina05.sirv.com/equipas/participante1.png',
+      };
+  
+      // Criar equipa com ID personalizado
+      const equipaDocRef = doc(db, "equipas", NomeEquipa);
+      await setDoc(equipaDocRef, equipaData);
+      console.log("Equipa criada com sucesso com ID:", NomeEquipa);
+  
+      // Obter nome completo do utilizador logado
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+  
+      if (!userDocSnap.exists()) {
+        throw new Error("Utilizador não encontrado na coleção 'users'.");
+      }
+      const userFullName = userDocSnap.data().fullName;
+      console.log("Nome do utilizador logado:", userFullName);
+  
+      // Criar coleção 'membros' e documento 'participantes'
+      const membrosDocRef = doc(collection(equipaDocRef, "membros"), "participantes");
+      const participantes = { participante1: userFullName };
+  
+      // for (let i = 2; i <= equipaData.numparticipantes; i++) {
+      //   participantes[`participante${i}`] = ""; // Strings vazias
+      // }
 
-    // Adiciona a nova equipa à coleção "equipas"
-    await addDoc(collection(db, "equipas"), equipaData);
+      // Lista de nomes aleatórios
+      const nomesAleatorios = [
+        "Ana",
+        "João",
+        "Maria",
+        "Pedro",
+        "Rita",
+        "Carlos",
+        "Luísa",
+        "Tiago",
+        "Sofia",
+        "Miguel"
+      ];
 
-    console.log("Equipa criada com sucesso!");
-    setModalVisible(false);
-  } catch (error) {
-    console.error("Erro ao criar a equipa:", error);
-  }
-};
+  // Preencher os restantes participantes com nomes aleatórios PARA SIMULAÇÃO !!
+  for (let i = 2; i <= equipaData.numparticipantes; i++) {
+  // Selecionar um nome aleatório da lista
+  const nomeAleatorio = nomesAleatorios[Math.floor(Math.random() * nomesAleatorios.length)];
+  
+  // Adicionar o nome ao objeto 'participantes'
+  participantes[`participante${i}`] = nomeAleatorio;
+}
+
+      await setDoc(membrosDocRef, participantes);
+      console.log("Coleção 'membros' e documento 'participantes' criados com sucesso!");
+  
+      // Atualizar o campo 'team' no documento do utilizador
+      await updateDoc(userDocRef, { team: NomeEquipa });
+      console.log("Campo 'team' do utilizador atualizado com sucesso!");
+  
+      // Fechar modal
+      setModalVisible(false);
+      console.log("Processo concluído sem erros.");
+  
+    } catch (error) {
+      console.error("Erro ao criar a equipa:", error.message);
+    }
+  };
+  
 
   // Validação dos inputs
   const validateInputs = () => {
@@ -159,14 +221,18 @@ const criarEquipa = async () => {
 
   // Certifica-se de que as fontes foram carregadas antes de renderizar
   if (!fontsLoaded) {
-    return <Text>Carregando...</Text>;
+    return <Text>A carregar...</Text>;
   }
 
   const handleNext = () => {
     if (!isNextDisabled) {
       criarEquipa(); // Chama a função para criar a equipa no Firebase
       setModalVisible(false);
-      router.push("./EquipaCriada"); // Redireciona para a página da equipa criada
+      // Passa o ID da equipa como um parâmetro de consulta
+      router.push({
+        pathname: "./EquipaCriada",  
+        params: { teamId: NomeEquipa },
+      })
     }
   };
   

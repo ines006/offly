@@ -501,6 +501,26 @@ font-size: 15px;
 font-weight: 600;
 `;
 
+export const Botoes_Pagina_principal_Desativado = styled.View`
+  display: flex;
+  max-width: 240px;
+  height: 39px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  background: #fff;
+  margin-top: 23px;
+  padding: 7px 31px;
+  border: 1px solid #263A83;
+`;
+
+export const Texto_Botoes_Pagina_principal_Desativado = styled.Text`
+color: #263A83;
+font-family: Poppins-regular;
+font-size: 15px;
+font-weight: 600;
+`;
+
 export const Texto_Botoes_Pagina_principal_Voltar = styled.Text`
 color: #414141;
 text-align: justify;

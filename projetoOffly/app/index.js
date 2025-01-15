@@ -66,8 +66,8 @@ export default function Index() {
         />
 
         <Button
-          title="teste pag principal ines"
-          onPress={() => router.push("./PaginaPrincipal-copy")}
+          title="pag principal equipas"
+          onPress={() => router.push("./PaginaPrincipal")}
         />
 
         <Button

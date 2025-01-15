@@ -63,18 +63,31 @@ const SubHeading = styled.Text`
 `;
 
 const Footer = styled.View`
-  flex: 1;
   width: 100%;
-  flex-direction: row;
-  justify-content: space-between;
+  flex-direction: column; 
   align-items: center;
   padding: 0 20px 20px 20px;
+`;
+
+const PaginationContainer = styled.View`
+  margin-bottom: 20px; 
+  flex-direction: row;
+  justify-content: center; 
+  align-items: center;
+`;
+
+const ButtonsContainer = styled.View`
+  flex-direction: row; 
+  justify-content: space-between; 
+  align-items: center;
+  width: 100%; 
 `;
 
 const Pagination = styled.View`
   flex-direction: row;
   justify-content: center;
 `;
+
 
 const Dot = styled.View`
   width: ${(props) => (props.active ? "12px" : "8px")};
@@ -94,6 +107,7 @@ const TextButtonLabel = styled.Text`
   font-weight: bold;
 `;
 
+
 const Button = styled.TouchableOpacity`
   background-color: #e3fc87;
   padding: 10px 15px;
@@ -108,52 +122,7 @@ const ButtonLabel = styled.Text`
 
 // Screens array
 const screens = [
-  {
-    key: "1",
-    logo: true,
-    heading: "OFFLY",
-    subheading: "",
-    renderContent: () => (
-      <Svg
-        width="163"
-        height="163"
-        viewBox="0 0 163 163"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <Defs>
-          <LinearGradient
-            id="paint0_linear_1479_13040"
-            x1="8.14162"
-            y1="-10.5576"
-            x2="263.527"
-            y2="207.307"
-          >
-            <Stop offset="0" stopColor="#BFE0FF" />
-            <Stop offset="1" stopColor="#2A428C" />
-          </LinearGradient>
-        </Defs>
-        <Rect
-          width="162.712"
-          height="162.712"
-          rx="32.2801"
-          fill="url(#paint0_linear_1479_13040)"
-        />
-        <Path
-          d="M58.405 38.9893C43.044 46.9866 32.5664 62.958 32.5664 81.3561C32.5664 107.766 54.1568 129.176 80.7898 129.176C107.423 129.176 129.013 107.766 129.013 81.3561C129.013 58.9985 113.54 40.2245 92.6342 34.9893C88.8446 34.0403 80.7898 32.0831 80.7898 33.5362C80.7898 34.9893 80.7898 88.5067 80.7898 88.5067"
-          stroke="white"
-          strokeOpacity="0.6"
-          strokeWidth="13"
-          strokeLinecap="round"
-        />
-        <Path
-          d="M66.3855 39.1252C66.3855 43.5841 62.7404 47.1987 58.2439 47.1987C53.7474 47.1987 50.1023 43.5841 50.1023 39.1252C50.1023 34.6664 53.2337 31.0518 58.2439 31.0518C63.4653 31.0518 66.3855 34.6664 66.3855 39.1252Z"
-          fill="white"
-          fillOpacity="0.5"
-        />
-      </Svg>
-    ),
-  },
+
   {
     key: "2",
     logo: false,
@@ -2066,26 +2035,33 @@ const App = () => {
         </Content>
       )}
       <Footer>
-        {currentScreen > 0 && (
-          <TextButton onPress={prevScreen}>
-            <TextButtonLabel>Anterior</TextButtonLabel>
-          </TextButton>
-        )}
-        <Pagination>
-          {screens.map((_, index) => (
-            <Dot key={index} active={index === currentScreen} />
-          ))}
-        </Pagination>
-        {currentScreen < screens.length - 1 ? (
-          <Button onPress={nextScreen}>
+        <PaginationContainer>
+          <Pagination>
+            {screens.map((_, index) => (
+              <Dot key={index} active={index === currentScreen} />
+            ))}
+          </Pagination>
+        </PaginationContainer>
+
+        <ButtonsContainer>
+          {currentScreen > 0 ? (
+            <TextButton onPress={prevScreen}>
+              <TextButtonLabel>Anterior</TextButtonLabel>
+            </TextButton>
+          ) : (
+            <TextButtonLabel style={{ opacity: 0 }}>Anterior</TextButtonLabel>
+          )}
+          <Button
+            onPress={
+              currentScreen < screens.length - 1
+                ? nextScreen
+                : () => alert("Bem-vindo à Offly!")
+            }
+          >
             <ButtonLabel>{">"}</ButtonLabel>
           </Button>
-        ) : (
-          <Button onPress={() => alert("Bem-vindo à aplicação!")}>
-            <ButtonLabel>Começar</ButtonLabel>
-          </Button>
-        )}
-      </Footer>
+        </ButtonsContainer>
+      </Footer>;
     </Container>
   );
 };

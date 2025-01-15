@@ -73,6 +73,16 @@ export default function Index() {
         <Button
           title="pag detalhes equipa criada"
           onPress={() => router.push("./EquipaCriada")}
+          />
+          
+        <Button
+          title="Ir para desafio"
+          onPress={() => router.push("./components/desafio/desafioSemanal")}
+        />
+        <Button
+          title="Ir para descobrir"
+          onPress={() => router.push("./components/desafio/descobrirDesafio")}
+
         />
       </View>
     </>

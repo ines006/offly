@@ -44,6 +44,9 @@ const Login = () => {
     }
   };
 
+
+  // falta logica para saber para que página deve ser redirecionado. 
+  // se o utilizador tiver equipa deve ir para a pagina onde ja existe equipa. caso contrario vai para a página de procurar equipa
   const handleSubmit = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);

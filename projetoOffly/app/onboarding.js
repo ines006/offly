@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components/native";
+import { useRouter } from "expo-router";
+
 import {
   Svg,
   Path,
@@ -2004,6 +2006,8 @@ const screens = [
   },
 ];
 
+const router = useRouter();
+
 // App Component
 const App = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
@@ -2020,6 +2024,11 @@ const App = () => {
     }
   };
 
+  // const handleclick =() => {
+  //   router.push("../components/pag-principal-lg/pag-principal-lg")
+  // }
+
+  
   return (
     <Container>
       {screens[currentScreen].logo ? (
@@ -2053,9 +2062,7 @@ const App = () => {
           )}
           <Button
             onPress={
-              currentScreen < screens.length - 1
-                ? nextScreen
-                : () => alert("Bem-vindo à Offly!")
+              currentScreen < screens.length - 1 ? nextScreen : () => router.push("questionario")
             }
           >
             <ButtonLabel>{">"}</ButtonLabel>

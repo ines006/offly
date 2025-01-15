@@ -95,7 +95,7 @@ const Register = () => {
       });
 
       console.log("Registo realizado com sucesso!");
-      router.push("../navbar");
+      router.push("onboarding");
     } catch (err) {
       setError("Falha ao fazer registo: " + err.message);
     }

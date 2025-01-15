@@ -91,9 +91,9 @@ export default function Home() {
       }
     };
   
-    Data(); // Invoca a função dentro do useEffect
+    Data(); 
   
-  }, [userId]); // Certifique-se de passar userId como dependência para o efeito
+  }, [userId]);
   
 
   

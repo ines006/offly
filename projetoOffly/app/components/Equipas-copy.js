@@ -1,12 +1,15 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, StyleSheet, Image } from 'react-native';
 import styled from 'styled-components/native';
 
 const Card_Equipa = ({ onPress, icon, teamName, playerCount }) => {
     return (
       <CardContainer onPress={onPress}>
         <IconWrapper>
-          <Icon>{icon}</Icon>
+          <Image
+            source={icon}
+            style={styles.teamIcon}
+          />
         </IconWrapper>
         <CardText>{teamName}</CardText>
         <MemberCount>{playerCount}</MemberCount>
@@ -57,3 +60,11 @@ const MemberCount = styled.Text`
   color: #ffffff;
   font-family: Poppins-regular;
 `;
+
+const styles = StyleSheet.create({
+  teamIcon: {
+    width: 60,
+    height: 60, 
+    marginRight: 10,
+  },
+})

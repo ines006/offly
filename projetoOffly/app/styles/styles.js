@@ -451,8 +451,15 @@ export const Star = styled.View`
 export const Container_Pagina_Pricipal = styled.View`
   display: flex;
   flex: 1;
-  padding: 60px 27px 27px 27px;
+  padding: 10px 27px 27px 27px;
   align-items: center;
+  background-color: white;
+`;
+
+export const Container_Pagina_Pricipal_2 = styled.View`
+  display: flex;
+  flex: 1;
+  margin-top: 20px;
   background-color: white;
 `;
 

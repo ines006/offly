@@ -1,15 +1,16 @@
 import { useFonts } from "expo-font";
 import React, { useState, useEffect } from "react";
-import { Modal, Text, View } from "react-native";
+import { Modal, Text, View, Image, StyleSheet } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
-import Card_Equipa from "./components/Equipas";
+import Card_Equipa from "./components/Equipas-copy";
 // Firebase Imports
 import { collection, getDocs } from "firebase/firestore";
 import { auth, db } from "./firebase/firebaseApi";
 import {
   Container_Pagina_Pricipal,
+  Container_Pagina_Pricipal_2,
   Sub_Titulos,
   Titulos,
   Botoes_Pagina_principal,
@@ -21,15 +22,18 @@ import {
   Caixa_de_texto,
   Titulos_Criar_Equipa,
   DropdownContainer,
-  // DropdownButton,
-  // DropdownButtonText,
-  // DropdownStyle,
-  // DropdownItemText,
   Definir_visibilidade_btn,
   SearchInput,
   SearchBarContainer,
+  ProfileContainer,
+  Avatar,
+  ProfileTextContainer,
+  UserName,
+  UserLevel,
+  StarsContainer,
 } from "./styles/styles";
 
+// Componente para os campos de texto de criação de equipa
 function Caixas_de_Texto_Criar_Equipa(props) {
   return (
     <View>
@@ -45,26 +49,17 @@ function Caixas_de_Texto_Criar_Equipa(props) {
 }
 
 export default function PaginaPrincipal() {
+  // Fontes personalizadas
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
-  // array de estado para guardar todas as equipas da db
+  // Estado para equipas
   const [equipas, setEquipas] = useState([]);
+  const [filteredEquipas, setFilteredEquipas] = useState([]);
+  const [searchText, setSearchText] = useState("");
 
-  // SIMULAÇÃO DO Nº DE PARTICIPANTES DE CADA EQUIPA
-  // DEPOIS NO FETCH DE CADA EQUIPA
-  // ACEDER AO ARRAY DOS MEMBROS 
-  // EXEMPLO arraymembros.length
-  const currentParticipants = 3;
-
- // MAIS TARDE FAZER LÓGICA DE APENAS MOSTRAR EQUIPAS EM QUE currentParticipants < numparticipantes
- // OU SEJA -> mostrar equipas que ainda nao estão completas
-
- // PESQUISA
- const [filteredEquipas, setFilteredEquipas] = useState([]); // Estado para armazenar equipas filtradas
- const [searchText, setSearchText] = useState(""); // Estado para o texto da pesquisa
-
+  // Estados para o modal e inputs
   const [modalVisible, setModalVisible] = useState(false);
   const [NomeEquipa, setNomeEquipa] = useState("");
   const [DescricaoEquipa, setDescricaoEquipa] = useState("");
@@ -76,46 +71,51 @@ export default function PaginaPrincipal() {
   const options = ["3", "4", "5"];
   const router = useRouter();
 
-  useEffect(() => { // Função para guardar os dados das equipas
-    const fetchEquipas = async () => {
-    
-        try { 
-        
-        // Acede a todos os documentos da coleção 'equipas'
-        const equipasCollectionRef = collection(db, 'equipas');
-        const querySnapshot = await getDocs(equipasCollectionRef);
-    
-            // Extrai os dados de cada documento na coleção
-            const equipasData = querySnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-            console.log("Fetch bem sucedido: ", equipasData);
+  // Função para buscar equipas da DB
+  const fetchEquipas = async () => {
+    try {
+      const equipasCollectionRef = collection(db, "equipas");
+      const querySnapshot = await getDocs(equipasCollectionRef);
 
-            setEquipas(equipasData);
-            setFilteredEquipas(equipasData); // Inicialmente, mostra todas as equipas
+      const equipaData = [];
 
-        } catch (error) {
-          console.error("Erro ao registar upload:", error);
-        }
+      for (const equipaDoc of querySnapshot.docs) {
+        const equipa = { id: equipaDoc.id, ...equipaDoc.data() };
 
-      };
+        const membrosCollectionRef = collection(db, `equipas/${equipaDoc.id}/membros`);
+        const membrosSnapshot = await getDocs(membrosCollectionRef);
 
-      fetchEquipas();
+        let currentParticipants = 0;
+        membrosSnapshot.forEach((membroDoc) => {
+          if (membroDoc.id === "participantes") {
+            currentParticipants = Object.keys(membroDoc.data()).length;
+          }
+        });
 
+        equipaData.push({ ...equipa, currentParticipants });
+      }
+
+      setEquipas(equipaData);
+      setFilteredEquipas(equipaData);
+    } catch (error) {
+      console.error("Erro ao buscar equipas:", error);
+    }
+  };
+
+  // Carregar equipas ao montar o componente
+  useEffect(() => {
+    fetchEquipas();
   }, []);
 
-  
-  // Atualiza as equipas filtradas sempre que o texto da pesquisa mudar
+  // Atualizar equipas filtradas com base no texto da pesquisa
   useEffect(() => {
     const filtered = equipas.filter((equipa) =>
       equipa.nome && equipa.nome.toLowerCase().includes(searchText.toLowerCase())
     );
     setFilteredEquipas(filtered);
-  }, [searchText, equipas]);  
+  }, [searchText, equipas]);
 
-
-
+  // Validação dos inputs
   const validateInputs = () => {
     if (
       NomeEquipa.trim() !== "" &&
@@ -133,10 +133,13 @@ export default function PaginaPrincipal() {
     validateInputs();
   }, [NomeEquipa, DescricaoEquipa, activeButton, selectedValue]);
 
+  // Certifica-se de que as fontes foram carregadas antes de renderizar
+  if (!fontsLoaded) {
+    return <Text>Carregando...</Text>;
+  }
+
   const handleNext = () => {
     if (!isNextDisabled) {
-      console.log("Team Name:", NomeEquipa);
-      console.log("Descrição:", DescricaoEquipa);
       router.push("./EquipaCriada");
       setModalVisible(false);
     }
@@ -160,6 +163,69 @@ export default function PaginaPrincipal() {
   );
 
   return (
+<>
+{/* Perfil */} {/*  para desenrascar meti assim o perfil do user */}
+<ProfileContainer style={{ paddingTop: 65, backgroundColor: "#fff" }}>
+<Avatar
+  source={{
+    uri: "https://celina05.sirv.com/equipas/participante1.png",
+  }}
+/>
+<ProfileTextContainer>
+  <UserName>Pedro Martins</UserName> <UserLevel>Nível 1</UserLevel>
+  <StarsContainer>
+    <Svg
+      width="13"
+      height="11"
+      viewBox="0 0 13 11"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <Path
+        d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+        fill="#263A83"
+      />
+    </Svg>
+    <Svg
+      width="13"
+      height="11"
+      viewBox="0 0 13 11"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <Path
+        d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+        fill="#BEC4DA"
+      />
+    </Svg>
+    <Svg
+      width="13"
+      height="11"
+      viewBox="0 0 13 11"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <Path
+        d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+        fill="#BEC4DA"
+      />
+    </Svg>
+    <Svg
+      width="13"
+      height="11"
+      viewBox="0 0 13 11"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <Path
+        d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+        fill="#BEC4DA"
+      />
+    </Svg>
+  </StarsContainer>
+</ProfileTextContainer>
+</ProfileContainer>
+
     <Container_Pagina_Pricipal>
       <Titulos>Começa a competir</Titulos>
       <Sub_Titulos>Junta-te a uma equipa</Sub_Titulos>
@@ -170,24 +236,22 @@ export default function PaginaPrincipal() {
         <SearchInput
           placeholder="Pesquisa equipas"
           placeholderTextColor="rgba(38, 58, 131, 0.5)"
-          value={searchText} // Vincula o estado da pesquisa ao campo de entrada
-          onChangeText={setSearchText} // Atualiza o estado da pesquisa ao digitar
+          value={searchText}
+          onChangeText={setSearchText}
         />
       </SearchBarContainer>
 
       {/* Mostra as equipas filtradas */}
       {filteredEquipas.length > 0 ? (
-        filteredEquipas
-          .slice(0, 4) // Mostra apenas as 4 primeiras equipas filtradas
-          .map((equipa) => (
-            <Card_Equipa
-              key={equipa.id}
-              onPress={() => console.log(`Selected team: ${equipa.nome}`)}
-              // icon={team.iconSvg} -> ADICIONAR ICONE EQUIPA
-              teamName={equipa.nome}
-              playerCount={`${currentParticipants}/${equipa.numparticipantes}`}
-            />
-          ))
+        filteredEquipas.slice(0, 4).map((equipa) => (
+          <Card_Equipa
+            key={equipa.id}
+            onPress={() => console.log(`Selected team: ${equipa.nome}`)}
+            icon={equipa.imagem}
+            teamName={equipa.nome}
+            playerCount={`${equipa.currentParticipants}/${equipa.numparticipantes}`}
+          />
+        ))
       ) : (
         <Text>A carregar equipas...</Text>
       )}
@@ -196,94 +260,104 @@ export default function PaginaPrincipal() {
         <Texto_Botoes_Pagina_principal>Criar equipa</Texto_Botoes_Pagina_principal>
       </Botoes_Pagina_principal>
 
+      {/* Modal para criar equipa */}
       <Modal animationType="fade" transparent={true} visible={modalVisible}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          <CaixaQuestionario>
-            <Titulos>Criar Equipa</Titulos>
-
-            <Caixas_de_Texto_Criar_Equipa
-              titulo="Dá um nome à tua equipa"
-              placeholder="Exemplo: Os incríveis"
-              value={NomeEquipa}
-              onChangeText={setNomeEquipa}
-              editable={true}
-            />
-
-            <Caixas_de_Texto_Criar_Equipa
-              titulo="Adiciona uma descrição"
-              placeholder="Exemplo: Vamos ganhar!"
-              value={DescricaoEquipa}
-              onChangeText={setDescricaoEquipa}
-              editable={true}
-            />
-
-            <View>
-              <Titulos_Criar_Equipa>Define a quantidade de participantes</Titulos_Criar_Equipa>
-              <DropdownContainer>
-                <ModalDropdown
-                  options={options}
-                  defaultValue={selectedValue}
-                  style={{ borderWidth: 0 }}
-                  dropdownStyle={{
-                    width: 150,
-                    borderWidth: 1,
-                    borderColor: "#263a83",
-                    borderRadius: 8,
-                    backgroundColor: "white",
-                  }}
-                  onSelect={(index, value) => setSelectedValue(value)}
-                />
-              </DropdownContainer>
-            </View>
-
-            <View>
-              <Titulos_Criar_Equipa>Define a visibilidade da tua equipa</Titulos_Criar_Equipa>
-              <BotaoNavegacaoContainer>
-                <Definir_visibilidade_btn
-                  style={{
-                    backgroundColor: activeButton === "public" ? "#E3FC87" : "transparent",
-                  }}
-                  onPress={() => handleButtonClick("public")}
-                >
-                  <Texto_Botoes_Definir_Visibilidade>Pública</Texto_Botoes_Definir_Visibilidade>
-                </Definir_visibilidade_btn>
-                <Definir_visibilidade_btn
-                  style={{
-                    backgroundColor: activeButton === "private" ? "#E3FC87" : "transparent",
-                  }}
-                  onPress={() => handleButtonClick("private")}
-                >
-                  <Texto_Botoes_Definir_Visibilidade>Privada</Texto_Botoes_Definir_Visibilidade>
-                </Definir_visibilidade_btn>
-              </BotaoNavegacaoContainer>
-            </View>
-
-            <BotaoNavegacaoContainer>
-              <Botoes_Pagina_principal
-                style={{ backgroundColor: "transparent" }}
-                onPress={() => setModalVisible(false)}
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                }}
               >
-                <Texto_Botoes_Pagina_principal_Voltar>Voltar</Texto_Botoes_Pagina_principal_Voltar>
-              </Botoes_Pagina_principal>
-
-              <Botoes_Pagina_principal
-                style={{ backgroundColor: isNextDisabled ? "gray" : "#263A83" }}
-                disabled={isNextDisabled}
-                onPress={handleNext}
-              >
-                <Texto_Botoes_Pagina_principal>seguinte</Texto_Botoes_Pagina_principal>
-              </Botoes_Pagina_principal>
-            </BotaoNavegacaoContainer>
-          </CaixaQuestionario>
-        </View>
-      </Modal>
+                <CaixaQuestionario>
+                  <Titulos>Criar Equipa</Titulos>
+      
+                  <Caixas_de_Texto_Criar_Equipa 
+                    titulo="Dá um nome à tua equipa"
+                    placeholder="Exemplo: Os incríveis"
+                    value={NomeEquipa}
+                    onChangeText={setNomeEquipa}
+                    editable={true}
+                  />
+      
+                  <Caixas_de_Texto_Criar_Equipa
+                    titulo="Adiciona uma descrição"
+                    placeholder="Exemplo: Vamos ganhar!"
+                    value={DescricaoEquipa}
+                    onChangeText={setDescricaoEquipa}
+                    editable={true}
+                  />
+      
+                  <View>
+                    <Titulos_Criar_Equipa>Define a quantidade de participantes</Titulos_Criar_Equipa>
+                    <DropdownContainer>
+                      <ModalDropdown
+                        options={options}
+                        defaultValue={selectedValue}
+                        style={{ borderWidth: 0 }}
+                        dropdownStyle={{
+                          width: 150,
+                          borderWidth: 1,
+                          borderColor: "#263a83",
+                          borderRadius: 8,
+                          backgroundColor: "white",
+                        }}
+                        onSelect={(index, value) => setSelectedValue(value)}
+                      />
+                    </DropdownContainer>
+                  </View>
+      
+                  <View>
+                    <Titulos_Criar_Equipa>Define a visibilidade da tua equipa</Titulos_Criar_Equipa>
+                    <BotaoNavegacaoContainer>
+                      <Definir_visibilidade_btn
+                        style={{
+                          backgroundColor: activeButton === "public" ? "#E3FC87" : "transparent",
+                        }}
+                        onPress={() => handleButtonClick("public")}
+                      >
+                        <Texto_Botoes_Definir_Visibilidade>Pública</Texto_Botoes_Definir_Visibilidade>
+                      </Definir_visibilidade_btn>
+                      <Definir_visibilidade_btn
+                        style={{
+                          backgroundColor: activeButton === "private" ? "#E3FC87" : "transparent",
+                        }}
+                        onPress={() => handleButtonClick("private")}
+                      >
+                        <Texto_Botoes_Definir_Visibilidade>Privada</Texto_Botoes_Definir_Visibilidade>
+                      </Definir_visibilidade_btn>
+                    </BotaoNavegacaoContainer>
+                  </View>
+      
+                  <BotaoNavegacaoContainer>
+                    <Botoes_Pagina_principal
+                      style={{ backgroundColor: "transparent" }}
+                      onPress={() => setModalVisible(false)}
+                    >
+                      <Texto_Botoes_Pagina_principal_Voltar>Voltar</Texto_Botoes_Pagina_principal_Voltar>
+                    </Botoes_Pagina_principal>
+      
+                    <Botoes_Pagina_principal
+                      style={{ backgroundColor: isNextDisabled ? "gray" : "#263A83" }}
+                      disabled={isNextDisabled}
+                      onPress={handleNext}
+                    >
+                      <Texto_Botoes_Pagina_principal>seguinte</Texto_Botoes_Pagina_principal>
+                    </Botoes_Pagina_principal>
+                  </BotaoNavegacaoContainer>
+                </CaixaQuestionario>
+              </View>
+            </Modal>
     </Container_Pagina_Pricipal>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  teamIcon: {
+    width: 60,
+    height: 60,
+    marginRight: 10,
+  },
+});

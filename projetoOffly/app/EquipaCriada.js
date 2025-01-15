@@ -97,7 +97,7 @@ export default function EquipaCriada() {
   // Função para entrar no torneio
   const handleTorneio = () => {
     console.log("redirecionar para torneio")
-    router.push("./components/pag-principal-lg/pag-principal-lg");
+    router.push("./components/navbar");
   };
 
   return (

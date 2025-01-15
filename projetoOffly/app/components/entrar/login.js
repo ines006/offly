@@ -63,7 +63,7 @@ const Login = () => {
   
         if (userData.team) {
           // Se o campo 'team' existir e não estiver vazio, redirecionar para a página principal
-          router.push("../../components/pag-principal-lg/pag-principal-lg");
+          router.push("../../components/navbar");
         } else {
           // Caso contrário, redirecionar para a página inicial
           router.push("../../PaginaPrincipal");

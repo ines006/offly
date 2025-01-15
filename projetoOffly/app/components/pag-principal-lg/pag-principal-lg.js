@@ -179,6 +179,14 @@ useEffect(() => {
     router.push("../uploadScreenTime/UploadScreen");
   };
 
+  const handleCadernetaPress = () => {
+    router.push('../../components/caderneta/caderneta'); 
+  };
+
+  const handleDesafioPress = () => {
+    router.push('../../components/desafio/descobrirDesafio'); 
+  };
+
   return (
     <>
       <ProfileContainer>
@@ -290,7 +298,7 @@ useEffect(() => {
 
       <TittleTorneio>Desafios</TittleTorneio>
       <DesafioContainer>
-        <DesafioCard onPress={() => handleDesafioPress(1)}>
+        <DesafioCard onPress={() => handleCadernetaPress(1)}>
           <DesafioIcon>
             <Svg width="55" height="55" viewBox="0 0 55 55" fill="none">
               {" "}

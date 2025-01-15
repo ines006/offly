@@ -71,6 +71,45 @@ export default function PaginaPrincipal() {
   const options = ["3", "4", "5"];
   const router = useRouter();
 
+  const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
+  const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
+
+  // Verificação de utilizador logado
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUserId(currentUser.uid);
+      console.log('utilizador logado na pag principal', currentUser)
+    } else {
+      Alert.alert('Erro', 'Nenhum utilizador logado!');
+    }
+  }, []);
+
+  // Função para obter o dados do utilizador e  do torneio
+    useEffect(() => {
+      const userData = async () => {
+        try {
+          if (!userId) return; 
+          const userDocRef = doc(db, "users", userId); 
+          const docSnap = await getDoc(userDocRef); 
+    
+          if (docSnap.exists()) {
+            const { fullName, team } = docSnap.data();
+            setUserName(fullName);
+            
+          } else {
+            console.log("Documento do utilizador não encontrado.");
+          }
+  
+        } catch (error) {
+          console.error("Erro ao verificar o nome", error);
+        }
+      };
+    
+      userData(); 
+    
+    }, [userId]); 
+
   // Função para buscar equipas da DB
   const fetchEquipas = async () => {
     try {
@@ -264,7 +303,7 @@ export default function PaginaPrincipal() {
   }}
 />
 <ProfileTextContainer>
-  <UserName>Pedro Martins</UserName> <UserLevel>Nível 1</UserLevel>
+  <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>
   <StarsContainer>
     <Svg
       width="13"

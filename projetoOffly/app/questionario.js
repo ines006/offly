@@ -94,7 +94,7 @@ export default function Questionario() {
 
   const submeterQuestionario = () => {
     return(
-      router.push("../components/navbar") // questionário deve redirecionar para a página procurar equipa
+      router.push("./PaginaPrincipal") // questionário redireciona para a pagina inicial (equipas)
     )
   };
 

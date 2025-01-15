@@ -34,11 +34,6 @@ export default function Index() {
           title="Ver fluxo atual"
           onPress={() => router.push("./components/entrar/login")}
         />
-        {/*TESTE PARA LOGIN EM MOBILE*/}
-        <Button
-          title="Fazer login"
-          onPress={() => router.push("./components/entrar/login2")}
-        />
         <Button
           title="Ir para UploadScreenTime"
           onPress={() => router.push("./components/UploadScreenTime")}

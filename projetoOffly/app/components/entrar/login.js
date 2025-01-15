@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebaseApi";
+import { doc, getDoc } from "firebase/firestore"; 
+import { db, auth } from "../../firebase/firebaseApi";
 import {
   StyleSheet,
   View,
@@ -44,18 +45,39 @@ const Login = () => {
     }
   };
 
-
-  // falta logica para saber para que página deve ser redirecionado. 
+  // após login
   // se o utilizador tiver equipa deve ir para a pagina onde ja existe equipa. caso contrario vai para a página de procurar equipa
   const handleSubmit = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("Login realizado com sucesso!");
-      router.push("../../questionario");
+      // Realizar o login
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user; // O usuário autenticado
+      console.log("Login realizado com sucesso!", user);
+  
+      // Após o login, acessar o Firestore para obter o campo 'team'
+      const userDocRef = doc(db, "users", user.uid); // Referência ao documento do usuário
+      const userDoc = await getDoc(userDocRef);
+  
+      if (userDoc.exists()) {
+        const userData = userDoc.data(); // Dados do documento
+  
+        if (userData.team) {
+          // Se o campo 'team' existir e não estiver vazio, redirecionar para a página principal
+          router.push("../../components/pag-principal-lg/pag-principal-lg");
+        } else {
+          // Caso contrário, redirecionar para a página inicial
+          router.push("../../PaginaPrincipal");
+        }
+      } else {
+        console.error("Documento do usuário não encontrado no Firestore.");
+        setError("Dados do usuário não encontrados. Contate o suporte.");
+      }
     } catch (err) {
+      console.error("Erro ao fazer login:", err);
       setError("Falha ao fazer login: " + err.message);
     }
   };
+  
 
   return (
     <View style={styles.container}>

@@ -1,6 +1,6 @@
 import { useFonts } from "expo-font";
 import React, { useState, useEffect } from "react";
-import { Modal, Text, View, Image, StyleSheet, ActivityIndicator } from "react-native";
+import { Modal, Text, View, Image, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";

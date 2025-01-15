@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../../firebase/firebaseApi"; // Certifique-se de que `db` está configurado no firebaseApi.js
+import { auth, db } from "../../firebase/firebaseApi"; 
 import {
   StyleSheet,
   View,

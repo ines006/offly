@@ -40,6 +40,11 @@ export default function Home() {
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
   const [isUploadedToday, setIsUploadedToday] = useState(false); // var de estado que define o estado do upload T ou F
   const [timeRemaining, setTimeRemaining] = useState(0); // var de estado que guarda o tempo restante para novo upload
+  const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
+  const [teamId, setTeamId] = useState(""); // var de estado que guarda o id da equipa do utilizador
+  const [teamPoints, setTeamPoints] = useState(0); // var de estado que guarda os pontos da equipa
+  const [teamMembers, setTeamMembers] = useState(0); // var de estado que guarda o nº de participantes
+
 
   // Verificação de utilizador logado
   useEffect(() => {
@@ -51,6 +56,45 @@ export default function Home() {
       Alert.alert('Erro', 'Nenhum utilizador logado!');
     }
   }, []);
+
+  // Função para obter o dados do utilizador e  do torneio
+  useEffect(() => {
+    const Data = async () => {
+      try {
+        if (!userId) return; 
+        const userDocRef = doc(db, "users", userId); 
+        const docSnap = await getDoc(userDocRef); 
+  
+        if (docSnap.exists()) {
+          const { fullName, team } = docSnap.data();
+          setUserName(fullName);
+          setTeamId(team); 
+          
+          if (team) {
+            const teamDocRef = doc(db, "equipas", team);
+            const teamSnap = await getDoc(teamDocRef);
+  
+            if (teamSnap.exists()) {
+              const teamData = teamSnap.data();
+              setTeamPoints(teamData.pontos); 
+              setTeamMembers(teamData.numparticipantes);
+            } else {
+              console.log("Equipa não encontrada.");
+            }
+          }
+        } else {
+          console.log("Documento do utilizador não encontrado.");
+        }
+
+      } catch (error) {
+        console.error("Erro ao verificar o nome", error);
+      }
+    };
+  
+    Data(); 
+  
+  }, [userId]);
+  
 
   
 // Função para redefinir o status de upload 
@@ -144,7 +188,7 @@ useEffect(() => {
           }}
         />
         <ProfileTextContainer>
-          <UserName>Pedro Martins</UserName> <UserLevel>Nível 1</UserLevel>
+          <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>
           <StarsContainer>
             <Svg
               width="13"
@@ -204,10 +248,11 @@ useEffect(() => {
             <FontAwesome name="plane" size={20} color="#34459E" />
           </IconContainer>
 
-          <TeamName>Equipa K</TeamName>
+          <TeamName>{teamId}</TeamName>
 
           <Points>
-            <FontAwesome name="star" size={12} color="#D4F34A" /> 1200 pontos
+            <FontAwesome name="star" size={12} color="#D4F34A" /> 
+            {teamPoints}
           </Points>
         </Header>
 
@@ -227,7 +272,7 @@ useEffect(() => {
         </Stats>
 
         <Footer>
-          <FooterText>5/5</FooterText>
+          <FooterText>{teamMembers}/{teamMembers}</FooterText>
           <FontAwesome name="group" size={16} color="#ffffff" />
         </Footer>
 

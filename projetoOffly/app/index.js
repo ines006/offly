@@ -34,6 +34,11 @@ export default function Index() {
           title="Ver fluxo atual"
           onPress={() => router.push("./components/entrar/login")}
         />
+        {/*TESTE PARA LOGIN EM MOBILE*/}
+        <Button
+          title="Fazer login"
+          onPress={() => router.push("./components/entrar/login2")}
+        />
         <Button
           title="Ir para UploadScreenTime"
           onPress={() => router.push("./components/UploadScreenTime")}
@@ -63,6 +68,16 @@ export default function Index() {
         <Button
           title="Ir para onboarding"
           onPress={() => router.push("./onboarding")}
+        />
+
+        <Button
+          title="pag principal equipas"
+          onPress={() => router.push("./PaginaPrincipal")}
+        />
+
+        <Button
+          title="pag detalhes equipa criada"
+          onPress={() => router.push("./EquipaCriada")}
         />
       </View>
     </>

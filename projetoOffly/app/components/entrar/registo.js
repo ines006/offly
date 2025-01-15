@@ -92,6 +92,7 @@ const Register = () => {
         username: username,
         email: email,
         createdAt: new Date(),
+        team: "",
       });
 
       console.log("Registo realizado com sucesso!");

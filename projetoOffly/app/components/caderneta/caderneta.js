@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebaseApi"; // Certifique-se de importar o Firebase Auth e Firestore
 import { useRouter } from "expo-router";
+import { Svg, Circle, Path } from "react-native-svg";
 
 const Caderneta = () => {
   const [validatedCards, setValidatedCards] = useState([]);
@@ -41,13 +49,32 @@ const Caderneta = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <View style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>&lt;</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+            <Circle
+              cx="18.1351"
+              cy="17.1713"
+              r="16.0177"
+              stroke="#263A83"
+              strokeWidth={2}
+            />
+            <Path
+              d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+              stroke="#263A83"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </Svg>
         </TouchableOpacity>
         <Text style={styles.title}>Caderneta</Text>
         <View style={styles.viewcaderneta}>
           <Text style={styles.sectionTitle}>Desafios semanais</Text>
-          <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
+          <Text style={styles.subtitle}>
+            Vê os desafios das semanas passadas
+          </Text>
           <View style={styles.cardRow}>
             {Array.from({ length: 4 }).map((_, index) => (
               <Card key={index} number={index + 1} />
@@ -85,10 +112,7 @@ const Caderneta = () => {
 const Card = ({ number, imageUrl, hasIcon }) => {
   return (
     <View
-      style={[
-        styles.card,
-        hasIcon ? styles.activeCard : styles.inactiveCard,
-      ]}
+      style={[styles.card, hasIcon ? styles.activeCard : styles.inactiveCard]}
     >
       {imageUrl ? (
         <Image
@@ -114,6 +138,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8F9FD",
     padding: 20,
+    marginTop: 40,
   },
   title: {
     fontSize: 24,
@@ -212,21 +237,14 @@ const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     top: 40,
-    left: 20,
     width: 40,
     height: 40,
-    borderRadius: 20,
+    left: 25,
+    borderRadius: 25,
     backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: "#263A83",
     justifyContent: "center",
     alignItems: "center",
-  },
-  backButtonText: {
-    color: "#263A83",
-    fontSize: 30,
-    alignItems: "center",
-    marginTop: -4,
+    zIndex: 999,
   },
 });
 

@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db, auth } from "../../firebase/firebaseApi"; 
+import { db, auth } from "../../firebase/firebaseApi";
 import Icon from "react-native-vector-icons/Ionicons";
+import { Svg, Circle, Path, G } from "react-native-svg";
 
 export default function CartaSelecionada() {
   const router = useRouter();
@@ -16,7 +24,7 @@ export default function CartaSelecionada() {
   useEffect(() => {
     const initializeTimer = async () => {
       try {
-        const user = auth.currentUser; 
+        const user = auth.currentUser;
         if (!user) {
           Alert.alert("Erro", "Usuário não autenticado.");
           return;
@@ -101,12 +109,58 @@ export default function CartaSelecionada() {
   return (
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>&lt;</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonText}>
+            <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+              <Circle
+                cx="18.1351"
+                cy="17.1713"
+                r="16.0177"
+                stroke="#263A83"
+                strokeWidth={2}
+              />
+              <Path
+                d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+                stroke="#263A83"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+            </Svg>
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.homeButton} onPress={() => router.push("../navbar")}>
-          <Text style={styles.homeButtonText}>X</Text>
+        <TouchableOpacity
+          style={styles.homeButton}
+          onPress={() => router.push("../navbar")}
+        >
+          <Text style={styles.homeButtonText}>
+            <Svg
+              width="800px"
+              height="800px"
+              viewBox="0 0 21 21"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <G
+                fill="none"
+                fill-rule="evenodd"
+                stroke="#263A83"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                transform="translate(2 2)"
+              >
+                <Circle cx="8.5" cy="8.5" r="8" />
+
+                <G transform="matrix(0 1 -1 0 17 0)">
+                  <Path d="m5.5 11.5 6-6" />
+
+                  <Path d="m5.5 5.5 6 6" />
+                </G>
+              </G>
+            </Svg>
+          </Text>
         </TouchableOpacity>
 
         {timeLeft !== null && timeLeft > 0 && (
@@ -117,7 +171,9 @@ export default function CartaSelecionada() {
         )}
 
         {isValidated && (
-          <Text style={styles.validationMessage}>Esta carta já foi validada!</Text>
+          <Text style={styles.validationMessage}>
+            Esta carta já foi validada!
+          </Text>
         )}
 
         <Text style={styles.title}>Escolheste a carta {cardNumber}</Text>
@@ -137,11 +193,13 @@ export default function CartaSelecionada() {
         </View>
 
         {!isValidated && (
-          <TouchableOpacity style={styles.validateButton} onPress={handleValidate}>
+          <TouchableOpacity
+            style={styles.validateButton}
+            onPress={handleValidate}
+          >
             <Text style={styles.validateButtonText}>Validar</Text>
           </TouchableOpacity>
         )}
-
       </SafeAreaView>
     </View>
   );
@@ -156,19 +214,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 50,
   },
   backButton: {
     position: "absolute",
     top: 40,
-    left: 20,
     width: 40,
     height: 40,
-    borderRadius: 20,
+    left: 25,
+    borderRadius: 25,
     backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: "#263A83",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 999,
   },
   homeButton: {
     position: "absolute",
@@ -178,14 +236,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: "#263A83",
     justifyContent: "center",
-    alignItems: "center",
-  },
-  homeButtonText: {
-    color: "#263A83",
-    fontSize: 30,
     alignItems: "center",
   },
   backButtonText: {

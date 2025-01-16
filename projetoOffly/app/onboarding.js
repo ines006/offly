@@ -66,30 +66,29 @@ const SubHeading = styled.Text`
 
 const Footer = styled.View`
   width: 100%;
-  flex-direction: column; 
+  flex-direction: column;
   align-items: center;
   padding: 0 20px 20px 20px;
 `;
 
 const PaginationContainer = styled.View`
-  margin-bottom: 20px; 
+  margin-bottom: 20px;
   flex-direction: row;
-  justify-content: center; 
+  justify-content: center;
   align-items: center;
 `;
 
 const ButtonsContainer = styled.View`
-  flex-direction: row; 
-  justify-content: space-between; 
+  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
-  width: 100%; 
+  width: 100%;
 `;
 
 const Pagination = styled.View`
   flex-direction: row;
   justify-content: center;
 `;
-
 
 const Dot = styled.View`
   width: ${(props) => (props.active ? "12px" : "8px")};
@@ -109,7 +108,6 @@ const TextButtonLabel = styled.Text`
   font-weight: bold;
 `;
 
-
 const Button = styled.TouchableOpacity`
   background-color: #e3fc87;
   padding: 10px 15px;
@@ -124,7 +122,6 @@ const ButtonLabel = styled.Text`
 
 // Screens array
 const screens = [
-
   {
     key: "2",
     logo: false,
@@ -2028,7 +2025,6 @@ const App = () => {
   //   router.push("../components/pag-principal-lg/pag-principal-lg")
   // }
 
-  
   return (
     <Container>
       {screens[currentScreen].logo ? (
@@ -2062,13 +2058,16 @@ const App = () => {
           )}
           <Button
             onPress={
-              currentScreen < screens.length - 1 ? nextScreen : () => router.push("questionario")
+              currentScreen < screens.length - 1
+                ? nextScreen
+                : () => router.push("questionario")
             }
           >
             <ButtonLabel>{">"}</ButtonLabel>
           </Button>
         </ButtonsContainer>
-      </Footer>;
+      </Footer>
+      ;
     </Container>
   );
 };

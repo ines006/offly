@@ -80,22 +80,43 @@ export default function PaginaPrincipal() {
   const [modalEquipa, setModalEquipa] = useState(false);
 
 
-// Array de URLs das imagens p/ equipas ALTERAR! CONFIRMAR
+// Array de URLs das imagens p/ equipas 
 const imageTeamUrls = [
   "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.50.14-removebg-preview.png",
   "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.51.27-removebg-preview.png",
   "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.52.12-removebg-preview.png",
   "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.52.51-removebg-preview.png",
   "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.53.23-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.53.56-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.54.27-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.54.56-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.55.24-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.56.03-removebg-preview.png",
 ];
 
 // Array de URLs das imagens p/ users
+// Caso ainda não tenham imagem de perfil (vai uma aleatória)
 const imageUserUrls = [
-  "https://celina05.sirv.com/equipas/participante1.png",
-  "https://celina05.sirv.com/equipas/participante2.png",
-  "https://celina05.sirv.com/equipas/participante3.png",
-  "https://celina05.sirv.com/equipas/participante4.png",
-  "https://celina05.sirv.com/equipas/participante5.png",
+  "https://celina05.sirv.com/avatares/avatar4.png",
+    "https://celina05.sirv.com/avatares/avatar5.png",
+    "https://celina05.sirv.com/avatares/avatar6.png",
+    "https://celina05.sirv.com/avatares/avatar9.png",
+    "https://celina05.sirv.com/avatares/avatar10.png",
+    "https://celina05.sirv.com/avatares/avatar11.png",
+    "https://celina05.sirv.com/avatares/avatar12.png",
+    "https://celina05.sirv.com/avatares/avatar13.png",
+    "https://celina05.sirv.com/avatares/avatar16.png",
+    "https://celina05.sirv.com/avatares/avatar18.png",
+    "https://celina05.sirv.com/avatares/avatar20.png",
+    "https://celina05.sirv.com/avatares/avatar1.png",
+    "https://celina05.sirv.com/avatares/avatar2.png",
+    "https://celina05.sirv.com/avatares/avatar3.png",
+    "https://celina05.sirv.com/avatares/avatar7.png",
+    "https://celina05.sirv.com/avatares/avatar8.png",
+    "https://celina05.sirv.com/avatares/avatar14.png",
+    "https://celina05.sirv.com/avatares/avatar15.png",
+    "https://celina05.sirv.com/avatares/avatar17.png",
+    "https://celina05.sirv.com/avatares/avatar19.png",
 ];
 
 // Função para obter uma URL aleatória 

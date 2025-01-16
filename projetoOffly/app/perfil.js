@@ -17,17 +17,33 @@ const ProfileScreen = () => {
   
   const router = useRouter();
 
-  // Array de URLs das imagens p/ users
-const imageUserUrls = [
-  "https://celina05.sirv.com/equipas/participante1.png",
-  "https://celina05.sirv.com/equipas/participante2.png",
-  "https://celina05.sirv.com/equipas/participante3.png",
-  "https://celina05.sirv.com/equipas/participante4.png",
-  "https://celina05.sirv.com/equipas/participante5.png",
-];
+  // Caso ainda não tenham imagem de perfil (vai uma aleatória)
+  const imageUserUrls = [
+    "https://celina05.sirv.com/avatares/avatar4.png",
+    "https://celina05.sirv.com/avatares/avatar5.png",
+    "https://celina05.sirv.com/avatares/avatar6.png",
+    "https://celina05.sirv.com/avatares/avatar9.png",
+    "https://celina05.sirv.com/avatares/avatar10.png",
+    "https://celina05.sirv.com/avatares/avatar11.png",
+    "https://celina05.sirv.com/avatares/avatar12.png",
+    "https://celina05.sirv.com/avatares/avatar13.png",
+    "https://celina05.sirv.com/avatares/avatar16.png",
+    "https://celina05.sirv.com/avatares/avatar18.png",
+    "https://celina05.sirv.com/avatares/avatar20.png",
+    "https://celina05.sirv.com/avatares/avatar1.png",
+    "https://celina05.sirv.com/avatares/avatar2.png",
+    "https://celina05.sirv.com/avatares/avatar3.png",
+    "https://celina05.sirv.com/avatares/avatar7.png",
+    "https://celina05.sirv.com/avatares/avatar8.png",
+    "https://celina05.sirv.com/avatares/avatar14.png",
+    "https://celina05.sirv.com/avatares/avatar15.png",
+    "https://celina05.sirv.com/avatares/avatar17.png",
+    "https://celina05.sirv.com/avatares/avatar19.png",
+  ];
+
 
 // Função para obter uma URL aleatória 
-const getRandomImage = (tipo) => {
+const getRandomImage = () => {
   const randomIndex = Math.floor(Math.random() * tipo.length);
   return tipo[randomIndex];
 };

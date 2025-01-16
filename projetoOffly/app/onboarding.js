@@ -109,9 +109,7 @@ const TextButtonLabel = styled.Text`
 `;
 
 const Button = styled.TouchableOpacity`
-  background-color: #e3fc87;
-  padding: 10px 15px;
-  border-radius: 50px;
+  padding: 1px;
 `;
 
 const ButtonLabel = styled.Text`
@@ -2025,6 +2023,23 @@ const App = () => {
   //   router.push("../components/pag-principal-lg/pag-principal-lg")
   // }
 
+  const CustomArrowIcon = () => (
+    <Svg
+      width="57"
+      height="57"
+      viewBox="0 0 57 57"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <Path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M40.1405 30.0675L30.0657 40.1494C29.3692 40.8441 28.2417 40.8441 27.547 40.1494C26.8506 39.4548 26.8506 38.3147 27.547 37.62L34.8876 30.2812H16.0312C15.0462 30.2812 14.25 29.4797 14.25 28.5C14.25 27.5203 15.0462 26.7188 16.0312 26.7188H34.8876L27.547 19.38C26.8506 18.6853 26.8506 17.5631 27.547 16.8506C28.2417 16.1559 29.3692 16.1559 30.0657 16.8506L40.1405 26.9325C40.568 27.36 40.7016 27.9478 40.6036 28.5C40.7016 29.0522 40.568 29.64 40.1405 30.0675ZM28.5 0C12.7591 0 0 12.7537 0 28.5C0 44.2463 12.7591 57 28.5 57C44.2409 57 57 44.2463 57 28.5C57 12.7537 44.2409 0 28.5 0Z"
+        fill="#E3FC87"
+      />
+    </Svg>
+  );
+
   return (
     <Container>
       {screens[currentScreen].logo ? (
@@ -2063,7 +2078,27 @@ const App = () => {
                 : () => router.push("questionario")
             }
           >
-            <ButtonLabel>{">"}</ButtonLabel>
+            <Svg
+              width="58"
+              height="58"
+              viewBox="0 0 58 58"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <Circle
+                cx="28.5"
+                cy="28.5"
+                r="27.1772"
+                transform="matrix(0.999959 -0.00910741 -0.00910741 -0.999959 0.519165 57.5166)"
+                fill="#E3FC87"
+                stroke="#E3FC87"
+                stroke-width="2.64563"
+              />
+              <Path
+                d="M18 27.5C17.1716 27.5 16.5 28.1716 16.5 29C16.5 29.8284 17.1716 30.5 18 30.5V27.5ZM42.0607 30.0607C42.6464 29.4749 42.6464 28.5251 42.0607 27.9393L32.5147 18.3934C31.9289 17.8076 30.9792 17.8076 30.3934 18.3934C29.8076 18.9792 29.8076 19.9289 30.3934 20.5147L38.8787 29L30.3934 37.4853C29.8076 38.0711 29.8076 39.0208 30.3934 39.6066C30.9792 40.1924 31.9289 40.1924 32.5147 39.6066L42.0607 30.0607ZM18 30.5H41V27.5H18V30.5Z"
+                fill="#263A83"
+              />
+            </Svg>
           </Button>
         </ButtonsContainer>
       </Footer>

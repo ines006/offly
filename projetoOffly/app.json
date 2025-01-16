@@ -9,9 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Este aplicativo requer acesso à câmera para tirar fotos.",
+        "NSPhotoLibraryUsageDescription": "Este aplicativo requer acesso à galeria para selecionar fotos.",
+        "NSPhotoLibraryAddUsageDescription": "Este aplicativo requer permissão para salvar fotos na galeria."
+      }
     },
     "android": {
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

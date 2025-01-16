@@ -13,7 +13,40 @@ const ProfileScreen = () => {
   const [username, setUsername] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
+  
   const router = useRouter();
+
+  // Caso ainda não tenham imagem de perfil (vai uma aleatória)
+  const imageUserUrls = [
+    "https://celina05.sirv.com/avatares/avatar4.png",
+    "https://celina05.sirv.com/avatares/avatar5.png",
+    "https://celina05.sirv.com/avatares/avatar6.png",
+    "https://celina05.sirv.com/avatares/avatar9.png",
+    "https://celina05.sirv.com/avatares/avatar10.png",
+    "https://celina05.sirv.com/avatares/avatar11.png",
+    "https://celina05.sirv.com/avatares/avatar12.png",
+    "https://celina05.sirv.com/avatares/avatar13.png",
+    "https://celina05.sirv.com/avatares/avatar16.png",
+    "https://celina05.sirv.com/avatares/avatar18.png",
+    "https://celina05.sirv.com/avatares/avatar20.png",
+    "https://celina05.sirv.com/avatares/avatar1.png",
+    "https://celina05.sirv.com/avatares/avatar2.png",
+    "https://celina05.sirv.com/avatares/avatar3.png",
+    "https://celina05.sirv.com/avatares/avatar7.png",
+    "https://celina05.sirv.com/avatares/avatar8.png",
+    "https://celina05.sirv.com/avatares/avatar14.png",
+    "https://celina05.sirv.com/avatares/avatar15.png",
+    "https://celina05.sirv.com/avatares/avatar17.png",
+    "https://celina05.sirv.com/avatares/avatar19.png",
+  ];
+
+
+// Função para obter uma URL aleatória 
+const getRandomImage = () => {
+  const randomIndex = Math.floor(Math.random() * tipo.length);
+  return tipo[randomIndex];
+};
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -33,9 +66,22 @@ const ProfileScreen = () => {
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setName(userData.fullName || '');
-            setUsername(userData.username || '');
+            const { fullName, username, image } = userDoc.data();
+            setName(fullName || '');
+            setUsername(username || '');
+
+          if (image) {
+            // Atribuir a imagem existente ao estado
+            setProfileImage({ uri: image });
+          } else {
+            // Gerar e atribuir uma nova imagem aleatória
+            const newProfileImage = getRandomImage(imageUserUrls);
+            setProfileImage({ uri: newProfileImage });
+                        
+            // Atualizar o documento do utilizador com a nova imagem
+            await updateDoc(userDocRef, { image: newProfileImage });
+          }
+
           } else {
             Alert.alert('Erro', 'Usuário não encontrado no Firestore.');
           }
@@ -165,7 +211,7 @@ const ProfileScreen = () => {
       </Header>
 
       <AvatarContainer>
-        <Avatar source={require('../assets/images/avatarperfil.png')} />
+        <Avatar source={profileImage} />
         <LevelText>Nível 1</LevelText>
         <Stars>
           <Icon name="star" size={20} color="#263A83" />

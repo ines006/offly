@@ -25,6 +25,22 @@ const DetalhesEquipa = () => {
     router.push('../caderneta/caderneta'); // Supondo que a página se chame 'caderneta.js'
   };
 
+  // Array de URLs das imagens p/ users
+  const imageUrls = [
+    "https://celina05.sirv.com/equipas/participante1.png",
+    "https://celina05.sirv.com/equipas/participante2.png",
+    "https://celina05.sirv.com/equipas/participante3.png",
+    "https://celina05.sirv.com/equipas/participante4.png",
+    "https://celina05.sirv.com/equipas/participante5.png",
+  ];
+
+  // Função para obter uma URL aleatória
+  const getRandomImage = () => {
+    const randomIndex = Math.floor(Math.random() * imageUrls.length);
+    return imageUrls[randomIndex];
+  };
+
+
   useEffect(() => {
     const fetchTeamDetails = async () => {
       try {
@@ -118,7 +134,7 @@ const DetalhesEquipa = () => {
         participants.map((participant, index) => (
           <View key={index} style={styles.card}>
             <Image
-                source={require("../../imagens/2.png")} 
+                source={{ uri: getRandomImage() }} 
                 style={styles.peopleImage}/>
             <Text style={styles.participantText}>{participant}</Text>
           </View>

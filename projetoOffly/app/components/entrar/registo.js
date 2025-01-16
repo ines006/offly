@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  Picker,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { doc, setDoc } from "firebase/firestore";
@@ -16,6 +17,7 @@ import { doc, setDoc } from "firebase/firestore";
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [gender, setGender] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,6 +30,46 @@ const Register = () => {
   const [confirmPasswordBarWidth] = useState(new Animated.Value(0));
 
   const router = useRouter();
+
+  // Array de URLs das imagens p/ users
+  const imageUserGirl = [
+    "https://celina05.sirv.com/avatares/avatar4.png",
+    "https://celina05.sirv.com/avatares/avatar5.png",
+    "https://celina05.sirv.com/avatares/avatar6.png",
+    "https://celina05.sirv.com/avatares/avatar9.png",
+    "https://celina05.sirv.com/avatares/avatar10.png",
+    "https://celina05.sirv.com/avatares/avatar11.png",
+    "https://celina05.sirv.com/avatares/avatar12.png",
+    "https://celina05.sirv.com/avatares/avatar13.png",
+    "https://celina05.sirv.com/avatares/avatar16.png",
+    "https://celina05.sirv.com/avatares/avatar18.png",
+    "https://celina05.sirv.com/avatares/avatar20.png",
+  ];
+  
+
+const imageUserBoy = [
+  "https://celina05.sirv.com/avatares/avatar1.png",
+  "https://celina05.sirv.com/avatares/avatar2.png",
+  "https://celina05.sirv.com/avatares/avatar3.png",
+  "https://celina05.sirv.com/avatares/avatar7.png",
+  "https://celina05.sirv.com/avatares/avatar8.png",
+  "https://celina05.sirv.com/avatares/avatar14.png",
+  "https://celina05.sirv.com/avatares/avatar15.png",
+  "https://celina05.sirv.com/avatares/avatar17.png",
+  "https://celina05.sirv.com/avatares/avatar19.png",
+];
+
+  // Função para obter uma imagem aleatória com base no gênero
+  const getRandomImage = (gender) => {
+    if (gender === "Masculino") {
+      const randomIndex = Math.floor(Math.random() * imageUserBoy.length);
+      return imageUserBoy[randomIndex];
+    } else if (gender === "Feminino") {
+      const randomIndex = Math.floor(Math.random() * imageUserGirl.length);
+      return imageUserGirl[randomIndex];
+    }
+    return null;
+  };
 
   const handleFocus = (field) => {
     const animatedWidth =
@@ -77,7 +119,7 @@ const Register = () => {
       return;
     }
 
-    if (!fullName || !username) {
+    if (!fullName || !username || !gender) {
       setError("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
@@ -85,6 +127,7 @@ const Register = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      
 
       // Salvar fullName e username no Firestore
       await setDoc(doc(db, "users", user.uid), {
@@ -93,6 +136,8 @@ const Register = () => {
         email: email,
         createdAt: new Date(),
         team: "",
+        gender: gender,
+        image: getRandomImage(gender),
       });
 
       console.log("Registo realizado com sucesso!");
@@ -173,6 +218,19 @@ const Register = () => {
               },
             ]}
           />
+        </View>
+
+        {/* Gênero */}
+        <View style={styles.wrapInput}>
+          <Picker
+            selectedValue={gender}
+            style={styles.input}
+            onValueChange={(itemValue) => setGender(itemValue)}
+          >
+            <Picker.Item label="Selecionar Gênero" value="" />
+            <Picker.Item label="Masculino" value="Masculino" />
+            <Picker.Item label="Feminino" value="Feminino" />
+          </Picker>
         </View>
 
         {/* Email */}

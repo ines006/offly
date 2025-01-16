@@ -1,36 +1,31 @@
-import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase/firebaseApi";
+import { doc, getDoc, setDoc, collection } from "firebase/firestore";
+import { auth, db } from "../../firebase/firebaseApi";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSequence,
   withTiming,
-  withRepeat,
-  withDelay,
-  runOnJS,
   Easing,
+  runOnJS,
 } from "react-native-reanimated";
 
-export default function WeeklyChallenge() {
+export default function Descobrir() {
   const router = useRouter();
   const scaleAnimation = useSharedValue(1);
   const rotateAnimation = useSharedValue(0);
-  const [isNavigating, setIsNavigating] = useState(false);
   const [imageURL, setImageURL] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-   
     const fetchImage = async () => {
       try {
         const docRef = doc(db, "shakecarta", "shakeDesafio");
         const docSnap = await getDoc(docRef);
-  
+
         if (docSnap.exists()) {
-          const data = docSnap.data();
-          setImageURL(data.imagem); 
+          setImageURL(docSnap.data().imagem);
         } else {
           console.error("Documento não encontrado!");
         }
@@ -38,12 +33,14 @@ export default function WeeklyChallenge() {
         console.error("Erro ao buscar a imagem:", error);
       }
     };
-  
+
     fetchImage();
   }, []);
 
   const triggerAnimation = () => {
-    setIsNavigating(true);
+    if (isLoading) return; 
+
+    setIsLoading(true);
 
     rotateAnimation.value = withTiming(360, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
       rotateAnimation.value = 0;
@@ -51,13 +48,76 @@ export default function WeeklyChallenge() {
 
     scaleAnimation.value = withTiming(1.5, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
       scaleAnimation.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) }, () => {
-        runOnJS(navigateToWeeklyChallenge)();
+        runOnJS(handleDiscover)();
       });
     });
   };
 
-  const navigateToWeeklyChallenge = () => {
-    router.push("../weekly/challenge");
+  const handleDiscover = async () => {
+    try {
+      const userId = auth.currentUser?.uid;
+
+      if (!userId) {
+        Alert.alert("Erro", "Usuário não está logado.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Buscar o ID da equipe do usuário logado
+      const userDocRef = doc(db, "users", userId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        Alert.alert("Erro", "Usuário não encontrado.");
+        setIsLoading(false);
+        return;
+      }
+
+      const teamName = userDocSnap.data()?.team;
+
+      if (!teamName) {
+        Alert.alert("Erro", "Usuário não pertence a nenhuma equipe.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Buscar os participantes da equipa
+      const teamDocRef = doc(db, "equipas", teamName, "membros", "participantes");
+      const teamDocSnap = await getDoc(teamDocRef);
+
+      if (!teamDocSnap.exists()) {
+        Alert.alert("Erro", "Equipe ou participantes não encontrados.");
+        setIsLoading(false);
+        return;
+      }
+
+      const participants = teamDocSnap.data(); 
+
+      // Adicionar na coleção desafioSemanal
+      const challengeTeamRef = doc(db, "desafioSemanal", "carta1", "equipasDesafio", teamName);
+      await setDoc(challengeTeamRef, {}); // Criar o documento da equipa equipa ao qual o utilizafor pertence
+
+      for (const [key, value] of Object.entries(participants)) {
+        const participantCollectionRef = collection(challengeTeamRef, key); // participante1, participante2, ...
+        const participantDocRef = doc(participantCollectionRef, value); // Nome do participante que está como documento dentro da subcoleção com o participanet(numero do participante)
+
+   
+        const fields = {};
+        for (let i = 1; i <= 7; i++) {
+          fields[i] = false; // Adicionar os campos numerados com valor booleano false de 1 a 7 que são os dias da semana que serão usados no próximo componente 
+        }
+
+        await setDoc(participantDocRef, fields);
+      }
+
+      Alert.alert("Sucesso", "Desafio semanal atualizado com sucesso!");
+      runOnJS(() => router.push("../desafio/desafioSemanal"))(); // Navegar após o sucesso
+    } catch (error) {
+      console.error("Erro ao atualizar desafio semanal:", error);
+      Alert.alert("Erro", "Não foi possível atualizar o desafio semanal.");
+    } finally {
+      setIsLoading(false); 
+    }
   };
 
   const animatedMainCardStyle = useAnimatedStyle(() => ({
@@ -88,8 +148,8 @@ export default function WeeklyChallenge() {
           Descobre o desafio semanal que vais fazer em equipa.
         </Text>
 
-        <TouchableOpacity style={styles.discoverButton} onPress={triggerAnimation}>
-          <Text style={styles.discoverButtonText}>Descobrir</Text>
+        <TouchableOpacity style={styles.discoverButton} onPress={triggerAnimation} disabled={isLoading}>
+          <Text style={styles.discoverButtonText}>{isLoading ? "Carregando..." : "Descobrir"}</Text>
         </TouchableOpacity>
       </View>
     </View>

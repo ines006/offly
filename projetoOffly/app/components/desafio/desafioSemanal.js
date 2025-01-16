@@ -8,77 +8,85 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-const CartaEParticipantes = () => {
+const DesafioSemanal = () => {
   const [participantes, setParticipantes] = useState([]);
+  const [team, setTeam] = useState(null);
   const desafio = "Utiliza o Instagram no máximo 10 minutos por dia";
   const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
-
   const [timer, setTimer] = useState({
     days: 6,
     hours: 23,
     minutes: 59,
   });
 
-  const progress = 85;
-
   useEffect(() => {
-    const fetchParticipantes = async () => {
+    const fetchTeamAndData = async () => {
       try {
-        const participantesList = [];
-        const subCollections = [
-          "participante1",
-          "participante2",
-          "participante3",
-          "participante4",
-          "participante5",
-        ];
+        const auth = getAuth();
+        const userId = auth.currentUser?.uid; // aqui é onde se obtem o id do utilizador logado 
 
-        for (const subCollection of subCollections) {
-          const subCollectionRef = collection(
+        if (!userId) throw new Error("Usuário não está autenticado.");
+
+        // Busca o campo team na coleção users
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (!userDoc.exists()) throw new Error("Usuário não encontrado.");
+
+        const userTeam = userDoc.data().team;
+        setTeam(userTeam);
+
+        // Neste parametro busca os dados a partir do parametro team
+        if (userTeam) {
+          const participantesList = [];
+          const teamDocRef = doc(
             db,
-            "desafioTeste",
-            "equipaId",
-            subCollection
-          );
-          const participantSnapshot = await getDocs(subCollectionRef);
+            "desafioSemanal",
+            "carta1",
+            "equipasDesafio",
+            userTeam
+          ); // Referência para o documento da equipa 
 
-          participantSnapshot.docs.forEach((participantDoc) => {
-            const data = participantDoc.data();
+          const subCollections = ["participante1", "participante2", "participante3", "participante4", "participante5"];
+          for (const subCollection of subCollections) {
+            const subCollectionRef = collection(teamDocRef, subCollection);
+            const participantSnapshot = await getDocs(subCollectionRef);
 
-            const participantInfo = {
-              name: participantDoc.id,
-              status: [1, 2, 3, 4, 5, 6, 7].map((num) =>
-                data && num in data ? data[num] : null // true, false ou null
-              ),
-            };
+            participantSnapshot.docs.forEach((participantDoc) => {
+              const data = participantDoc.data();
+              const participantInfo = {
+                name: participantDoc.id,
+                status: [1, 2, 3, 4, 5, 6, 7].map((num) =>
+                  data && num in data ? data[num] : null // true, false ou null
+                ),
+              };
+              participantesList.push(participantInfo);
+            });
+          }
 
-            participantesList.push(participantInfo);
-          });
+          setParticipantes(participantesList);
         }
-
-        setParticipantes(participantesList);
       } catch (error) {
-        console.error("Erro ao buscar participantes: ", error);
+        console.error("Erro ao buscar dados do Firestore: ", error);
       }
     };
 
-    fetchParticipantes();
+    fetchTeamAndData();
   }, []);
 
-  // Calcular o valor de cada bolinha de acordo com os 100 porcento e dividir pelo numero de participantes a dividir por 7 que são os dias da semana. Isto equivale ao numero de participantes * 7
+  // Calcular o valor de cada bolinha
   const valorPorBolinha = participantes.length
-    ? 100 / (7 * participantes.length) // 100 dividido por (7 vezes o número de participantes)
+    ? 100 / (7 * participantes.length)
     : 0;
 
-  // Calcular o número de bolinhas azuis (status === true) pois só elas é que somam pontos para a barra de progresso
+  // Calcular o número de bolinhas azuis (status === true)
   const bolinhasAzuis = participantes.reduce((total, participante) => {
     const statusTrue = participante.status.filter((status) => status === true).length;
     return total + statusTrue;
   }, 0);
 
-  // Calcular o progresso de acordo com o número de bolinhas em azul vezes o valor de cada bolinha. 
+  // Calcular o progresso
   const progresso = (bolinhasAzuis * valorPorBolinha).toFixed(2);
 
   return (
@@ -138,10 +146,10 @@ const CartaEParticipantes = () => {
                       {
                         backgroundColor:
                           status === true
-                            ? "#263A83" 
+                            ? "#263A83"
                             : status === false
-                            ? "#A9A9A9" 
-                            : "#D3D3D3", 
+                            ? "#A9A9A9"
+                            : "#D3D3D3",
                       },
                     ]}
                   >
@@ -162,10 +170,10 @@ const CartaEParticipantes = () => {
                       {
                         backgroundColor:
                           status === true
-                            ? "#263A83" 
+                            ? "#263A83"
                             : status === false
-                            ? "#A9A9A9" 
-                            : "#D3D3D3", 
+                            ? "#A9A9A9"
+                            : "#D3D3D3",
                       },
                     ]}
                   >
@@ -347,4 +355,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CartaEParticipantes;
+export default DesafioSemanal;

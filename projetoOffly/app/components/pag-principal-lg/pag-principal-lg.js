@@ -95,16 +95,6 @@ export default function Home() {
   
   }, [userId]);
   
-
-  const handleCadernetaPress = () => {
-    router.push('../caderneta/caderneta'); // Navega para o componente Caderneta
-  };
-
-  const handleDesafioPress = () => {
-    router.push({
-      pathname: "../desafio/descobrirDesafio"});
-  };
-  
 // Função para redefinir o status de upload 
 const resetUploadStatus = async () => {
   try {

@@ -71,7 +71,7 @@ const UploadScreen = () => {
   // Função para fechar a modal
   const handleCloseModal = () => {
     setModalVisible(false);
-    router.push("../pag-principal-lg/pag-principal-lg");
+    router.push("../../components/navbar");
   };
 
   // Função para abrir a galeria e selecionar uma imagem

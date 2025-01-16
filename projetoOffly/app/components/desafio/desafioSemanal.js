@@ -5,13 +5,16 @@ import {
   Image,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { useRouter } from "expo-router"
 
 const DesafioSemanal = () => {
+  const router = useRouter();
   const [participantes, setParticipantes] = useState([]);
   const [team, setTeam] = useState(null);
   const desafio = "Utiliza o Instagram no máximo 10 minutos por dia";
@@ -91,6 +94,9 @@ const DesafioSemanal = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push("../../components/navbar")}>
+            <Text style={styles.backButtonText}>&lt;</Text>
+        </TouchableOpacity>
       <Text style={styles.title}>Desafio da Semana</Text>
 
       {/* Timer semanal */}
@@ -352,6 +358,25 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: "#263A83",
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#263A83",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backButtonText: {
+    color: "#263A83",
+    fontSize: 30,
+    alignItems: "center",
+    marginTop: -4,
   },
 });
 

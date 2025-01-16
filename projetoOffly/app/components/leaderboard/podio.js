@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ImageBackground } from "react-native";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
 import { useRouter } from "expo-router";
 
@@ -9,19 +9,35 @@ const PodioPontuacao = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "equipas"), (snapshot) => {
-      const teamsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.id,
-        points: doc.data().pontos,
-        acquired: doc.data().adquiridos,
-        imageUrl: doc.data().imagem, // Adiciona a URL da imagem
-      }));
-
-      setTeams(teamsData.sort((a, b) => b.points - a.points));
-    });
-
-    return () => unsubscribe();
+    const fetchTorneioEquipas = async () => {
+      try {
+        const torneioRef = doc(db, "torneios", "Torneio XPTO"); 
+        const torneioSnap = await getDoc(torneioRef);
+  
+        if (torneioSnap.exists()) {
+          const torneioData = torneioSnap.data();
+          const equipasIds = torneioData.equipas || [];
+  
+          const equipasPromises = equipasIds.map(async (id) => {
+            const equipaRef = doc(db, "equipas", id);
+            const equipaSnap = await getDoc(equipaRef);
+            return {
+              id,
+              name: equipaSnap.data()?.nome || "Desconhecido",
+              points: equipaSnap.data()?.pontos || 0,
+              imageUrl: equipaSnap.data()?.imagem || "https://default-image-url.png",
+            };
+          });
+  
+          const equipasData = await Promise.all(equipasPromises);
+          setTeams(equipasData.sort((a, b) => b.points - a.points));
+        }
+      } catch (error) {
+        console.error("Erro ao buscar equipas do torneio:", error);
+      }
+    };
+  
+    fetchTorneioEquipas();
   }, []);
 
   const Podium = () => (

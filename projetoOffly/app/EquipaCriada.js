@@ -12,7 +12,7 @@ import {
   Botoes_Pagina_principal_Desativado,
   Texto_Botoes_Pagina_principal_Desativado,
 } from "./styles/styles";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, arrayUnion, updateDoc  } from "firebase/firestore";
 import { db } from "./firebase/firebaseApi";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
@@ -110,9 +110,17 @@ export default function EquipaCriada() {
   }
 
   // Função para entrar no torneio
-  const handleTorneio = () => {
-    console.log("redirecionar para torneio")
-    router.push("./components/navbar");
+  const handleTorneio = async () => {
+    try {
+      const torneioRef = doc(db, "torneios", "Torneio XPTO"); 
+      await updateDoc(torneioRef, {
+        equipas: arrayUnion(teamId), 
+      });
+      console.log("Equipa adicionada ao torneio com sucesso!");
+      router.push("./components/navbar");
+    } catch (error) {
+      console.error("Erro ao adicionar equipa ao torneio:", error);
+    }
   };
 
   return (

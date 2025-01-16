@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "expo-router";
 
@@ -23,8 +23,8 @@ const DesafioSemanal = () => {
     minutes: 0,
     seconds: 0,
   });
-  const intervaloRef = useRef(null); // Referência para o intervalo
-  const desafio = "Utiliza o Instagram no máximo 10 minutos por dia";
+  const [desafio, setDesafio] = useState("");
+  const intervaloRef = useRef(null); 
   const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const DesafioSemanal = () => {
 
         if (!userId) {
           console.error("Usuário não autenticado.");
-          return; // Caso o utilizador não esteja autenticado
+          return;
         }
 
         const userDoc = await getDoc(doc(db, "users", userId));
@@ -54,7 +54,13 @@ const DesafioSemanal = () => {
             userTeam
           );
 
-          const subCollections = ["participante1", "participante2", "participante3", "participante4", "participante5"];
+          const subCollections = [
+            "participante1",
+            "participante2",
+            "participante3",
+            "participante4",
+            "participante5",
+          ];
           for (const subCollection of subCollections) {
             const subCollectionRef = collection(teamDocRef, subCollection);
             const participantSnapshot = await getDocs(subCollectionRef);
@@ -78,68 +84,98 @@ const DesafioSemanal = () => {
       }
     };
 
+    const fetchDesafioTexto = async () => {
+      try {
+        const cartaDocRef = doc(db, "desafioSemanal", "carta1");
+        const cartaDoc = await getDoc(cartaDocRef);
+
+        if (!cartaDoc.exists()) throw new Error("Documento de desafio não encontrado.");
+
+        setDesafio(cartaDoc.data()?.cartaDes || "Desafio não encontrado.");
+      } catch (error) {
+        console.error("Erro ao buscar o texto do desafio: ", error);
+      }
+    };
+
     fetchTeamAndData();
+    fetchDesafioTexto();
   }, []);
 
   useEffect(() => {
+    let intervaloId;
+
     const fetchTimerData = async () => {
       try {
         const timerDocRef = doc(db, "desafioSemanal", "carta1", "timer", "timerCarta");
         const timerDoc = await getDoc(timerDocRef);
-  
+
         if (!timerDoc.exists()) throw new Error("Timer não encontrado.");
-  
+
         const timerData = timerDoc.data();
         if (!timerData?.start || !timerData?.end) {
           throw new Error("Dados do timer estão incompletos.");
         }
-  
-        // Converte strings ISO 8601 para objetos Date
+
         const startTime = new Date(timerData.start);
         const endTime = new Date(timerData.end);
-  
+
         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
           throw new Error("As datas do timer são inválidas.");
         }
-  
+
         if (endTime <= startTime) {
           throw new Error("A data de término é anterior ou igual à data de início.");
         }
-  
+
         const updateTimer = () => {
           const now = new Date();
           const timeRemaining = endTime - now;
-  
+
+          console.log("Time remaining (ms):", timeRemaining);
+
           if (timeRemaining <= 0) {
+            console.log("Timer terminou! Atualizando Firestore...");
             setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-            clearInterval(intervaloRef.current); // Para o timer quando o tempo terminar
-        
+
+            // Atualiza o campo 'validada' no Firestore
+            const cartaDocRef = doc(db, "desafioSemanal", "carta1");
+            clearInterval(intervaloId);
+            updateDoc(cartaDocRef, { validada: true })
+              .then(() => console.log("Campo 'validada' atualizado com sucesso!"))
+              .catch((error) =>
+                console.error("Erro ao atualizar o campo 'validada':", error)
+              );
           } else {
             const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+            const hours = Math.floor(
+              (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            );
+            const minutes = Math.floor(
+              (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
+            );
             const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-  
+
+        
             setTimer({ days, hours, minutes, seconds });
           }
         };
-  
-        updateTimer(); // Atualiza o timer imediatamente
-        intervaloRef.current = setInterval(updateTimer, 1000);
+
+        updateTimer();
+        intervaloId = setInterval(updateTimer, 1000);
       } catch (error) {
         console.error("Erro ao buscar ou validar os dados do timer: ", error);
-        setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 }); // Define valores padrão em caso de erro
+        setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
-  
+
     fetchTimerData();
-  
+
     return () => {
-      if (intervaloRef.current) {
-        clearInterval(intervaloRef.current);
+      if (intervaloId) {
+        clearInterval(intervaloId);
       }
     };
-  }, []);
+  }, [desafio]); // Atualiza quando o conteúdo do desafio muda
 
   const valorPorBolinha = participantes.length
     ? 100 / (7 * participantes.length)

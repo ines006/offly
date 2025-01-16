@@ -176,7 +176,7 @@ useEffect(() => {
 
 
   const handleCirclePress = () => {
-    router.push("../uploadScreenTime/UploadScreen");
+    router.push("./uploadScreenTime/UploadScreen");
   };
 
   const handleCadernetaPress = () => {

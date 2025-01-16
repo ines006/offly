@@ -74,6 +74,22 @@ export default function PaginaPrincipal() {
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
   const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
 
+// Array de URLs das imagens p/ equipas ALTERAR!
+// const imageUrls = [
+//   "https://celina05.sirv.com/equipas/equipa1.png",
+//   "https://celina05.sirv.com/equipas/equipa2.png",
+//   "https://celina05.sirv.com/equipas/equipa3.png",
+//   "https://celina05.sirv.com/equipas/equipa4.png",
+//   "https://celina05.sirv.com/equipas/equipa5.png",
+// ];
+
+
+// Função para obter uma URL aleatória
+const getRandomImage = () => {
+  const randomIndex = Math.floor(Math.random() * imageUrls.length);
+  return imageUrls[randomIndex];
+};
+
   // Verificação de utilizador logado
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -175,6 +191,7 @@ export default function PaginaPrincipal() {
         adquiridos: 0,
         pontos: 1000,
         imagem: 'https://celina05.sirv.com/equipas/participante1.png',
+        // imagem: getRandomImage(),
       };
   
       // Criar equipa com ID personalizado

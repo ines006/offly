@@ -97,7 +97,7 @@ const imageTeamUrls = [
 // Array de URLs das imagens p/ users
 // Caso ainda não tenham imagem de perfil (vai uma aleatória)
 const imageUserUrls = [
-  "https://celina05.sirv.com/avatares/avatar4.png",
+    "https://celina05.sirv.com/avatares/avatar4.png",
     "https://celina05.sirv.com/avatares/avatar5.png",
     "https://celina05.sirv.com/avatares/avatar6.png",
     "https://celina05.sirv.com/avatares/avatar9.png",

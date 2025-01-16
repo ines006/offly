@@ -1,35 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Alert } from "react-native";
-import { launchImageLibrary } from "react-native-image-picker";
+import * as ImagePicker from "expo-image-picker";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
-
-// Firebase Imports
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebaseApi";
 
 const UploadScreen = () => {
-
   const router = useRouter();
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
   const [submitVisible, setSubmitVisible] = useState(false); // var de estado que define a visibilidade do botão "Submeter"
   const [modalVisible, setModalVisible] = useState(false); // var de estado que define a visibilidade do modal de sucesso
   const [selectedImage, setSelectedImage] = useState(null); // var de estado que guarda a imagem selecionada
 
-  // Verificação de utilizador logado
+// Verificação de utilizador logado
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
       setUserId(currentUser.uid);
     } else {
-      Alert.alert('Erro', 'Nenhum utilizador logado!');
+      Alert.alert("Erro", "Nenhum utilizador logado!");
     }
   }, []);
 
-  // Função para abrir o botão de submeter
-  const handleButton = () => {
-    setSubmitVisible(true);
-  };
 
   // Função para abrir a modal e submeter dados de upload para a firebase
   const handleSubmit = async () => {
@@ -68,30 +61,30 @@ const UploadScreen = () => {
     }
   };
 
-  // Função para fechar a modal
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    router.push("../../components/navbar");
-  };
 
   // Função para abrir a galeria e selecionar uma imagem
-  const handleSelectImage = () => {
-    const options = {
-      mediaType: "photo",
-      quality: 1,
-    };
+  const handleSelectImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Erro", "Permissão para acessar a galeria negada!");
+      return;
+    }
 
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log("Seleção de imagem cancelada");
-      } else if (response.errorCode) {
-        console.error("Erro ao selecionar imagem:", response.errorMessage);
-      } else {
-        const uri = response.assets[0]?.uri;
-        setSelectedImage(uri);
-        setSubmitVisible(true);
-      }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
     });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+      setSubmitVisible(true);
+    }
+  };
+
+  // Função para abrir o botão de submeter
+  const handleButton = () => {
+    setSubmitVisible(true);
   };
 
   // Função para remover a imagem
@@ -100,6 +93,11 @@ const UploadScreen = () => {
     setSubmitVisible(false);
   };
 
+  // Função para fechar a modal
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    router.push("../../components/navbar");
+  };
 
   return (
     <View style={styles.container}>

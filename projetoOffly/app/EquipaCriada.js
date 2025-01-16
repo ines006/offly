@@ -13,7 +13,7 @@ import {
   Texto_Botoes_Pagina_principal_Desativado,
 } from "./styles/styles";
 import { doc, getDoc, collection, getDocs, arrayUnion, updateDoc  } from "firebase/firestore";
-import { db } from "./firebase/firebaseApi";
+import { db, auth } from "./firebase/firebaseApi";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 
@@ -24,22 +24,38 @@ export default function EquipaCriada() {
   });
 
   const { teamId } = useLocalSearchParams();
-  console.log("Team ID:", teamId);
-  // const teamId  = "Equipa H" // SIMULAÇÃO
   const [teamDetails, setTeamDetails] = useState(null);
   const [participants, setParticipants] = useState([]);
-  const [loading, setLoading] = useState(true);  // Estado para controle do carregamento
+  const [loading, setLoading] = useState(true);  
   const [errorLoading, setErrorLoading] = useState(false);
+  const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
+  const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
+  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
   
   const router = useRouter();
 
    // Array de URLs das imagens p/ users
    const imageUrls = [
-    "https://celina05.sirv.com/equipas/participante1.png",
-    "https://celina05.sirv.com/equipas/participante2.png",
-    "https://celina05.sirv.com/equipas/participante3.png",
-    "https://celina05.sirv.com/equipas/participante4.png",
-    "https://celina05.sirv.com/equipas/participante5.png",
+    "https://celina05.sirv.com/avatares/avatar4.png",
+    "https://celina05.sirv.com/avatares/avatar5.png",
+    "https://celina05.sirv.com/avatares/avatar6.png",
+    "https://celina05.sirv.com/avatares/avatar9.png",
+    "https://celina05.sirv.com/avatares/avatar10.png",
+    "https://celina05.sirv.com/avatares/avatar11.png",
+    "https://celina05.sirv.com/avatares/avatar12.png",
+    "https://celina05.sirv.com/avatares/avatar13.png",
+    "https://celina05.sirv.com/avatares/avatar16.png",
+    "https://celina05.sirv.com/avatares/avatar18.png",
+    "https://celina05.sirv.com/avatares/avatar20.png",
+    "https://celina05.sirv.com/avatares/avatar1.png",
+    "https://celina05.sirv.com/avatares/avatar2.png",
+    "https://celina05.sirv.com/avatares/avatar3.png",
+    "https://celina05.sirv.com/avatares/avatar7.png",
+    "https://celina05.sirv.com/avatares/avatar8.png",
+    "https://celina05.sirv.com/avatares/avatar14.png",
+    "https://celina05.sirv.com/avatares/avatar15.png",
+    "https://celina05.sirv.com/avatares/avatar17.png",
+    "https://celina05.sirv.com/avatares/avatar19.png",
   ];
 
   // Função para obter uma URL aleatória
@@ -48,6 +64,57 @@ export default function EquipaCriada() {
     return imageUrls[randomIndex];
   };
 
+
+  // Verificação de utilizador logado
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUserId(currentUser.uid);
+      console.log('utilizador logado na pag principal', currentUser)
+    } else {
+      Alert.alert('Erro', 'Nenhum utilizador logado!');
+    }
+  }, []);
+
+  // Função para obter o dados do utilizador (imagem)
+    useEffect(() => {
+      const userData = async () => {
+        try {
+          if (!userId) return; 
+          const userDocRef = doc(db, "users", userId); 
+          const docSnap = await getDoc(userDocRef); 
+    
+          if (docSnap.exists()) {
+            const { fullName, image } = docSnap.data();
+            setUserName(fullName);
+
+            if (image) {
+              // Atribuir a imagem existente ao estado
+              setProfileImage(image);
+            } else {
+              // Gerar e atribuir uma nova imagem aleatória
+              const newProfileImage = getRandomImage();
+              setProfileImage(newProfileImage);
+              
+              // Atualizar o documento do utilizador com a nova imagem
+              await updateDoc(userDocRef, { image: newProfileImage });
+            }
+            
+          } else {
+            console.log("Documento do utilizador não encontrado.");
+          }
+  
+        } catch (error) {
+          console.error("Erro", error);
+        }
+      };
+    
+      userData(); 
+    
+    }, [userId]); 
+
+
+  // Dados dos participantes da equipa
   const fetchData = async () => {
     try {
       setErrorLoading(false);
@@ -134,7 +201,12 @@ export default function EquipaCriada() {
     <>
       {participants.map((participant, index) => (
         <View key={index} style={styles.card}>
-          <Image source={{ uri: getRandomImage() }} style={styles.peopleImage} />
+          <Image
+            source={{
+              uri: participant === userName ? profileImage : getRandomImage(),
+            }}
+            style={styles.peopleImage}
+          />
           <Text style={styles.participantText}>{participant}</Text>
         </View>
       ))}

@@ -1,6 +1,6 @@
 import { useFonts } from "expo-font";
 import React, { useState, useEffect } from "react";
-import { Modal, Text, View, Image, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { Modal, Text, View, Image, StyleSheet, ActivityIndicator, Alert, Button } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
@@ -74,6 +74,10 @@ export default function PaginaPrincipal() {
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
   const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
   const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
+
+  //Para entrar na equipa
+  const [selectedEquipaId, setSelectedEquipaId] = useState(null); // ID da equipa selecionada
+  const [modalEquipa, setModalEquipa] = useState(false);
 
 
 // Array de URLs das imagens p/ equipas ALTERAR! CONFIRMAR
@@ -150,35 +154,39 @@ const getRandomImage = (tipo) => {
     }, [userId]); 
 
   // Função para buscar equipas da DB
-  const fetchEquipas = async () => {
-    try {
-      const equipasCollectionRef = collection(db, "equipas");
-      const querySnapshot = await getDocs(equipasCollectionRef);
+const fetchEquipas = async () => {
+  try {
+    const equipasCollectionRef = collection(db, "equipas");
+    const querySnapshot = await getDocs(equipasCollectionRef);
 
-      const equipaData = [];
+    const equipaData = [];
 
-      for (const equipaDoc of querySnapshot.docs) {
-        const equipa = { id: equipaDoc.id, ...equipaDoc.data() };
+    for (const equipaDoc of querySnapshot.docs) {
+      const equipa = { id: equipaDoc.id, ...equipaDoc.data() };
 
-        const membrosCollectionRef = collection(db, `equipas/${equipaDoc.id}/membros`);
-        const membrosSnapshot = await getDocs(membrosCollectionRef);
+      const membrosCollectionRef = collection(db, `equipas/${equipaDoc.id}/membros`);
+      const membrosSnapshot = await getDocs(membrosCollectionRef);
 
-        let currentParticipants = 0;
-        membrosSnapshot.forEach((membroDoc) => {
-          if (membroDoc.id === "participantes") {
-            currentParticipants = Object.keys(membroDoc.data()).length;
-          }
-        });
+      let currentParticipants = 0;
+      membrosSnapshot.forEach((membroDoc) => {
+        if (membroDoc.id === "participantes") {
+          currentParticipants = Object.keys(membroDoc.data()).length;
+        }
+      });
 
+      // Adiciona a equipa somente se a diferença entre o número de participantes e o número atual for 1
+      if (Math.abs(currentParticipants - equipa.numparticipantes) === 1) {
         equipaData.push({ ...equipa, currentParticipants });
       }
-
-      setEquipas(equipaData);
-      setFilteredEquipas(equipaData);
-    } catch (error) {
-      console.error("Erro ao buscar equipas:", error);
     }
-  };
+
+    setEquipas(equipaData);
+    setFilteredEquipas(equipaData);
+  } catch (error) {
+    console.error("Erro ao buscar equipas:", error);
+  }
+};
+
 
   // Carregar equipas ao montar o componente
   useEffect(() => {
@@ -279,6 +287,74 @@ const getRandomImage = (tipo) => {
     }
   };
   
+// Função para entrar numa equipa
+  const handleEntrarnaEquipa = async () => {
+    if (!userId || !selectedEquipaId) return;
+  
+    try {
+      // Obter os dados da equipa
+      const equipaRef = doc(db, "equipas", selectedEquipaId);
+      const equipaDoc = await getDoc(equipaRef);
+      const equipaData = equipaDoc.data();
+  
+      // Verificar o número de participantes atuais
+      const numParticipantes = equipaData.numparticipantes;
+      const membrosRef = collection(equipaRef, "membros");
+      const membrosDoc = await getDoc(doc(membrosRef, "participantes"));
+  
+      const participantes = membrosDoc.data() || {};
+  
+      let newParticipantKey = null;
+      // Identificar qual o campo de participante disponível
+      if (Object.keys(participantes).length < numParticipantes) {
+        for (let i = 1; i <= numParticipantes; i++) {
+          if (!participantes[`participante${i}`]) {
+            newParticipantKey = `participante${i}`;
+            break;
+          }
+        }
+      }
+  
+      if (!newParticipantKey) {
+        Alert.alert("Erro", "Não há espaço disponível para entrar nesta equipa.");
+        return;
+      }
+  
+      // Obter o nome do utilizador
+      const userDocRef = doc(db, "users", userId);
+      const userDocSnap = await getDoc(userDocRef);
+      const userData = userDocSnap.data();
+      const userName = userData.fullName;
+  
+      // Atualizar o campo team no documento do utilizador
+      if (userData.team) {
+        // Caso o campo já exista, atualizar com o novo ID
+        await updateDoc(userDocRef, {
+          team: selectedEquipaId,
+        });
+      } else {
+        // Caso não exista, criar o campo e definir o valor
+        await setDoc(
+          userDocRef,
+          {
+            team: selectedEquipaId,
+          }
+        );
+      }
+  
+      // Adicionar o utilizador como participante na equipa
+      await updateDoc(doc(membrosRef, "participantes"), {
+        [newParticipantKey]: userName,
+      });
+  
+      Alert.alert("Sucesso", `Você entrou na equipa ${equipaData.nome}!`);
+    } catch (error) {
+      console.error("Erro ao entrar na equipa:", error);
+      Alert.alert("Erro", "Não foi possível entrar na equipa.");
+    }
+  };
+  
+  
 
   // Validação dos inputs
   const validateInputs = () => {
@@ -315,6 +391,19 @@ const getRandomImage = (tipo) => {
     }
   };
   
+  const handleNext2 = () => {
+    
+      handleEntrarnaEquipa(); // Chama a função para entrar na equipa no Firebase
+      setModalEquipa(false); // Fechar o modal
+
+      // Passa o ID da equipa como um parâmetro de consulta
+      router.push({
+        pathname: "./EquipaCriada",  
+        params: { teamId: selectedEquipaId },
+      })
+    
+  };
+
 
   const handleButtonClick = (button) => {
     setActiveButton(button);
@@ -326,6 +415,11 @@ const getRandomImage = (tipo) => {
 
   const Criar_Equipa = () => {
     setModalVisible(true);
+  };
+
+  const handleModalEquipa = (id) => {
+    setSelectedEquipaId(id);
+    setModalEquipa(true);
   };
 
   const SearchIcon = () => (
@@ -419,7 +513,7 @@ const getRandomImage = (tipo) => {
         filteredEquipas.slice(0, 4).map((equipa) => (
           <Card_Equipa
             key={equipa.id}
-            onPress={() => console.log(`Selected team: ${equipa.nome}`)}
+            onPress={() => handleModalEquipa(equipa.id)}
             icon={equipa.imagem}
             teamName={equipa.nome}
             playerCount={`${equipa.currentParticipants}/${equipa.numparticipantes}`}
@@ -518,12 +612,49 @@ const getRandomImage = (tipo) => {
                       disabled={isNextDisabled}
                       onPress={handleNext}
                     >
-                      <Texto_Botoes_Pagina_principal>seguinte</Texto_Botoes_Pagina_principal>
+                      <Texto_Botoes_Pagina_principal>Seguinte</Texto_Botoes_Pagina_principal>
                     </Botoes_Pagina_principal>
                   </BotaoNavegacaoContainer>
                 </CaixaQuestionario>
               </View>
             </Modal>
+
+
+            {/* Modal para entrar na equipa */}
+            {/* <Modal animationType="fade" transparent={true} visible={modalVisible}>
+                  <BotaoNavegacaoContainer>
+                    <Botoes_Pagina_principal
+                      style={{ backgroundColor: "transparent" }}
+                      onPress={() => setModalEquipa(false)}
+                    >
+                      <Texto_Botoes_Pagina_principal_Voltar>Voltar</Texto_Botoes_Pagina_principal_Voltar>
+                    </Botoes_Pagina_principal>
+      
+                    <Botoes_Pagina_principal
+                      style={{ backgroundColor: isNextDisabled ? "gray" : "#263A83" }}
+                      disabled={isNextDisabled}
+                      onPress={handleEntrarnaEquipa}
+                    >
+                      <Texto_Botoes_Pagina_principal>Entrar equipa</Texto_Botoes_Pagina_principal>
+                    </Botoes_Pagina_principal>
+                  </BotaoNavegacaoContainer>
+              </Modal> */}
+
+              {modalEquipa && (
+                <Modal
+                  visible={modalEquipa}
+                  animationType="slide"
+                  onRequestClose={() => setModalEquipa(false)}
+                >
+                  <View style={{ marginTop: 50}}>
+                    <Text>Entrar na Equipa</Text>
+                    {/* Restante conteúdo do modal */}
+                    <Button title="Entrar" onPress={handleNext2} />
+                    <Button title="Cancelar" onPress={() => setModalEquipa(false)} />
+                  </View>
+                </Modal>
+              )}
+
     </Container_Pagina_Pricipal>
     </>
   );

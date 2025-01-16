@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,38 +9,41 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { useRouter } from "expo-router"
+import { useRouter } from "expo-router";
 
 const DesafioSemanal = () => {
   const router = useRouter();
   const [participantes, setParticipantes] = useState([]);
   const [team, setTeam] = useState(null);
-  const desafio = "Utiliza o Instagram no máximo 10 minutos por dia";
-  const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
   const [timer, setTimer] = useState({
-    days: 6,
-    hours: 23,
-    minutes: 59,
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
   });
+  const [desafio, setDesafio] = useState("");
+  const intervaloRef = useRef(null); 
+  const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
 
   useEffect(() => {
     const fetchTeamAndData = async () => {
       try {
         const auth = getAuth();
-        const userId = auth.currentUser?.uid; // aqui é onde se obtem o id do utilizador logado 
+        const userId = auth.currentUser?.uid;
 
-        if (!userId) throw new Error("Usuário não está autenticado.");
+        if (!userId) {
+          console.error("Usuário não autenticado.");
+          return;
+        }
 
-        // Busca o campo team na coleção users
         const userDoc = await getDoc(doc(db, "users", userId));
         if (!userDoc.exists()) throw new Error("Usuário não encontrado.");
 
         const userTeam = userDoc.data().team;
         setTeam(userTeam);
 
-        // Neste parametro busca os dados a partir do parametro team
         if (userTeam) {
           const participantesList = [];
           const teamDocRef = doc(
@@ -49,9 +52,15 @@ const DesafioSemanal = () => {
             "carta1",
             "equipasDesafio",
             userTeam
-          ); // Referência para o documento da equipa 
+          );
 
-          const subCollections = ["participante1", "participante2", "participante3", "participante4", "participante5"];
+          const subCollections = [
+            "participante1",
+            "participante2",
+            "participante3",
+            "participante4",
+            "participante5",
+          ];
           for (const subCollection of subCollections) {
             const subCollectionRef = collection(teamDocRef, subCollection);
             const participantSnapshot = await getDocs(subCollectionRef);
@@ -61,7 +70,7 @@ const DesafioSemanal = () => {
               const participantInfo = {
                 name: participantDoc.id,
                 status: [1, 2, 3, 4, 5, 6, 7].map((num) =>
-                  data && num in data ? data[num] : null // true, false ou null
+                  data && num in data ? data[num] : null
                 ),
               };
               participantesList.push(participantInfo);
@@ -75,47 +84,134 @@ const DesafioSemanal = () => {
       }
     };
 
+    const fetchDesafioTexto = async () => {
+      try {
+        const cartaDocRef = doc(db, "desafioSemanal", "carta1");
+        const cartaDoc = await getDoc(cartaDocRef);
+
+        if (!cartaDoc.exists()) throw new Error("Documento de desafio não encontrado.");
+
+        setDesafio(cartaDoc.data()?.cartaDes || "Desafio não encontrado.");
+      } catch (error) {
+        console.error("Erro ao buscar o texto do desafio: ", error);
+      }
+    };
+
     fetchTeamAndData();
+    fetchDesafioTexto();
   }, []);
 
-  // Calcular o valor de cada bolinha
+  useEffect(() => {
+    let intervaloId;
+
+    const fetchTimerData = async () => {
+      try {
+        const timerDocRef = doc(db, "desafioSemanal", "carta1", "timer", "timerCarta");
+        const timerDoc = await getDoc(timerDocRef);
+
+        if (!timerDoc.exists()) throw new Error("Timer não encontrado.");
+
+        const timerData = timerDoc.data();
+        if (!timerData?.start || !timerData?.end) {
+          throw new Error("Dados do timer estão incompletos.");
+        }
+
+        const startTime = new Date(timerData.start);
+        const endTime = new Date(timerData.end);
+
+        if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+          throw new Error("As datas do timer são inválidas.");
+        }
+
+        if (endTime <= startTime) {
+          throw new Error("A data de término é anterior ou igual à data de início.");
+        }
+
+        const updateTimer = () => {
+          const now = new Date();
+          const timeRemaining = endTime - now;
+
+          console.log("Time remaining (ms):", timeRemaining);
+
+          if (timeRemaining <= 0) {
+            console.log("Timer terminou! Atualizando Firestore...");
+            setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+            // Atualiza o campo 'validada' no Firestore
+            const cartaDocRef = doc(db, "desafioSemanal", "carta1");
+            clearInterval(intervaloId);
+            updateDoc(cartaDocRef, { validada: true })
+              .then(() => console.log("Campo 'validada' atualizado com sucesso!"))
+              .catch((error) =>
+                console.error("Erro ao atualizar o campo 'validada':", error)
+              );
+          } else {
+            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor(
+              (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            );
+            const minutes = Math.floor(
+              (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
+            );
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+        
+            setTimer({ days, hours, minutes, seconds });
+          }
+        };
+
+        updateTimer();
+        intervaloId = setInterval(updateTimer, 1000);
+      } catch (error) {
+        console.error("Erro ao buscar ou validar os dados do timer: ", error);
+        setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    fetchTimerData();
+
+    return () => {
+      if (intervaloId) {
+        clearInterval(intervaloId);
+      }
+    };
+  }, [desafio]); // Atualiza quando o conteúdo do desafio muda
+
   const valorPorBolinha = participantes.length
     ? 100 / (7 * participantes.length)
     : 0;
 
-  // Calcular o número de bolinhas azuis (status === true)
   const bolinhasAzuis = participantes.reduce((total, participante) => {
     const statusTrue = participante.status.filter((status) => status === true).length;
     return total + statusTrue;
   }, 0);
 
-  // Calcular o progresso
-  const progresso = (bolinhasAzuis * valorPorBolinha).toFixed(2);
+  const progresso = Math.max(0, Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2)));
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.push("../../components/navbar")}>
-            <Text style={styles.backButtonText}>&lt;</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push("../../components/navbar")}
+      >
+        <Text style={styles.backButtonText}>&lt;</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Desafio da Semana</Text>
 
-      {/* Timer semanal */}
       <View style={styles.timerContainer}>
         <View style={styles.timer}>
           <Text style={styles.timerText}>
-            {timer.days}d {timer.hours}h {timer.minutes}m
+            {timer.days}d {timer.hours}h {timer.minutes}m {timer.seconds}s
           </Text>
         </View>
       </View>
 
-      {/* Carta do desafio */}
       <View style={styles.cardContainer}>
         <View style={styles.mainCard}>
           <Text style={styles.mainDescription}>{desafio}</Text>
         </View>
       </View>
 
-      {/* Barra de progresso */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBarBackground}>
           <LinearGradient
@@ -131,7 +227,6 @@ const DesafioSemanal = () => {
         </View>
       </View>
 
-      {/* Lista de participantes */}
       <View style={styles.participantsContainer}>
         <Text style={styles.participantsTitle}>Participantes</Text>
         {participantes.map((participante, index) => (
@@ -142,7 +237,6 @@ const DesafioSemanal = () => {
             />
             <Text style={styles.participantText}>{participante.name}</Text>
             <View style={styles.circlesWrapper}>
-              {/* Linha de cima com 4 dias */}
               <View style={styles.rowTop}>
                 {participante.status.slice(0, 4).map((status, idx) => (
                   <View
@@ -165,8 +259,6 @@ const DesafioSemanal = () => {
                   </View>
                 ))}
               </View>
-
-              {/* Linha de baixo com 3 dias */}
               <View style={styles.rowBottom}>
                 {participante.status.slice(4).map((status, idx) => (
                   <View

@@ -73,21 +73,31 @@ export default function PaginaPrincipal() {
 
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
   const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
-
-// Array de URLs das imagens p/ equipas ALTERAR!
-// const imageUrls = [
-//   "https://celina05.sirv.com/equipas/equipa1.png",
-//   "https://celina05.sirv.com/equipas/equipa2.png",
-//   "https://celina05.sirv.com/equipas/equipa3.png",
-//   "https://celina05.sirv.com/equipas/equipa4.png",
-//   "https://celina05.sirv.com/equipas/equipa5.png",
-// ];
+  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
 
 
-// Função para obter uma URL aleatória
-const getRandomImage = () => {
-  const randomIndex = Math.floor(Math.random() * imageUrls.length);
-  return imageUrls[randomIndex];
+// Array de URLs das imagens p/ equipas ALTERAR! CONFIRMAR
+const imageTeamUrls = [
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.50.14-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.51.27-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.52.12-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.52.51-removebg-preview.png",
+  "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.53.23-removebg-preview.png",
+];
+
+// Array de URLs das imagens p/ users
+const imageUserUrls = [
+  "https://celina05.sirv.com/equipas/participante1.png",
+  "https://celina05.sirv.com/equipas/participante2.png",
+  "https://celina05.sirv.com/equipas/participante3.png",
+  "https://celina05.sirv.com/equipas/participante4.png",
+  "https://celina05.sirv.com/equipas/participante5.png",
+];
+
+// Função para obter uma URL aleatória 
+const getRandomImage = (tipo) => {
+  const randomIndex = Math.floor(Math.random() * tipo.length);
+  return tipo[randomIndex];
 };
 
   // Verificação de utilizador logado
@@ -110,8 +120,21 @@ const getRandomImage = () => {
           const docSnap = await getDoc(userDocRef); 
     
           if (docSnap.exists()) {
-            const { fullName, team } = docSnap.data();
+            // nome
+            const { fullName, team, image } = docSnap.data();
             setUserName(fullName);
+
+            if (image) {
+              // Atribuir a imagem existente ao estado
+              setProfileImage({ uri: image });
+            } else {
+              // Gerar e atribuir uma nova imagem aleatória
+              const newProfileImage = getRandomImage(imageUserUrls);
+              setProfileImage({ uri: newProfileImage });
+              
+              // Atualizar o documento do utilizador com a nova imagem
+              await updateDoc(userDocRef, { image: newProfileImage });
+            }
             
           } else {
             console.log("Documento do utilizador não encontrado.");
@@ -190,8 +213,7 @@ const getRandomImage = () => {
         visibilidade: activeButton === 'public' ? 'publica' : 'privada',
         adquiridos: 0,
         pontos: 1000,
-        imagem: 'https://celina05.sirv.com/equipas/participante1.png',
-        // imagem: getRandomImage(),
+        imagem: getRandomImage(imageTeamUrls),
       };
   
       // Criar equipa com ID personalizado
@@ -208,6 +230,7 @@ const getRandomImage = () => {
       }
       const userFullName = userDocSnap.data().fullName;
       console.log("Nome do utilizador logado:", userFullName);
+
   
       // Criar coleção 'membros' e documento 'participantes'
       const membrosDocRef = doc(collection(equipaDocRef, "membros"), "participantes");
@@ -297,6 +320,10 @@ const getRandomImage = () => {
     setActiveButton(button);
   };
 
+  const handlePerfil = () => {
+    router.push('./perfil'); 
+  };
+
   const Criar_Equipa = () => {
     setModalVisible(true);
   };
@@ -313,11 +340,9 @@ const getRandomImage = () => {
   return (
 <>
 {/* Perfil */} {/*  para desenrascar meti assim o perfil do user */}
-<ProfileContainer style={{ paddingTop: 65, backgroundColor: "#fff" }}>
+<ProfileContainer onPress={handlePerfil} style={{ paddingTop: 65, backgroundColor: "#fff" }}>
 <Avatar
-  source={{
-    uri: "https://celina05.sirv.com/equipas/participante1.png",
-  }}
+  source={profileImage}
 />
 <ProfileTextContainer>
   <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>

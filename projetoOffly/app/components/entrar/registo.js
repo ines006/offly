@@ -29,6 +29,22 @@ const Register = () => {
 
   const router = useRouter();
 
+
+  // Array de URLs das imagens p/ users
+  const imageUrls = [
+    "https://celina05.sirv.com/equipas/participante1.png",
+    "https://celina05.sirv.com/equipas/participante2.png",
+    "https://celina05.sirv.com/equipas/participante3.png",
+    "https://celina05.sirv.com/equipas/participante4.png",
+    "https://celina05.sirv.com/equipas/participante5.png",
+  ];
+
+  // Função para obter uma URL aleatória
+  const getRandomImage = () => {
+    const randomIndex = Math.floor(Math.random() * imageUrls.length);
+    return imageUrls[randomIndex];
+  };
+
   const handleFocus = (field) => {
     const animatedWidth =
       field === "fullName"
@@ -85,6 +101,7 @@ const Register = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      
 
       // Salvar fullName e username no Firestore
       await setDoc(doc(db, "users", user.uid), {
@@ -93,6 +110,7 @@ const Register = () => {
         email: email,
         createdAt: new Date(),
         team: "",
+        image: getRandomImage(),
       });
 
       console.log("Registo realizado com sucesso!");

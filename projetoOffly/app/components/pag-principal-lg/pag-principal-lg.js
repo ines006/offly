@@ -44,7 +44,22 @@ export default function Home() {
   const [teamId, setTeamId] = useState(""); // var de estado que guarda o id da equipa do utilizador
   const [teamPoints, setTeamPoints] = useState(0); // var de estado que guarda os pontos da equipa
   const [teamMembers, setTeamMembers] = useState(0); // var de estado que guarda o nº de participantes
+  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
 
+  // Array de URLs das imagens p/ users
+const imageUserUrls = [
+  "https://celina05.sirv.com/equipas/participante1.png",
+  "https://celina05.sirv.com/equipas/participante2.png",
+  "https://celina05.sirv.com/equipas/participante3.png",
+  "https://celina05.sirv.com/equipas/participante4.png",
+  "https://celina05.sirv.com/equipas/participante5.png",
+];
+
+// Função para obter uma URL aleatória 
+const getRandomImage = (tipo) => {
+  const randomIndex = Math.floor(Math.random() * tipo.length);
+  return tipo[randomIndex];
+};
 
   // Verificação de utilizador logado
   useEffect(() => {
@@ -66,7 +81,7 @@ export default function Home() {
         const docSnap = await getDoc(userDocRef); 
   
         if (docSnap.exists()) {
-          const { fullName, team } = docSnap.data();
+          const { fullName, team, image } = docSnap.data();
           setUserName(fullName);
           setTeamId(team); 
           
@@ -82,6 +97,19 @@ export default function Home() {
               console.log("Equipa não encontrada.");
             }
           }
+          
+          if (image) {
+            // Atribuir a imagem existente ao estado
+            setProfileImage({ uri: image });
+          } else {
+            // Gerar e atribuir uma nova imagem aleatória
+            const newProfileImage = getRandomImage(imageUserUrls);
+            setProfileImage({ uri: newProfileImage });
+                        
+            // Atualizar o documento do utilizador com a nova imagem
+            await updateDoc(userDocRef, { image: newProfileImage });
+          }
+
         } else {
           console.log("Documento do utilizador não encontrado.");
         }
@@ -187,13 +215,15 @@ useEffect(() => {
     router.push('../../components/desafio/descobrirDesafio'); 
   };
 
+  const handlePerfil = () => {
+    router.push('../../perfil'); 
+  };
+
   return (
     <>
-      <ProfileContainer>
+      <ProfileContainer onPress={handlePerfil}>
         <Avatar
-          source={{
-            uri: "https://celina05.sirv.com/equipas/participante1.png",
-          }}
+            source={profileImage}
         />
         <ProfileTextContainer>
           <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>

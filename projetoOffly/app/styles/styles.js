@@ -405,7 +405,7 @@ export const NomeUtilizador = styled.Text`
 
 //Perfil pag inicial
 
-export const ProfileContainer = styled.View`
+export const ProfileContainer = styled.TouchableOpacity`
   flex-direction: row;
   align-items: center;
   padding: 20px;

@@ -13,7 +13,24 @@ const ProfileScreen = () => {
   const [username, setUsername] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
+  
   const router = useRouter();
+
+  // Array de URLs das imagens p/ users
+const imageUserUrls = [
+  "https://celina05.sirv.com/equipas/participante1.png",
+  "https://celina05.sirv.com/equipas/participante2.png",
+  "https://celina05.sirv.com/equipas/participante3.png",
+  "https://celina05.sirv.com/equipas/participante4.png",
+  "https://celina05.sirv.com/equipas/participante5.png",
+];
+
+// Função para obter uma URL aleatória 
+const getRandomImage = (tipo) => {
+  const randomIndex = Math.floor(Math.random() * tipo.length);
+  return tipo[randomIndex];
+};
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -33,9 +50,22 @@ const ProfileScreen = () => {
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setName(userData.fullName || '');
-            setUsername(userData.username || '');
+            const { fullName, username, image } = userDoc.data();
+            setName(fullName || '');
+            setUsername(username || '');
+
+          if (image) {
+            // Atribuir a imagem existente ao estado
+            setProfileImage({ uri: image });
+          } else {
+            // Gerar e atribuir uma nova imagem aleatória
+            const newProfileImage = getRandomImage(imageUserUrls);
+            setProfileImage({ uri: newProfileImage });
+                        
+            // Atualizar o documento do utilizador com a nova imagem
+            await updateDoc(userDocRef, { image: newProfileImage });
+          }
+
           } else {
             Alert.alert('Erro', 'Usuário não encontrado no Firestore.');
           }
@@ -158,14 +188,14 @@ const ProfileScreen = () => {
   return (
     <Container>
       <Header>
-        <BackButton onPress={() => Alert.alert('Voltar', 'Voltar para a página anterior')}>
+        <BackButton onPress={() => router.back()}>
           <Icon name="arrow-back" size={24} color="#263A83" />
         </BackButton>
         <HeaderTitle>Perfil</HeaderTitle>
       </Header>
 
       <AvatarContainer>
-        <Avatar source={require('../assets/images/avatarperfil.png')} />
+        <Avatar source={profileImage} />
         <LevelText>Nível 1</LevelText>
         <Stars>
           <Icon name="star" size={20} color="#263A83" />

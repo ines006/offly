@@ -410,6 +410,7 @@ export const ProfileContainer = styled.TouchableOpacity`
   align-items: center;
   padding: 20px;
   width: 100%;
+  margin-top: 50;
   align-self: center;
 `;
 
@@ -495,10 +496,10 @@ export const Botoes_Pagina_principal = styled.TouchableOpacity`
 `;
 
 export const Texto_Botoes_Pagina_principal = styled.Text`
-color:white;
-font-family: Poppins-regular;
-font-size: 15px;
-font-weight: 600;
+  color: white;
+  font-family: Poppins-regular;
+  font-size: 15px;
+  font-weight: 600;
 `;
 
 export const Botoes_Pagina_principal_Desativado = styled.View`
@@ -511,45 +512,44 @@ export const Botoes_Pagina_principal_Desativado = styled.View`
   background: #fff;
   margin-top: 23px;
   padding: 7px 31px;
-  border: 1px solid #263A83;
+  border: 1px solid #263a83;
 `;
 
 export const Texto_Botoes_Pagina_principal_Desativado = styled.Text`
-color: #263A83;
-font-family: Poppins-regular;
-font-size: 15px;
-font-weight: 600;
+  color: #263a83;
+  font-family: Poppins-regular;
+  font-size: 15px;
+  font-weight: 600;
 `;
 
 export const Texto_Botoes_Pagina_principal_Voltar = styled.Text`
-color: #414141;
-text-align: justify;
-font-family: poppins-regular;
-font-size: 15px;
-font-weight: 400;
+  color: #414141;
+  text-align: justify;
+  font-family: poppins-regular;
+  font-size: 15px;
+  font-weight: 400;
 `;
 
 export const Caixa_de_texto = styled.TextInput`
-min-width: 280px;
-height: 33px;
-border-radius: 10px;
-border: 1px solid #263a83;
-padding: 10px;
-margin-top:10px;
-color:hsl(0, 0.00%, 0.00%);
-text-align: justify;
-font-family: Poppins-regular;
-font-size: 12px;
-font-weight: 400;
+  min-width: 280px;
+  height: 33px;
+  border-radius: 10px;
+  border: 1px solid #263a83;
+  padding: 10px;
+  margin-top: 10px;
+  color: hsl(0, 0%, 0%);
+  text-align: justify;
+  font-family: Poppins-regular;
+  font-size: 12px;
+  font-weight: 400;
 `;
 
-
 export const Titulos_Criar_Equipa = styled.Text`
-color: #414141;
-font-family: Poppins-regular;
-font-size: 15px;
-font-weight: 400;
-margin-top:20px;
+  color: #414141;
+  font-family: Poppins-regular;
+  font-size: 15px;
+  font-weight: 400;
+  margin-top: 20px;
 `;
 
 export const DropdownContainer = styled.View`
@@ -597,34 +597,34 @@ export const Definir_visibilidade_btn = styled.TouchableOpacity`
   justify-content: center;
   align-items: center;
   border: 1px solid black;
-  border-radius:  10px;
+  border-radius: 10px;
   background: transparent;
   border-color: #263a83;
   opacity: ${(props) => (props.disabled ? 0.5 : 1)};
 `;
 
 export const Texto_Botoes_Definir_Visibilidade = styled.Text`
-color: #263a83;
-text-align: justify;
-font-family: poppins-regular;
-font-size: 15px;
-font-weight: 400;
+  color: #263a83;
+  text-align: justify;
+  font-family: poppins-regular;
+  font-size: 15px;
+  font-weight: 400;
 `;
 // PESQUISAR EQUIPAS
 
 export const SearchBarContainer = styled.View`
   flex-direction: row;
-display: flex;
-width: 330px;
-height: 49px;
-padding: 7px 15px;
-align-items: center;
-gap: 10px;
- 
-border-radius: 10px;
-border: 1px solid #263A83;
-margin-top: 24px;
-margin-bottom: 29px;
+  display: flex;
+  width: 330px;
+  height: 49px;
+  padding: 7px 15px;
+  align-items: center;
+  gap: 10px;
+
+  border-radius: 10px;
+  border: 1px solid #263a83;
+  margin-top: 24px;
+  margin-bottom: 29px;
 `;
 
 export const SearchInput = styled.TextInput`
@@ -646,12 +646,12 @@ export const Container_Pagina_Equipa_Criada = styled.View`
 
 // Titulos Criar Equipa
 export const Titulos_Equipa_Criada = styled.Text`
-color: #263A83;
-font-family: Poppins-regular;
-font-size: 15px;
-font-weight: 800;
-margin-top:20px;
- align-self: center;
+  color: #263a83;
+  font-family: Poppins-regular;
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 20px;
+  align-self: center;
 `;
 
 // Sub Titulos Criar Equipa
@@ -667,7 +667,7 @@ export const Sub_Titulos_Criar_Equipa = styled.Text`
 // Container participantes
 export const Member_Container = styled.View`
   flex: 1;
-  background-color: #263A83;
+  background-color: #263a83;
   border-radius: 20px;
   align-items: center;
   justify-content: center;
@@ -685,7 +685,7 @@ export const Member_Card = styled.View`
   width: 330px;
   margin-vertical: 8px;
   margin-horizontal: 10px;
-  background-color: #263A83;
+  background-color: #263a83;
   border-radius: 20px;
   align-items: center;
   text-align: center;
@@ -710,10 +710,9 @@ export const Member_Text = styled.Text`
   font-weight: bold;
 `;
 
-
 export const NoMember_Container = styled.View`
   flex: 1;
-  background-color: #E6EAF2;
+  background-color: #e6eaf2;
   border-radius: 20px;
   align-items: center;
   justify-content: center;
@@ -726,7 +725,7 @@ export const NoMember_Container = styled.View`
 
 export const NoMember_Text = styled.Text`
   font-size: 30px;
-  color: #263A83;
+  color: #263a83;
   letter-spacing: 5px;
   font-weight: bold;
 `;
@@ -735,9 +734,9 @@ export const NoMember_Text = styled.Text`
 export const Caixa_Equipa_Criada = styled.View`
   width: 329px;
   border-radius: 20px;
-  background-color: #F1F1F1;
+  background-color: #f1f1f1;
   padding: 20px;
   margin-top: 29.61px;
   justify-content: space-between;
-   align-items: center;
+  align-items: center;
 `;

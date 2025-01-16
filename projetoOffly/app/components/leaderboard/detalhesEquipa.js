@@ -11,7 +11,7 @@ import {
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
 import { useRouter, useLocalSearchParams } from "expo-router";
-
+import { Svg, Circle, Path } from "react-native-svg";
 
 const DetalhesEquipa = () => {
   const { teamId } = useLocalSearchParams();
@@ -22,7 +22,7 @@ const DetalhesEquipa = () => {
 
   const handlePress = () => {
     // Navega para a página da Caderneta
-    router.push('../caderneta/caderneta'); // Supondo que a página se chame 'caderneta.js'
+    router.push("../caderneta/caderneta"); // Supondo que a página se chame 'caderneta.js'
   };
 
   // Array de URLs das imagens p/ users
@@ -40,7 +40,6 @@ const DetalhesEquipa = () => {
     return imageUrls[randomIndex];
   };
 
-
   useEffect(() => {
     const fetchTeamDetails = async () => {
       try {
@@ -55,7 +54,13 @@ const DetalhesEquipa = () => {
         }
 
         // Aqui busca os participantes na subcoleção 'membros/participantes' (firsebase/firestore da Celina)
-        const participantsRef = doc(db, "equipas", teamId, "membros", "participantes");
+        const participantsRef = doc(
+          db,
+          "equipas",
+          teamId,
+          "membros",
+          "participantes"
+        );
         const participantsSnap = await getDoc(participantsRef);
 
         if (participantsSnap.exists()) {
@@ -88,60 +93,78 @@ const DetalhesEquipa = () => {
   if (!teamDetails) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Detalhes da equipa não encontrados.</Text>
+        <Text style={styles.errorText}>
+          Detalhes da equipa não encontrados.
+        </Text>
       </View>
     );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>&lt;</Text>
-        </TouchableOpacity>
-        
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Text style={styles.backButtonText}>
+          <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+            <Circle
+              cx="18.1351"
+              cy="17.1713"
+              r="16.0177"
+              stroke="#263A83"
+              strokeWidth={2}
+            />
+            <Path
+              d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+              stroke="#263A83"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </Svg>
+        </Text>
+      </TouchableOpacity>
 
       <Text style={styles.title}>Torneio XPTO</Text>
 
       <View style={styles.info}>
         <Image
-                source={require("../../imagens/1.png")} 
-                style={styles.teamImage}/>
+          source={require("../../imagens/1.png")}
+          style={styles.teamImage}
+        />
 
         <View style={styles.textContainer}>
-            <Text style={styles.labelnome}>
-            {teamId}
-            </Text>
-            <Text style={styles.labelpontos}>
-            {teamDetails.pontos} pontos
-            </Text>
+          <Text style={styles.labelnome}>{teamId}</Text>
+          <Text style={styles.labelpontos}>{teamDetails.pontos} pontos</Text>
         </View>
       </View>
 
-
       <View style={styles.buttonContainer}>
-      <TouchableOpacity style={styles.button} onPress={handlePress}>
+        <TouchableOpacity style={styles.button} onPress={handlePress}>
           <Text style={styles.buttonText}>Ver Caderneta</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={() => console.log("Ir para Desafio Semanal")}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => console.log("Ir para Desafio Semanal")}
+        >
           <Text style={styles.buttonText}>Ver Desafio Semanal</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.remainingTeamsContainer}>
-      {participants.length > 0 ? (
-        participants.map((participant, index) => (
-          <View key={index} style={styles.card}>
-            <Image
-                source={{ uri: getRandomImage() }} 
-                style={styles.peopleImage}/>
-            <Text style={styles.participantText}>{participant}</Text>
-          </View>
-        ))
-      ) : (
-        <Text style={styles.noParticipants}>Nenhum participante encontrado.</Text>
-      )}
+        {participants.length > 0 ? (
+          participants.map((participant, index) => (
+            <View key={index} style={styles.card}>
+              <Image
+                source={{ uri: getRandomImage() }}
+                style={styles.peopleImage}
+              />
+              <Text style={styles.participantText}>{participant}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noParticipants}>
+            Nenhum participante encontrado.
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -150,26 +173,19 @@ const DetalhesEquipa = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    marginTop: 50,
   },
   backButton: {
     position: "absolute",
-    top: 40, 
-    left: 20,
+    top: 40,
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "transparent", 
-    borderWidth: 2, 
-    borderColor: "#263A83", 
+    left: 25,
+    borderRadius: 25,
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  backButtonText: {
-    color: "#263A83", 
-    fontSize: 30,
-    alignItems: "center",
-    marginTop:-4,
+    zIndex: 999,
   },
 
   loaderContainer: {
@@ -192,7 +208,7 @@ const styles = StyleSheet.create({
     color: "#263A83",
     textAlign: "center",
     marginTop: 27,
-    marginBottom:30,
+    marginBottom: 30,
   },
   labelnome: {
     fontSize: 19,
@@ -270,16 +286,16 @@ const styles = StyleSheet.create({
   },
   remainingTeamsContainer: {
     flex: 1,
-    backgroundColor: "#D2E9FF", 
+    backgroundColor: "#D2E9FF",
     borderRadius: 20,
-    alignItems: "center", 
-    justifyContent: "center", 
+    alignItems: "center",
+    justifyContent: "center",
     paddingTop: 15,
     paddingBottom: 15,
     width: 370,
-    alignSelf: "center", 
-    marginTop: 30, 
-    marginBottom: 30, 
+    alignSelf: "center",
+    marginTop: 30,
+    marginBottom: 30,
   },
   teamImage: {
     width: 90,
@@ -287,14 +303,14 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   info: {
-    flexDirection: "row", 
-    alignItems: "center", 
-    padding: 10, 
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
   },
   textContainer: {
-    flexDirection: "column", 
+    flexDirection: "column",
     marginLeft: 10,
-    marginTop:10,
+    marginTop: 10,
   },
   peopleImage: {
     width: 60,

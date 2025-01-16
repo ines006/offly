@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../../firebase/firebaseApi"; 
+import { auth, db } from "../../firebase/firebaseApi";
 import {
   StyleSheet,
   View,
@@ -17,7 +17,7 @@ import { doc, setDoc } from "firebase/firestore";
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
-  const [gender, setGender] = useState(""); 
+  const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,19 +45,18 @@ const Register = () => {
     "https://celina05.sirv.com/avatares/avatar18.png",
     "https://celina05.sirv.com/avatares/avatar20.png",
   ];
-  
 
-const imageUserBoy = [
-  "https://celina05.sirv.com/avatares/avatar1.png",
-  "https://celina05.sirv.com/avatares/avatar2.png",
-  "https://celina05.sirv.com/avatares/avatar3.png",
-  "https://celina05.sirv.com/avatares/avatar7.png",
-  "https://celina05.sirv.com/avatares/avatar8.png",
-  "https://celina05.sirv.com/avatares/avatar14.png",
-  "https://celina05.sirv.com/avatares/avatar15.png",
-  "https://celina05.sirv.com/avatares/avatar17.png",
-  "https://celina05.sirv.com/avatares/avatar19.png",
-];
+  const imageUserBoy = [
+    "https://celina05.sirv.com/avatares/avatar1.png",
+    "https://celina05.sirv.com/avatares/avatar2.png",
+    "https://celina05.sirv.com/avatares/avatar3.png",
+    "https://celina05.sirv.com/avatares/avatar7.png",
+    "https://celina05.sirv.com/avatares/avatar8.png",
+    "https://celina05.sirv.com/avatares/avatar14.png",
+    "https://celina05.sirv.com/avatares/avatar15.png",
+    "https://celina05.sirv.com/avatares/avatar17.png",
+    "https://celina05.sirv.com/avatares/avatar19.png",
+  ];
 
   // Função para obter uma imagem aleatória com base no gênero
   const getRandomImage = (gender) => {
@@ -125,9 +124,12 @@ const imageUserBoy = [
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
-      
 
       // Salvar fullName e username no Firestore
       await setDoc(doc(db, "users", user.uid), {

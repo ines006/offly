@@ -9,9 +9,16 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
-import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "expo-router";
+import { Svg, Circle, Path } from "react-native-svg";
 
 const DesafioSemanal = () => {
   const router = useRouter();
@@ -24,7 +31,7 @@ const DesafioSemanal = () => {
     seconds: 0,
   });
   const [desafio, setDesafio] = useState("");
-  const intervaloRef = useRef(null); 
+  const intervaloRef = useRef(null);
   const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
 
   useEffect(() => {
@@ -89,7 +96,8 @@ const DesafioSemanal = () => {
         const cartaDocRef = doc(db, "desafioSemanal", "carta1");
         const cartaDoc = await getDoc(cartaDocRef);
 
-        if (!cartaDoc.exists()) throw new Error("Documento de desafio não encontrado.");
+        if (!cartaDoc.exists())
+          throw new Error("Documento de desafio não encontrado.");
 
         setDesafio(cartaDoc.data()?.cartaDes || "Desafio não encontrado.");
       } catch (error) {
@@ -106,7 +114,13 @@ const DesafioSemanal = () => {
 
     const fetchTimerData = async () => {
       try {
-        const timerDocRef = doc(db, "desafioSemanal", "carta1", "timer", "timerCarta");
+        const timerDocRef = doc(
+          db,
+          "desafioSemanal",
+          "carta1",
+          "timer",
+          "timerCarta"
+        );
         const timerDoc = await getDoc(timerDocRef);
 
         if (!timerDoc.exists()) throw new Error("Timer não encontrado.");
@@ -124,7 +138,9 @@ const DesafioSemanal = () => {
         }
 
         if (endTime <= startTime) {
-          throw new Error("A data de término é anterior ou igual à data de início.");
+          throw new Error(
+            "A data de término é anterior ou igual à data de início."
+          );
         }
 
         const updateTimer = () => {
@@ -141,7 +157,9 @@ const DesafioSemanal = () => {
             const cartaDocRef = doc(db, "desafioSemanal", "carta1");
             clearInterval(intervaloId);
             updateDoc(cartaDocRef, { validada: true })
-              .then(() => console.log("Campo 'validada' atualizado com sucesso!"))
+              .then(() =>
+                console.log("Campo 'validada' atualizado com sucesso!")
+              )
               .catch((error) =>
                 console.error("Erro ao atualizar o campo 'validada':", error)
               );
@@ -155,7 +173,6 @@ const DesafioSemanal = () => {
             );
             const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-        
             setTimer({ days, hours, minutes, seconds });
           }
         };
@@ -182,11 +199,16 @@ const DesafioSemanal = () => {
     : 0;
 
   const bolinhasAzuis = participantes.reduce((total, participante) => {
-    const statusTrue = participante.status.filter((status) => status === true).length;
+    const statusTrue = participante.status.filter(
+      (status) => status === true
+    ).length;
     return total + statusTrue;
   }, 0);
 
-  const progresso = Math.max(0, Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2)));
+  const progresso = Math.max(
+    0,
+    Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2))
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -194,7 +216,21 @@ const DesafioSemanal = () => {
         style={styles.backButton}
         onPress={() => router.push("../../components/navbar")}
       >
-        <Text style={styles.backButtonText}>&lt;</Text>
+        <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+          <Circle
+            cx="18.1351"
+            cy="17.1713"
+            r="16.0177"
+            stroke="#263A83"
+            strokeWidth={2}
+          />
+          <Path
+            d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+            stroke="#263A83"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
       </TouchableOpacity>
       <Text style={styles.title}>Desafio da Semana</Text>
 
@@ -220,9 +256,7 @@ const DesafioSemanal = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Text style={styles.progressTextInside}>
-              {progresso}/100
-            </Text>
+            <Text style={styles.progressTextInside}>{progresso}/100</Text>
           </LinearGradient>
         </View>
       </View>
@@ -253,9 +287,7 @@ const DesafioSemanal = () => {
                       },
                     ]}
                   >
-                    <Text style={styles.circleText}>
-                      {diasDaSemana[idx]}
-                    </Text>
+                    <Text style={styles.circleText}>{diasDaSemana[idx]}</Text>
                   </View>
                 ))}
               </View>
@@ -294,6 +326,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 16,
     backgroundColor: "white",
+    paddingTop: 50,
   },
   timerContainer: {
     alignItems: "center",
@@ -453,16 +486,16 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: "absolute",
-    top: 40,
+    top: 65,
     left: 20,
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: "transparent",
-    borderWidth: 2,
     borderColor: "#263A83",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 999,
   },
   backButtonText: {
     color: "#263A83",

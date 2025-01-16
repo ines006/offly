@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components/native";
-import { Alert } from "react-native";
+import { Alert, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -184,15 +184,20 @@ useEffect(() => {
   const handleDesafioPress = () => {
     router.push("../../components/desafio/verificarDesafio");
   };
+  const handlePerfilPress = () =>{
+    router.push("../../perfil")
+  }
 
   return (
     <>
-      <ProfileContainer>
-        <Avatar
+      <ProfileContainer onPress={() => handlePerfilPress()}> 
+      <TouchableOpacity onPress={() => router.push("../../perfil")}>
+        <Avatar 
           source={{
             uri: "https://celina05.sirv.com/equipas/participante1.png",
           }}
         />
+      </TouchableOpacity>
         <ProfileTextContainer>
           <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>
           <StarsContainer>

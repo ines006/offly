@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Alert } from 'react-native';
+import { Alert, TouchableOpacity } from 'react-native';
 import { auth, db } from './firebase/firebaseApi';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
@@ -158,8 +158,8 @@ const ProfileScreen = () => {
   return (
     <Container>
       <Header>
-        <BackButton onPress={() => Alert.alert('Voltar', 'Voltar para a página anterior')}>
-          <Icon name="arrow-back" size={24} color="#263A83" />
+        <BackButton onPress={() => router.back()}>
+            <Icon name="arrow-back" size={24} color="#263A83" />
         </BackButton>
         <HeaderTitle>Perfil</HeaderTitle>
       </Header>
@@ -235,8 +235,17 @@ const Header = styled.View`
   margin-bottom: 20px;
 `;
 
-const BackButton = styled.TouchableOpacity`
-  margin-right: 10px;
+const BackButton = styled(TouchableOpacity)`
+position: absolute;
+top: 40px;
+left: 20px;
+width: 40px;
+height: 40px;
+border-radius: 20px;
+background-color: transparent;
+border: 2px solid #263A83;
+justify-content: center;
+align-items: center;
 `;
 
 const HeaderTitle = styled.Text`

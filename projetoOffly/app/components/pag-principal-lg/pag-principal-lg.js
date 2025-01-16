@@ -182,8 +182,8 @@ useEffect(() => {
   };
 
   const handleDesafioPress = () => {
-    router.push('../../components/desafio/descobrirDesafio'); 
-  };
+    router.push("../../components/desafio/verificarDesafio");
+  };
 
   return (
     <>

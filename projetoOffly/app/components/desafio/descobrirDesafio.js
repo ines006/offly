@@ -38,7 +38,7 @@ export default function Descobrir() {
   }, []);
 
   const triggerAnimation = () => {
-    if (isLoading) return; 
+    if (isLoading) return;
 
     setIsLoading(true);
 
@@ -81,6 +81,27 @@ export default function Descobrir() {
         return;
       }
 
+      // Função para encontrar a próxima carta não validada
+      const getNextUnvalidatedCard = async () => {
+        for (let i = 0; i < 10; i++) { // Considerando que pode haver até 10 cartas (carta0 até carta9)
+          const cardDocRef = doc(db, "desafioSemanal", `carta${i}`);
+          const cardDocSnap = await getDoc(cardDocRef);
+
+          if (!cardDocSnap.exists() || !cardDocSnap.data()?.validada) {
+            return `carta${i}`; // Retorna o nome da próxima carta não validada
+          }
+        }
+        return null; // Todas as cartas estão validadas
+      };
+
+      const nextCard = await getNextUnvalidatedCard();
+
+      if (!nextCard) {
+        Alert.alert("Erro", "Todas as cartas já foram validadas!");
+        setIsLoading(false);
+        return;
+      }
+
       // Buscar os participantes da equipa
       const teamDocRef = doc(db, "equipas", teamName, "membros", "participantes");
       const teamDocSnap = await getDoc(teamDocRef);
@@ -91,20 +112,19 @@ export default function Descobrir() {
         return;
       }
 
-      const participants = teamDocSnap.data(); 
+      const participants = teamDocSnap.data();
 
-      // Adicionar na coleção desafioSemanal
-      const challengeTeamRef = doc(db, "desafioSemanal", "carta1", "equipasDesafio", teamName);
-      await setDoc(challengeTeamRef, {}); // Criar o documento da equipa equipa ao qual o utilizafor pertence
+      // Adicionar na próxima carta não validada
+      const challengeTeamRef = doc(db, "desafioSemanal", nextCard, "equipasDesafio", teamName);
+      await setDoc(challengeTeamRef, {}); // Criar o documento da equipa ao qual o utilizador pertence
 
       for (const [key, value] of Object.entries(participants)) {
         const participantCollectionRef = collection(challengeTeamRef, key); // participante1, participante2, ...
-        const participantDocRef = doc(participantCollectionRef, value); // Nome do participante que está como documento dentro da subcoleção com o participanet(numero do participante)
+        const participantDocRef = doc(participantCollectionRef, value); // Nome do participante que está como documento dentro da subcoleção com o participante (número do participante)
 
-   
         const fields = {};
         for (let i = 1; i <= 7; i++) {
-          fields[i] = false; // Adicionar os campos numerados com valor booleano false de 1 a 7 que são os dias da semana que serão usados no próximo componente 
+          fields[i] = false; // Adicionar os campos numerados com valor booleano false de 1 a 7 que são os dias da semana
         }
 
         await setDoc(participantDocRef, fields);
@@ -127,7 +147,7 @@ export default function Descobrir() {
       console.error("Erro ao atualizar desafio semanal:", error);
       Alert.alert("Erro", "Não foi possível atualizar o desafio semanal.");
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   };
 

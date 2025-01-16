@@ -9,16 +9,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-} from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "expo-router";
-import { Svg, Circle, Path } from "react-native-svg";
 
 const DesafioSemanal = () => {
   const router = useRouter();
@@ -31,11 +24,33 @@ const DesafioSemanal = () => {
     seconds: 0,
   });
   const [desafio, setDesafio] = useState("");
+  const [currentCarta, setCurrentCarta] = useState(null); // Carta sendo renderizada
   const intervaloRef = useRef(null);
   const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
 
   useEffect(() => {
-    const fetchTeamAndData = async () => {
+    const fetchCurrentCarta = async () => {
+      try {
+        const cartasSnapshot = await getDocs(collection(db, "desafioSemanal"));
+        const cartas = cartasSnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => a.id.localeCompare(b.id));
+
+        const cartaToRender = cartas.find((carta) => !carta.validada);
+        if (cartaToRender) {
+          setCurrentCarta(cartaToRender);
+          setDesafio(cartaToRender.cartades || "Desafio não encontrado.");
+          fetchTeamAndParticipants(cartaToRender.id);
+          fetchTimerData(cartaToRender.id);
+        } else {
+          console.log("Todas as cartas estão validadas.");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar cartas: ", error);
+      }
+    };
+
+    const fetchTeamAndParticipants = async (cartaId) => {
       try {
         const auth = getAuth();
         const userId = auth.currentUser?.uid;
@@ -56,7 +71,7 @@ const DesafioSemanal = () => {
           const teamDocRef = doc(
             db,
             "desafioSemanal",
-            "carta1",
+            cartaId,
             "equipasDesafio",
             userTeam
           );
@@ -87,40 +102,13 @@ const DesafioSemanal = () => {
           setParticipantes(participantesList);
         }
       } catch (error) {
-        console.error("Erro ao buscar dados do Firestore: ", error);
+        console.error("Erro ao buscar dados dos participantes: ", error);
       }
     };
 
-    const fetchDesafioTexto = async () => {
+    const fetchTimerData = async (cartaId) => {
       try {
-        const cartaDocRef = doc(db, "desafioSemanal", "carta1");
-        const cartaDoc = await getDoc(cartaDocRef);
-
-        if (!cartaDoc.exists())
-          throw new Error("Documento de desafio não encontrado.");
-
-        setDesafio(cartaDoc.data()?.cartaDes || "Desafio não encontrado.");
-      } catch (error) {
-        console.error("Erro ao buscar o texto do desafio: ", error);
-      }
-    };
-
-    fetchTeamAndData();
-    fetchDesafioTexto();
-  }, []);
-
-  useEffect(() => {
-    let intervaloId;
-
-    const fetchTimerData = async () => {
-      try {
-        const timerDocRef = doc(
-          db,
-          "desafioSemanal",
-          "carta1",
-          "timer",
-          "timerCarta"
-        );
+        const timerDocRef = doc(db, "desafioSemanal", cartaId, "timer", "timerCarta");
         const timerDoc = await getDoc(timerDocRef);
 
         if (!timerDoc.exists()) throw new Error("Timer não encontrado.");
@@ -138,28 +126,22 @@ const DesafioSemanal = () => {
         }
 
         if (endTime <= startTime) {
-          throw new Error(
-            "A data de término é anterior ou igual à data de início."
-          );
+          throw new Error("A data de término é anterior ou igual à data de início.");
         }
 
         const updateTimer = () => {
           const now = new Date();
           const timeRemaining = endTime - now;
 
-          console.log("Time remaining (ms):", timeRemaining);
-
           if (timeRemaining <= 0) {
             console.log("Timer terminou! Atualizando Firestore...");
             setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
             // Atualiza o campo 'validada' no Firestore
-            const cartaDocRef = doc(db, "desafioSemanal", "carta1");
-            clearInterval(intervaloId);
+            const cartaDocRef = doc(db, "desafioSemanal", cartaId);
+            clearInterval(intervaloRef.current);
             updateDoc(cartaDocRef, { validada: true })
-              .then(() =>
-                console.log("Campo 'validada' atualizado com sucesso!")
-              )
+              .then(() => console.log("Campo 'validada' atualizado com sucesso!"))
               .catch((error) =>
                 console.error("Erro ao atualizar o campo 'validada':", error)
               );
@@ -178,37 +160,32 @@ const DesafioSemanal = () => {
         };
 
         updateTimer();
-        intervaloId = setInterval(updateTimer, 1000);
+        intervaloRef.current = setInterval(updateTimer, 1000);
       } catch (error) {
         console.error("Erro ao buscar ou validar os dados do timer: ", error);
         setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
-    fetchTimerData();
+    fetchCurrentCarta();
 
     return () => {
-      if (intervaloId) {
-        clearInterval(intervaloId);
+      if (intervaloRef.current) {
+        clearInterval(intervaloRef.current);
       }
     };
-  }, [desafio]); // Atualiza quando o conteúdo do desafio muda
+  }, []);
 
   const valorPorBolinha = participantes.length
     ? 100 / (7 * participantes.length)
     : 0;
 
   const bolinhasAzuis = participantes.reduce((total, participante) => {
-    const statusTrue = participante.status.filter(
-      (status) => status === true
-    ).length;
+    const statusTrue = participante.status.filter((status) => status === true).length;
     return total + statusTrue;
   }, 0);
 
-  const progresso = Math.max(
-    0,
-    Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2))
-  );
+  const progresso = Math.max(0, Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2)));
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -216,107 +193,101 @@ const DesafioSemanal = () => {
         style={styles.backButton}
         onPress={() => router.push("../../components/navbar")}
       >
-        <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
-          <Circle
-            cx="18.1351"
-            cy="17.1713"
-            r="16.0177"
-            stroke="#263A83"
-            strokeWidth={2}
-          />
-          <Path
-            d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
-            stroke="#263A83"
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-        </Svg>
+        <Text style={styles.backButtonText}>&lt;</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Desafio da Semana</Text>
 
-      <View style={styles.timerContainer}>
-        <View style={styles.timer}>
-          <Text style={styles.timerText}>
-            {timer.days}d {timer.hours}h {timer.minutes}m {timer.seconds}s
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.cardContainer}>
-        <View style={styles.mainCard}>
-          <Text style={styles.mainDescription}>{desafio}</Text>
-        </View>
-      </View>
-
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBarBackground}>
-          <LinearGradient
-            colors={["rgba(38, 58, 131, 1)", "rgba(38, 58, 131, 0)"]}
-            style={[styles.progressBar, { width: `${progresso}%` }]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.progressTextInside}>{progresso}/100</Text>
-          </LinearGradient>
-        </View>
-      </View>
-
-      <View style={styles.participantsContainer}>
-        <Text style={styles.participantsTitle}>Participantes</Text>
-        {participantes.map((participante, index) => (
-          <View key={index} style={styles.card}>
-            <Image
-              source={require("../../imagens/2.png")}
-              style={styles.peopleImage}
-            />
-            <Text style={styles.participantText}>{participante.name}</Text>
-            <View style={styles.circlesWrapper}>
-              <View style={styles.rowTop}>
-                {participante.status.slice(0, 4).map((status, idx) => (
-                  <View
-                    key={`top-${idx}`}
-                    style={[
-                      styles.circle,
-                      {
-                        backgroundColor:
-                          status === true
-                            ? "#263A83"
-                            : status === false
-                            ? "#A9A9A9"
-                            : "#D3D3D3",
-                      },
-                    ]}
-                  >
-                    <Text style={styles.circleText}>{diasDaSemana[idx]}</Text>
-                  </View>
-                ))}
-              </View>
-              <View style={styles.rowBottom}>
-                {participante.status.slice(4).map((status, idx) => (
-                  <View
-                    key={`bottom-${idx}`}
-                    style={[
-                      styles.circle,
-                      {
-                        backgroundColor:
-                          status === true
-                            ? "#263A83"
-                            : status === false
-                            ? "#A9A9A9"
-                            : "#D3D3D3",
-                      },
-                    ]}
-                  >
-                    <Text style={styles.circleText}>
-                      {diasDaSemana[idx + 4]}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+      {currentCarta ? (
+        <>
+          <View style={styles.timerContainer}>
+            <View style={styles.timer}>
+              <Text style={styles.timerText}>
+                {timer.days}d {timer.hours}h {timer.minutes}m {timer.seconds}s
+              </Text>
             </View>
           </View>
-        ))}
-      </View>
+
+          <View style={styles.cardContainer}>
+            <View style={styles.mainCard}>
+              <Text style={styles.mainDescription}>{desafio}</Text>
+            </View>
+          </View>
+
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBarBackground}>
+              <LinearGradient
+                colors={["rgba(38, 58, 131, 1)", "rgba(38, 58, 131, 0)"]}
+                style={[styles.progressBar, { width: `${progresso}%` }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.progressTextInside}>{progresso}/100</Text>
+              </LinearGradient>
+            </View>
+          </View>
+
+          <View style={styles.participantsContainer}>
+            <Text style={styles.participantsTitle}>Participantes</Text>
+            {participantes.map((participante, index) => (
+              <View key={index} style={styles.card}>
+                <Image
+                  source={require("../../imagens/2.png")}
+                  style={styles.peopleImage}
+                />
+                <Text style={styles.participantText}>{participante.name}</Text>
+                <View style={styles.circlesWrapper}>
+                  <View style={styles.rowTop}>
+                    {participante.status.slice(0, 4).map((status, idx) => (
+                      <View
+                        key={`top-${idx}`}
+                        style={[
+                          styles.circle,
+                          {
+                            backgroundColor:
+                              status === true
+                                ? "#263A83"
+                                : status === false
+                                ? "#A9A9A9"
+                                : "#D3D3D3",
+                          },
+                        ]}
+                      >
+                        <Text style={styles.circleText}>
+                          {diasDaSemana[idx]}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                  <View style={styles.rowBottom}>
+                    {participante.status.slice(4).map((status, idx) => (
+                      <View
+                        key={`bottom-${idx}`}
+                        style={[
+                          styles.circle,
+                          {
+                            backgroundColor:
+                              status === true
+                                ? "#263A83"
+                                : status === false
+                                ? "#A9A9A9"
+                                : "#D3D3D3",
+                          },
+                        ]}
+                      >
+                        <Text style={styles.circleText}>
+                          {diasDaSemana[idx + 4]}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </>
+      ) : (
+        <Text style={styles.loadingText}>Carregando...</Text>
+      )}
     </ScrollView>
   );
 };

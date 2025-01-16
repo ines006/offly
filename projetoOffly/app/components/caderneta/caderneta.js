@@ -14,6 +14,7 @@ import { Svg, Circle, Path } from "react-native-svg";
 
 const Caderneta = () => {
   const [validatedCards, setValidatedCards] = useState([]);
+  const [weeklyChallengeCards, setWeeklyChallengeCards] = useState([]); // Estado para armazenar cartas do desafio semanal
   const router = useRouter();
 
   useEffect(() => {
@@ -43,7 +44,26 @@ const Caderneta = () => {
       }
     };
 
+    const fetchWeeklyChallengeCards = async () => {
+      try {
+        // Acessa a coleção "desafioSemanal"
+        const desafioRef = collection(db, "desafioSemanal");
+        const q = query(desafioRef, where("validada", "==", true)); // Buscar apenas cartas com "validada" == true
+        const querySnapshot = await getDocs(q);
+
+        const desafioCards = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setWeeklyChallengeCards(desafioCards); // Atualiza o estado com as cartas do desafio semanal validadas
+      } catch (error) {
+        console.error("Erro ao buscar cartas do desafio semanal:", error);
+      }
+    };
+
     fetchValidatedCards();
+    fetchWeeklyChallengeCards(); // Chama a função para buscar as cartas do desafio semanal
   }, []);
 
   return (
@@ -72,12 +92,21 @@ const Caderneta = () => {
         <Text style={styles.title}>Caderneta</Text>
         <View style={styles.viewcaderneta}>
           <Text style={styles.sectionTitle}>Desafios semanais</Text>
-          <Text style={styles.subtitle}>
-            Vê os desafios das semanas passadas
-          </Text>
-          <View style={styles.cardRow}>
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Card key={index} number={index + 1} />
+          <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
+          
+          {/* Renderização das cartas do desafio semanal dentro do grid */}
+          <View style={styles.cardGrid}>
+            {weeklyChallengeCards.map((card) => (
+              <View key={card.id} style={[styles.card, styles.activeCard]}>
+                <Text style={styles.cardTitle}>{card.titulo}</Text> {/* Exibe o título da carta */}
+              </View>
+            ))}
+
+            {/* Cartas restantes do desafio semanal com fundo tracejado */}
+            {Array.from({ length: 4 - weeklyChallengeCards.length }).map((_, index) => (
+              <View key={weeklyChallengeCards.length + index} style={[styles.card, styles.inactiveCard]}>
+                <Text style={styles.cardNumber}>{weeklyChallengeCards.length + index + 1}</Text>
+              </View>
             ))}
           </View>
 
@@ -100,7 +129,13 @@ const Caderneta = () => {
                   />
                 );
               }
-              return <Card key={index} number={index + 1} hasIcon={false} />;
+              return (
+                <Card
+                  key={index}
+                  number={index + 1}
+                  hasIcon={false}
+                />
+              );
             })}
           </View>
         </View>
@@ -177,12 +212,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   activeCard: {
-    backgroundColor: "#D8EAF8",
+    backgroundColor: "#D8EAF8", // Fundo para as cartas diárias e desafios semanais validados
     borderRadius: 8,
     overflow: "hidden",
   },
   inactiveCard: {
-    backgroundColor: "#EDEDF1",
+    backgroundColor: "#EDEDF1", // Fundo tracejado para cartas não validadas
     borderColor: "#263A83",
     borderWidth: 1,
     borderStyle: "dashed",
@@ -217,9 +252,8 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#2D2F45",
+    color: "#FFFFFF", // Cor do texto do título
     textAlign: "center",
-    marginBottom: 5,
   },
   cardContent: {
     fontSize: 14,

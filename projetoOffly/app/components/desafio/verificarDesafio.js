@@ -1,15 +1,15 @@
 import React, { useEffect } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebaseApi";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 
-const VerificacaoDesafio = () => {
+const VerificacaoDesafios = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const verificarDesafio = async (user) => {
+    const verificarDesafios = async (user) => {
       try {
         // Verifica se o utilizador está autenticado
         if (!user) {
@@ -21,10 +21,10 @@ const VerificacaoDesafio = () => {
         console.log("ID do utilizador autenticado:", user.uid);
 
         // Referência do documento do utilizador
-        const userDocRef = doc(db, "users", user.uid); // Nome da coleção deve ser consistente
+        const userDocRef = doc(db, "users", user.uid);
         console.log("Referência do documento do utilizador:", userDocRef.path);
 
-        // Obtém o documento do usuário
+        // Obtém o documento do utilizador
         const userDoc = await getDoc(userDocRef);
 
         if (!userDoc.exists()) {
@@ -36,6 +36,7 @@ const VerificacaoDesafio = () => {
         const userData = userDoc.data();
         console.log("Dados do utilizador:", userData);
 
+        // Verifica se o nome da equipe existe
         const teamName = userData.team?.trim();
         if (!teamName) {
           console.error("Nome da equipa não encontrado no documento do utilizador.");
@@ -43,29 +44,62 @@ const VerificacaoDesafio = () => {
           return;
         }
 
-        console.log("Nome da equipa do utilizador", teamName);
+        console.log("Nome da equipa do utilizador:", teamName);
 
-        // Verifica o documento na subcoleção equipasDesafio
-        const teamDocRef = doc(db, "desafioSemanal/carta1/equipasDesafio", teamName);
-        const teamDoc = await getDoc(teamDocRef);
+        // Iterar pelas cartas na coleção desafioSemanal
+        const cartas = ["carta0", "carta1", "carta2", "carta3"];
+        for (const carta of cartas) {
+          const cartaDocRef = doc(db, "desafioSemanal", carta);
+          console.log(`Verificando a carta: ${cartaDocRef.path}`);
 
-        console.log("Documento da equipa encontrado:", teamDoc.exists());
+          const cartaDoc = await getDoc(cartaDocRef);
 
-        if (teamDoc.exists()) {
-          router.push("/components/desafio/desafioSemanal");
-        } else {
-          router.push("/components/desafio/descobrirDesafio");
+          if (!cartaDoc.exists()) {
+            console.error(`Documento da carta ${carta} não encontrado.`);
+            router.push("/components/desafio/descobrirDesafio");
+            return;
+          }
+
+          const cartaData = cartaDoc.data();
+          console.log(`Dados da carta ${carta}:`, cartaData);
+
+          if (cartaData.validada === true) {
+            console.log(`Carta ${carta} está validada. Avançando para a próxima...`);
+            continue; // Passa para a próxima carta
+          } else {
+            console.log(`Carta ${carta} não está validada. Verificando subcoleção equipasDesafio...`);
+
+            // Verifica o documento na subcoleção equipasDesafio
+            const teamDocRef = doc(db, `desafioSemanal/${carta}/equipasDesafio`, teamName);
+            console.log("Referência do documento da equipa:", teamDocRef.path);
+
+            const teamDoc = await getDoc(teamDocRef);
+
+            if (teamDoc.exists()) {
+              console.log("Equipe encontrada. Redirecionando para desafio semanal...");
+              router.push("/components/desafio/desafioSemanal");
+              return;
+            } else {
+              console.error("Equipe não encontrada. Redirecionando para descobrir desafio...");
+              router.push("/components/desafio/descobrirDesafio");
+              return;
+            }
+          }
         }
+
+        // Se todas as cartas estiverem validadas, redireciona para descobrirDesafio
+        console.log("Todas as cartas estão validadas. Redirecionando para descobrir desafio...");
+        router.push("/components/desafio/descobrirDesafio");
       } catch (error) {
-        console.error("Erro ao verificar desafio:", error);
+        console.error("Erro ao verificar desafios:", error);
         router.push("/components/desafio/descobrirDesafio");
       }
     };
 
-    // Verificar o estado do usuário
+    // Verificar o estado do utilizador
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        verificarDesafio(user);
+        verificarDesafios(user);
       } else {
         console.error("Usuário não autenticado.");
         router.push("/components/entrar/login");
@@ -97,4 +131,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VerificacaoDesafio;
+export default VerificacaoDesafios;

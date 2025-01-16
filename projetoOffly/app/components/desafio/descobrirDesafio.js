@@ -63,7 +63,7 @@ export default function Descobrir() {
         return;
       }
 
-      // Buscar o ID da equipe do usuário logado
+      // Buscar o ID da equipa do utilizador logado
       const userDocRef = doc(db, "users", userId);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -110,7 +110,18 @@ export default function Descobrir() {
         await setDoc(participantDocRef, fields);
       }
 
-      Alert.alert("Sucesso", "Desafio semanal atualizado com sucesso!");
+      // Adicionar o timer
+      const timerCollectionRef = collection(challengeTeamRef, "timer");
+      const timerDocRef = doc(timerCollectionRef, "start");
+
+      const now = Date.now(); // Horário atual em Unix Timestamp
+      const oneWeekFromNow = now + 7 * 24 * 60 * 60 * 1000; // Adicionar 7 dias ao horário atual
+
+      await setDoc(timerDocRef, {
+        startTime: now,
+        endTime: oneWeekFromNow,
+      });
+
       runOnJS(() => router.push("../desafio/desafioSemanal"))(); // Navegar após o sucesso
     } catch (error) {
       console.error("Erro ao atualizar desafio semanal:", error);

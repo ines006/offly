@@ -33,6 +33,7 @@ const PodioPontuacao = () => {
               id,
               name: equipaSnap.data()?.nome || "Desconhecido",
               points: equipaSnap.data()?.pontos || 0,
+              acquired: equipaSnap.data()?.adquiridos || 0,
               imageUrl:
                 equipaSnap.data()?.imagem || "https://default-image-url.png",
             };

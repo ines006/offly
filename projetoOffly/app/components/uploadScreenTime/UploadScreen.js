@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Alert } from "r
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, updateDoc, collection } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebaseApi";
 
 const UploadScreen = () => {
@@ -55,12 +55,97 @@ const UploadScreen = () => {
         });
         console.log("Documento criado no Firestore.");
       }
+
+      // Atualizar desafios semanais
+      await updateWeeklyChallenge();
+
     }
     } catch (error) {
       console.error("Erro ao registar upload:", error);
     }
   };
 
+  const updateWeeklyChallenge = async () => {
+    try {
+      // Obter a equipa do utilizador
+      const userDocRef = doc(db, "users", userId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        console.error("Utilizador não encontrado.");
+        return;
+      }
+
+      const userName = userDocSnap.data()?.fullName;
+      if (!userName) {
+        console.error("Utilizador não tem nome.");
+        return;
+      }
+
+      const teamName = userDocSnap.data()?.team;
+      if (!teamName) {
+        console.error("Utilizador não pertence a nenhuma equipa.");
+        return;
+      }
+
+      // Aceder a carta não validada atual
+      const cartasSnapshot = await getDocs(collection(db, "desafioSemanal"));
+      const cartas = cartasSnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => a.id.localeCompare(b.id));
+
+      const currentCarta = cartas.find((carta) => !carta.validada);
+      if (!currentCarta) {
+        console.error("Nenhuma carta não validada encontrada.");
+        return;
+      }
+
+      // Obter o timer da carta atual
+      const timerDocRef = doc(db, "desafioSemanal", currentCarta.id, "timer", "timerCarta");
+      const timerDocSnap = await getDoc(timerDocRef);
+
+      if (!timerDocSnap.exists()) {
+        console.error("Timer não encontrado.");
+        return;
+      }
+
+      const timerData = timerDocSnap.data();
+      const startDate = new Date(timerData.start);
+      const endDate = new Date(timerData.end);
+      const now = new Date();
+
+      if (now < startDate || now > endDate) {
+        console.error("Fora do intervalo do desafio semanal.");
+        return;
+      }
+
+      const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+      // Atualizar o campo do dia correspondente no documento do participante
+      const participantDocRef = doc(
+        db,
+        "desafioSemanal",
+        currentCarta.id,
+        "equipasDesafio",
+        teamName,
+        "participante1",
+        userName
+      );
+
+      const participantDocSnap = await getDoc(participantDocRef);
+      if (participantDocSnap.exists()) {
+        const updateData = {};
+        updateData[diffInDays] = true;
+
+        await updateDoc(participantDocRef, updateData);
+        console.log(`Dia ${diffInDays} atualizado para true.`);
+      } else {
+        console.error("Documento do participante não encontrado.");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar desafios semanais:", error);
+    }
+  };
 
   // Função para abrir a galeria e selecionar uma imagem
   const handleSelectImage = async () => {

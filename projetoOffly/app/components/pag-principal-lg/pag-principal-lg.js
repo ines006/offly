@@ -235,8 +235,8 @@ useEffect(() => {
 
   return (
     <>
-      <ProfileContainer onPress={handlePerfilPress}> 
-      <TouchableOpacity>
+      <ProfileContainer> 
+      <TouchableOpacity onPress={handlePerfilPress}>
         <Avatar 
             source={profileImage}
         />

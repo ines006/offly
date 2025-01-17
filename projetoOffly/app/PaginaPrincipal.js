@@ -1,6 +1,6 @@
 import { useFonts } from "expo-font";
 import React, { useState, useEffect } from "react";
-import { Modal, Text, View, Image, StyleSheet, ActivityIndicator, Alert, Button } from "react-native";
+import { Modal, Text, View, Image, StyleSheet, ActivityIndicator, Alert, Button, TouchableOpacity } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
@@ -455,10 +455,12 @@ const fetchEquipas = async () => {
   return (
 <>
 {/* Perfil */} {/*  para desenrascar meti assim o perfil do user */}
-<ProfileContainer onPress={handlePerfil} style={{ paddingTop: 65, backgroundColor: "#fff" }}>
-<Avatar
-  source={profileImage}
-/>
+<ProfileContainer style={{ paddingTop: 65, backgroundColor: "#fff" }}>
+  <TouchableOpacity onPress={handlePerfil} >
+  <Avatar
+    source={profileImage}
+  />
+  </TouchableOpacity>
 <ProfileTextContainer>
   <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>
   <StarsContainer>

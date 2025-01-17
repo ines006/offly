@@ -637,8 +637,7 @@ export const SearchInput = styled.TextInput`
 
 // Container
 export const Container_Pagina_Equipa_Criada = styled.View`
-  display: flex;
-  flex: 1;
+  margin-top:80;
   padding: 60px 27px 27px 27px;
   align-items: center;
   background-color: white;
@@ -652,6 +651,7 @@ export const Titulos_Equipa_Criada = styled.Text`
   font-weight: 800;
   margin-top: 20px;
   align-self: center;
+  font-family: poppins-regular;
 `;
 
 // Sub Titulos Criar Equipa

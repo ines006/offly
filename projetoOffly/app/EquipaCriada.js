@@ -1,5 +1,14 @@
 import { useFonts } from "expo-font";
-import { Text, View, StyleSheet, TouchableOpacity, ActivityIndicator, Image, ScrollView} from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+} from "react-native";
+import { Alert } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import React, { useState, useEffect } from "react";
 import {
@@ -12,13 +21,18 @@ import {
   Botoes_Pagina_principal_Desativado,
   Texto_Botoes_Pagina_principal_Desativado,
 } from "./styles/styles";
-import { doc, getDoc, collection, getDocs, arrayUnion, updateDoc  } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  arrayUnion,
+  updateDoc,
+} from "firebase/firestore";
 import { db, auth } from "./firebase/firebaseApi";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
-
 export default function EquipaCriada() {
-
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
@@ -26,16 +40,16 @@ export default function EquipaCriada() {
   const { teamId } = useLocalSearchParams();
   const [teamDetails, setTeamDetails] = useState(null);
   const [participants, setParticipants] = useState([]);
-  const [loading, setLoading] = useState(true);  
+  const [loading, setLoading] = useState(true);
   const [errorLoading, setErrorLoading] = useState(false);
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
   const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
   const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
-  
+
   const router = useRouter();
 
-   // Array de URLs das imagens p/ users
-   const imageUrls = [
+  // Array de URLs das imagens p/ users
+  const imageUrls = [
     "https://celina05.sirv.com/avatares/avatar4.png",
     "https://celina05.sirv.com/avatares/avatar5.png",
     "https://celina05.sirv.com/avatares/avatar6.png",
@@ -64,55 +78,50 @@ export default function EquipaCriada() {
     return imageUrls[randomIndex];
   };
 
-
   // Verificação de utilizador logado
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
       setUserId(currentUser.uid);
-      console.log('utilizador logado na pag principal', currentUser)
+      console.log("utilizador logado na pag principal", currentUser);
     } else {
-      Alert.alert('Erro', 'Nenhum utilizador logado!');
+      Alert.alert("Erro", "Nenhum utilizador logado!");
     }
   }, []);
 
   // Função para obter o dados do utilizador (imagem)
-    useEffect(() => {
-      const userData = async () => {
-        try {
-          if (!userId) return; 
-          const userDocRef = doc(db, "users", userId); 
-          const docSnap = await getDoc(userDocRef); 
-    
-          if (docSnap.exists()) {
-            const { fullName, image } = docSnap.data();
-            setUserName(fullName);
+  useEffect(() => {
+    const userData = async () => {
+      try {
+        if (!userId) return;
+        const userDocRef = doc(db, "users", userId);
+        const docSnap = await getDoc(userDocRef);
 
-            if (image) {
-              // Atribuir a imagem existente ao estado
-              setProfileImage(image);
-            } else {
-              // Gerar e atribuir uma nova imagem aleatória
-              const newProfileImage = getRandomImage();
-              setProfileImage(newProfileImage);
-              
-              // Atualizar o documento do utilizador com a nova imagem
-              await updateDoc(userDocRef, { image: newProfileImage });
-            }
-            
+        if (docSnap.exists()) {
+          const { fullName, image } = docSnap.data();
+          setUserName(fullName);
+
+          if (image) {
+            // Atribuir a imagem existente ao estado
+            setProfileImage(image);
           } else {
-            console.log("Documento do utilizador não encontrado.");
-          }
-  
-        } catch (error) {
-          console.error("Erro", error);
-        }
-      };
-    
-      userData(); 
-    
-    }, [userId]); 
+            // Gerar e atribuir uma nova imagem aleatória
+            const newProfileImage = getRandomImage();
+            setProfileImage(newProfileImage);
 
+            // Atualizar o documento do utilizador com a nova imagem
+            await updateDoc(userDocRef, { image: newProfileImage });
+          }
+        } else {
+          console.log("Documento do utilizador não encontrado.");
+        }
+      } catch (error) {
+        console.error("Erro", error);
+      }
+    };
+
+    userData();
+  }, [userId]);
 
   // Dados dos participantes da equipa
   const fetchData = async () => {
@@ -127,7 +136,13 @@ export default function EquipaCriada() {
         console.error("Documento da equipa não encontrado!");
       }
 
-      const participantsRef = doc(db, "equipas", teamId, "membros", "participantes");
+      const participantsRef = doc(
+        db,
+        "equipas",
+        teamId,
+        "membros",
+        "participantes"
+      );
       const participantsSnap = await getDoc(participantsRef);
 
       if (participantsSnap.exists()) {
@@ -171,7 +186,9 @@ export default function EquipaCriada() {
   if (!teamDetails) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Detalhes da equipa não encontrados.</Text>
+        <Text style={styles.errorText}>
+          Detalhes da equipa não encontrados.
+        </Text>
       </View>
     );
   }
@@ -179,9 +196,9 @@ export default function EquipaCriada() {
   // Função para entrar no torneio
   const handleTorneio = async () => {
     try {
-      const torneioRef = doc(db, "torneios", "Torneio XPTO"); 
+      const torneioRef = doc(db, "torneios", "Torneio XPTO");
       await updateDoc(torneioRef, {
-        equipas: arrayUnion(teamId), 
+        equipas: arrayUnion(teamId),
       });
       console.log("Equipa adicionada ao torneio com sucesso!");
       router.push("./components/navbar");
@@ -191,50 +208,85 @@ export default function EquipaCriada() {
   };
 
   return (
-    <ScrollView style={{backgroundColor: "#fff"}}> 
+    <ScrollView style={{ backgroundColor: "#fff" }}>
       <Container_Pagina_Equipa_Criada>
+              {/* Botão de Voltar atrás */}
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+          <Circle
+            cx="18.1351"
+            cy="17.1713"
+            r="16.0177"
+            stroke="#263A83"
+            strokeWidth={2}
+          />
+          <Path
+            d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+            stroke="#263A83"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </TouchableOpacity>
         <Titulos_Equipa_Criada>{teamDetails?.nome}</Titulos_Equipa_Criada>
-        <Sub_Titulos_Criar_Equipa>{teamDetails?.descricao}</Sub_Titulos_Criar_Equipa>
+        <Sub_Titulos_Criar_Equipa>
+          {teamDetails?.descricao}
+        </Sub_Titulos_Criar_Equipa>
 
         <View style={styles.remainingTeamsContainer}>
-  {participants.length > 0 ? (
-    <>
-      {participants.map((participant, index) => (
-        <View key={index} style={styles.card}>
-          <Image
-            source={{
-              uri: participant === userName ? profileImage : getRandomImage(),
-            }}
-            style={styles.peopleImage}
-          />
-          <Text style={styles.participantText}>{participant}</Text>
+          {participants.length > 0 ? (
+            <>
+              {participants.map((participant, index) => (
+                <View key={index} style={styles.card}>
+                  <Image
+                    source={{
+                      uri:
+                        participant === userName
+                          ? profileImage
+                          : getRandomImage(),
+                    }}
+                    style={styles.peopleImage}
+                  />
+                  <Text style={styles.participantText}>{participant}</Text>
+                </View>
+              ))}
+              <Botoes_Pagina_principal onPress={handleTorneio}>
+                <Texto_Botoes_Pagina_principal>
+                  Entrar no Torneio
+                </Texto_Botoes_Pagina_principal>
+              </Botoes_Pagina_principal>
+            </>
+          ) : (
+            <>
+              <Text style={styles.noParticipants}>
+                Nenhum participante encontrado.
+              </Text>
+              {/* Botão de Refresh */}
+              <Botoes_Pagina_principal onPress={fetchData}>
+                <Texto_Botoes_Pagina_principal>
+                  Atualizar Participantes
+                </Texto_Botoes_Pagina_principal>
+              </Botoes_Pagina_principal>
+
+              <Botoes_Pagina_principal_Desativado>
+                <Texto_Botoes_Pagina_principal_Desativado>
+                  Entrar no Torneio
+                </Texto_Botoes_Pagina_principal_Desativado>
+              </Botoes_Pagina_principal_Desativado>
+            </>
+          )}
         </View>
-      ))}
-      <Botoes_Pagina_principal onPress={handleTorneio}>
-        <Texto_Botoes_Pagina_principal>Entrar no Torneio</Texto_Botoes_Pagina_principal>
-      </Botoes_Pagina_principal>
-    </>
-  ) : (
-    <>
-      <Text style={styles.noParticipants}>Nenhum participante encontrado.</Text>
-      {/* Botão de Refresh */}
-      <Botoes_Pagina_principal onPress={fetchData}>
-        <Texto_Botoes_Pagina_principal>Atualizar Participantes</Texto_Botoes_Pagina_principal>
-      </Botoes_Pagina_principal>
-
-      <Botoes_Pagina_principal_Desativado>
-        <Texto_Botoes_Pagina_principal_Desativado>Entrar no Torneio</Texto_Botoes_Pagina_principal_Desativado>
-      </Botoes_Pagina_principal_Desativado>
-    </>
-  )}
-</View>
-
       </Container_Pagina_Equipa_Criada>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  backButton: {
+    zIndex: 99,
+    position: "absolute",
+    left: 25,
+  },
   remainingTeamsContainer: {
     flex: 1,
     backgroundColor: "#F1F1F1",

@@ -9,10 +9,15 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
-  Picker,
 } from "react-native";
+import {
+  BotaoNavegacaoContainer,
+  Definir_visibilidade_btn,
+  Texto_Botoes_Definir_Visibilidade,
+} from "../../styles/styles";
 import { useRouter } from "expo-router";
 import { doc, setDoc } from "firebase/firestore";
+import { useFonts } from "expo-font";
 
 const Register = () => {
   const [fullName, setFullName] = useState("");
@@ -30,6 +35,10 @@ const Register = () => {
   const [confirmPasswordBarWidth] = useState(new Animated.Value(0));
 
   const router = useRouter();
+
+  const [fontsLoaded] = useFonts({
+    "Poppins-Regular": require("../../../assets/fonts/Poppins-Regular.ttf"),
+  });
 
   // Array de URLs das imagens p/ users
   const imageUserGirl = [
@@ -118,7 +127,7 @@ const Register = () => {
       return;
     }
 
-    if (!fullName || !username || !gender) {
+    if (!fullName || !username) {
       setError("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
@@ -138,7 +147,7 @@ const Register = () => {
         email: email,
         createdAt: new Date(),
         team: "",
-        gender: gender,
+        // gender: gender,
         image: getRandomImage(gender),
       });
 
@@ -148,6 +157,12 @@ const Register = () => {
       setError("Falha ao fazer registo: " + err.message);
     }
   };
+
+  const handleButtonClick = (button) => {
+    setActiveButton(button);
+  };
+
+  const [activeButton, setActiveButton] = useState(null);
 
   return (
     <View style={styles.container}>
@@ -220,19 +235,6 @@ const Register = () => {
               },
             ]}
           />
-        </View>
-
-        {/* Gênero */}
-        <View style={styles.wrapInput}>
-          <Picker
-            selectedValue={gender}
-            style={styles.input}
-            onValueChange={(itemValue) => setGender(itemValue)}
-          >
-            <Picker.Item label="Selecionar Gênero" value="" />
-            <Picker.Item label="Masculino" value="Masculino" />
-            <Picker.Item label="Feminino" value="Feminino" />
-          </Picker>
         </View>
 
         {/* Email */}
@@ -342,6 +344,35 @@ const Register = () => {
 
         {/* Mensagem de Erro */}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        {/* Gênero */}
+        <View style={styles.wrapInput}>
+          <BotaoNavegacaoContainer>
+            <Definir_visibilidade_btn
+              style={{
+                backgroundColor:
+                  activeButton === "Masculino" ? "#E3FC87" : "white",
+              }}
+              onPress={() => handleButtonClick("Masculino")}
+            >
+              <Texto_Botoes_Definir_Visibilidade>
+                Masculino
+              </Texto_Botoes_Definir_Visibilidade>
+            </Definir_visibilidade_btn>
+            <Definir_visibilidade_btn
+              style={{
+                backgroundColor:
+                  activeButton === "Feminino" ? "#E3FC87" : "white",
+              }}
+              onPress={() => handleButtonClick("Feminino")}
+            >
+              <Texto_Botoes_Definir_Visibilidade>
+                Feminino
+              </Texto_Botoes_Definir_Visibilidade>
+            </Definir_visibilidade_btn>
+          </BotaoNavegacaoContainer>
+        </View>
+
 
         {/* Botão de Registro */}
         <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>

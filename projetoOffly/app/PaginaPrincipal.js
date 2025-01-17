@@ -10,7 +10,6 @@ import { getDocs, getDoc, doc, setDoc, updateDoc, collection } from 'firebase/fi
 import { auth, db } from "./firebase/firebaseApi";
 import {
   Container_Pagina_Pricipal,
-  Container_Pagina_Pricipal_2,
   Sub_Titulos,
   Titulos,
   Botoes_Pagina_principal,
@@ -455,7 +454,7 @@ const fetchEquipas = async () => {
   return (
 <>
 {/* Perfil */} {/*  para desenrascar meti assim o perfil do user */}
-<ProfileContainer style={{ paddingTop: 65, backgroundColor: "#fff" }}>
+<ProfileContainer style={{  backgroundColor: "#fff" }}>
   <TouchableOpacity onPress={handlePerfil} >
   <Avatar
     source={profileImage}

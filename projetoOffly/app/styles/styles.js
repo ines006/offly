@@ -457,12 +457,6 @@ export const Container_Pagina_Pricipal = styled.View`
   background-color: white;
 `;
 
-export const Container_Pagina_Pricipal_2 = styled.View`
-  display: flex;
-  flex: 1;
-  margin-top: 20px;
-  background-color: white;
-`;
 
 // Titulos
 export const Titulos = styled.Text`

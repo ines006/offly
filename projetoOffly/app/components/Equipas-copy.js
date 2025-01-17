@@ -7,7 +7,7 @@ const Card_Equipa = ({ onPress, icon, teamName, playerCount }) => {
       <CardContainer onPress={onPress}>
         <IconWrapper>
           <Image
-            source={icon}
+            source={{ uri: icon }}
             style={styles.teamIcon}
           />
         </IconWrapper>

@@ -98,8 +98,16 @@ const Caderneta = () => {
           <View style={styles.cardGrid}>
             {weeklyChallengeCards.map((card) => (
               <View key={card.id} style={[styles.card, styles.activeCard]}>
-                <Text style={styles.cardTitle}>{card.titulo}</Text> {/* Exibe o título da carta */}
-              </View>
+              {card.imagem ? (
+                <Image
+                  source={{ uri: card.imagem }}
+                  style={styles.cardImage2}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.cardTitle}>Imagem não disponível</Text>
+              )}
+            </View>
             ))}
 
             {/* Cartas restantes do desafio semanal com fundo tracejado */}
@@ -279,6 +287,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 999,
+  },
+  cardImage2: {
+    width: "100%", 
+    height: "100%", 
+    alignSelf: "center", 
+    borderRadius: 8, 
   },
 });
 

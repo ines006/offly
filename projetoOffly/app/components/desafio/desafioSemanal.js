@@ -36,12 +36,12 @@ const DesafioSemanal = () => {
           .map((doc) => ({ id: doc.id, ...doc.data() }))
           .sort((a, b) => a.id.localeCompare(b.id));
 
-        const cartaToRender = cartas.find((carta) => !carta.validada);
-        if (cartaToRender) {
-          setCurrentCarta(cartaToRender);
-          setDesafio(cartaToRender.cartades || "Desafio não encontrado.");
-          fetchTeamAndParticipants(cartaToRender.id);
-          fetchTimerData(cartaToRender.id);
+          const cartaToRender = cartas.find((carta) => !carta.validada);
+          if (cartaToRender) {
+            setCurrentCarta(cartaToRender); // Inclui o campo imagem
+            setDesafio(cartaToRender.cartades || "Desafio não encontrado.");
+            fetchTeamAndParticipants(cartaToRender.id);
+            fetchTimerData(cartaToRender.id);
         } else {
           console.log("Todas as cartas estão validadas.");
         }
@@ -208,9 +208,16 @@ const DesafioSemanal = () => {
           </View>
 
           <View style={styles.cardContainer}>
-            <View style={styles.mainCard}>
-              <Text style={styles.mainDescription}>{desafio}</Text>
-            </View>
+          <View style={styles.mainCard}>
+            {currentCarta.imagem && (
+              <Image
+                source={{ uri: currentCarta.imagem }} // Usar o campo 'imagem' como fonte
+                style={styles.cardImage} // Adicionar estilo para a imagem
+                resizeMode="cover" // Ajustar como a imagem será exibida
+              />
+            )}
+            <Text style={styles.mainDescription}>{desafio}</Text>
+          </View>
           </View>
 
           <View style={styles.progressContainer}>
@@ -330,10 +337,12 @@ const styles = StyleSheet.create({
     width: 210,
     height: 360,
     backgroundColor: "#e3fc87",
-    borderRadius: 10,
+    borderRadius: 20,
+    borderColor: "#263A83",
+    borderWidth: 10,
     alignItems: "center",
-    justifyContent: "center",
-    padding: 15,
+    justifyContent: "flex-start", 
+    overflow: "hidden", 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -342,7 +351,7 @@ const styles = StyleSheet.create({
   },
   mainDescription: {
     color: "black",
-    fontSize: 28,
+    fontSize: 16,
     fontWeight: "bold",
     padding: 10,
     textAlign: "center",
@@ -371,11 +380,9 @@ const styles = StyleSheet.create({
   progressTextInside: {
     color: "white",
     fontWeight: "bold",
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    transform: [{ translateX: -50 }, { translateY: -10 }],
     fontSize: 16,
+    left: 20,
+    top: 5,
   },
   participantsContainer: {
     marginTop: 20,
@@ -474,6 +481,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: -4,
   },
+  cardImage: {
+    width: "100%", 
+    height: 150, 
+    borderTopLeftRadius: 10, 
+    borderTopRightRadius: 10, 
+    marginTop: 50,
+  },
+  
 });
 
 export default DesafioSemanal;

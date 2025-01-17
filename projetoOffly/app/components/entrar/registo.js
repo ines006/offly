@@ -23,6 +23,7 @@ const Register = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState("");
+  const [activeButton, setActiveButton] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -147,7 +148,7 @@ const Register = () => {
         email: email,
         createdAt: new Date(),
         team: "",
-        // gender: gender,
+        gender: gender,
         image: getRandomImage(gender),
       });
 
@@ -160,9 +161,9 @@ const Register = () => {
 
   const handleButtonClick = (button) => {
     setActiveButton(button);
+    setGender(button);
   };
 
-  const [activeButton, setActiveButton] = useState(null);
 
   return (
     <View style={styles.container}>

@@ -20,15 +20,15 @@ const Caderneta = () => {
   useEffect(() => {
     const fetchValidatedCards = async () => {
       try {
-        const user = auth.currentUser; // Obtém o usuário autenticado
+        const user = auth.currentUser; 
         if (!user) {
           console.error("Usuário não está autenticado.");
           return;
         }
 
-        const userId = user.uid; // Obtém o ID do usuário autenticado
+        const userId = user.uid; 
 
-        // Acessa a subcoleção "cartas" do usuário autenticado
+    
         const cardsRef = collection(db, "users", userId, "cartas");
         const q = query(cardsRef, where("validada", "==", true));
         const querySnapshot = await getDocs(q);
@@ -38,7 +38,7 @@ const Caderneta = () => {
           ...doc.data(),
         }));
 
-        setValidatedCards(cards); // Atualiza o estado com as cartas validadas
+        setValidatedCards(cards); 
       } catch (error) {
         console.error("Erro ao buscar cartas validadas:", error);
       }
@@ -125,7 +125,7 @@ const Caderneta = () => {
                     key={card.id}
                     number={card.id}
                     hasIcon={true}
-                    imageUrl={card.imagem} // Passando a URL da imagem
+                    imageUrl={card.imagem} 
                   />
                 );
               }
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#FFFFFF", // Cor do texto do título
+    color: "#FFFFFF", 
     textAlign: "center",
   },
   cardContent: {

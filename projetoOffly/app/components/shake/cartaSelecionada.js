@@ -86,26 +86,6 @@ export default function CartaSelecionada() {
     return `${hours}h ${minutes}m ${seconds}s`;
   };
 
-  const handleValidate = async () => {
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        Alert.alert("Erro", "Usuário não autenticado.");
-        return;
-      }
-
-      const cardRef = doc(db, "users", user.uid, "cartas", selectedCard.id);
-      await updateDoc(cardRef, { validada: true });
-
-      setIsValidated(true);
-      setTimeLeft(0); // O timer é zerado após validação.
-      Alert.alert("Sucesso", "A carta foi validada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao validar a carta:", error);
-      Alert.alert("Erro", "Não foi possível validar a carta.");
-    }
-  };
-
   return (
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
@@ -195,9 +175,9 @@ export default function CartaSelecionada() {
         {!isValidated && (
           <TouchableOpacity
             style={styles.validateButton}
-            onPress={handleValidate}
+            onPress={() => router.push("./uploadDesafio")}
           >
-            <Text style={styles.validateButtonText}>Validar</Text>
+            <Text style={styles.validateButtonText}>Comprova o teu desafio</Text>
           </TouchableOpacity>
         )}
       </SafeAreaView>
@@ -317,18 +297,6 @@ const styles = StyleSheet.create({
   validateButtonText: {
     color: "#FFF",
     fontSize: 18,
-    fontWeight: "bold",
-  },
-  saveButton: {
-    marginTop: 10,
-    backgroundColor: "#4CAF50",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  saveButtonText: {
-    color: "#FFF",
-    fontSize: 16,
     fontWeight: "bold",
   },
 });

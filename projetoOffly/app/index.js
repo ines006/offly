@@ -74,7 +74,7 @@ export default function Index() {
           title="pag detalhes equipa criada"
           onPress={() => router.push("./EquipaCriada")}
           />
-          
+
         <Button
           title="Ir para desafio"
           onPress={() => router.push("./components/desafio/desafioSemanal")}
@@ -82,7 +82,14 @@ export default function Index() {
         <Button
           title="Ir para descobrir"
           onPress={() => router.push("./components/desafio/descobrirDesafio")}
-
+        />
+        <Button
+          title="Upload"
+          onPress={() => router.push("./components/uploadScreenTime/UploadScreen")}
+        />
+        <Button
+          title="Upload desafio"
+          onPress={() => router.push("./components/shake/UploadDesafio")}
         />
       </View>
     </>

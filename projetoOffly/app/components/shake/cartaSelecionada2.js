@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, ActivityIndicator } from "react-native";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -9,7 +9,7 @@ export default function CartaSelecionada2({ userId, carta, onValidated }) {
   const [timeLeft, setTimeLeft] = useState(null);
   const [isValidated, setIsValidated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter(); 
+  const router = useRouter();
 
   useEffect(() => {
     const initializeTimer = async () => {
@@ -33,10 +33,7 @@ export default function CartaSelecionada2({ userId, carta, onValidated }) {
 
             setTimeLeft(timeRemaining > 0 ? timeRemaining : 0);
           } else {
-            // Inicia o timer caso ainda não tenha sido iniciado anteriormente (porem ver novamente a logica para colocar o carataSelecionada se calhar com este dados já)
-            const now = new Date().getTime();
-            await updateDoc(cartaRef, { timerStart: now });
-            setTimeLeft(24 * 60 * 60 * 1000);
+            Alert.alert("Erro", "O timer não foi encontrado para esta carta.");
           }
         } else {
           Alert.alert("Erro", "Carta não encontrada no banco de dados!");
@@ -74,36 +71,6 @@ export default function CartaSelecionada2({ userId, carta, onValidated }) {
     return `${hours}h ${minutes}m ${seconds}s`;
   };
 
-  const handleValidate = async () => {
-    try {
-      if (!carta || !carta.id) {
-        Alert.alert("Erro", "Dados da carta inválidos!");
-        return;
-      }
-
-      // Referência ao documento da carta no Firestore
-      const cartaRef = doc(db, "users", userId, "cartas", carta.id);
-
-      
-      await updateDoc(cartaRef, { validada: true });
-
-      setIsValidated(true);
-      setTimeLeft(0);
-      Alert.alert("Sucesso", "A carta foi validada com sucesso!");
-
-      if (onValidated) {
-        onValidated(); // Esta a ser passado pelo componente Shakescreen
-      }
-
-      router.push("../navbar");
-
-    } catch (error) {
-      console.error("Erro ao validar a carta:", error);
-      Alert.alert("Erro", "Não foi possível validar a carta.");
-    }
-  };
-
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -137,8 +104,11 @@ export default function CartaSelecionada2({ userId, carta, onValidated }) {
         </View>
 
         {!isValidated ? (
-          <TouchableOpacity style={styles.validateButton} onPress={handleValidate}>
-            <Text style={styles.validateButtonText}>Validar</Text>
+          <TouchableOpacity
+            style={styles.validateButton}
+            onPress={() => router.push("../shake/uploadDesafio")}
+          >
+            <Text style={styles.validateButtonText}>Comprova o teu desafio</Text>
           </TouchableOpacity>
         ) : (
           <Text style={styles.validationMessage}>Esta carta já foi validada!</Text>

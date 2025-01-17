@@ -1,6 +1,6 @@
 import { useFonts } from "expo-font";
 import React, { useState, useEffect } from "react";
-import { Modal, Text, View, Image, StyleSheet, ActivityIndicator, Alert, Button } from "react-native";
+import { Modal, Text, View, Image, StyleSheet, ActivityIndicator, Alert, Button, TouchableOpacity } from "react-native";
 import ModalDropdown from "react-native-modal-dropdown";
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
@@ -661,20 +661,39 @@ const fetchEquipas = async () => {
                   </BotaoNavegacaoContainer>
               </Modal> */}
 
-              {modalEquipa && (
-                <Modal
-                  visible={modalEquipa}
-                  animationType="slide"
-                  onRequestClose={() => setModalEquipa(false)}
-                >
-                  <View style={{ marginTop: 50}}>
-                    <Text>Entrar na Equipa</Text>
-                    {/* Restante conteúdo do modal */}
-                    <Button title="Entrar" onPress={handleNext2} />
-                    <Button title="Cancelar" onPress={() => setModalEquipa(false)} />
-                  </View>
-                </Modal>
-              )}
+{modalEquipa && (
+  <Modal
+    visible={modalEquipa}
+    animationType="fade"
+    transparent={true}
+    onRequestClose={() => setModalEquipa(false)}
+  >
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContainer}>
+        <Text style={styles.modalTitle}>Entrar na Equipa</Text>
+        <Text style={styles.modalDescription}>
+          Tens a certeza de que queres juntar-te à equipa?
+        </Text>
+
+        <View style={styles.modalButtonContainer}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
+            onPress={() => setModalEquipa(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.confirmButton]}
+            onPress={handleEntrarnaEquipa}
+          >
+            <Text style={styles.confirmButtonText}>Entrar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>
+)}
+
 
     </Container_Pagina_Pricipal>
     </>
@@ -692,4 +711,60 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    width: "85%",
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#263A83",
+    marginBottom: 10,
+    textAlign: "center",
+
+  },
+  modalDescription: {
+    fontSize: 12,
+    color: "#6B6B6B",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#F5F5F5",
+  },
+  confirmButton: {
+    backgroundColor: "#263A83",
+  },
+  cancelButtonText: {
+    color: "#6B6B6B",
+    fontWeight: "bold",
+  },
+  confirmButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  }
 });

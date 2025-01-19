@@ -34,13 +34,16 @@ const PodioPontuacao = () => {
               name: equipaSnap.data()?.nome || "Desconhecido",
               points: equipaSnap.data()?.pontos || 0,
               acquired: equipaSnap.data()?.adquiridos || 0,
+              totalPoints:
+                (equipaSnap.data()?.pontos || 0) +
+                (equipaSnap.data()?.adquiridos || 0), // Soma de pontos e adquiridos
               imageUrl:
                 equipaSnap.data()?.imagem || "https://default-image-url.png",
             };
           });
 
           const equipasData = await Promise.all(equipasPromises);
-          setTeams(equipasData.sort((a, b) => b.points - a.points));
+          setTeams(equipasData.sort((a, b) => b.totalPoints - a.totalPoints)); // Classifica pela soma
         }
       } catch (error) {
         console.error("Erro ao buscar equipas do torneio:", error);
@@ -61,7 +64,7 @@ const PodioPontuacao = () => {
           style={styles.teamImage}
         />
         <Text style={styles.podiumTeam}>{teams[1]?.name || "-"}</Text>
-        <Text style={styles.podiumPoints}>{teams[1]?.points || "-"} P</Text>
+        <Text style={styles.podiumPoints}>{teams[1]?.totalPoints || "-"} P</Text>
       </View>
 
       {/* 1st Place */}
@@ -73,7 +76,7 @@ const PodioPontuacao = () => {
           style={styles.teamImage}
         />
         <Text style={styles.podiumTeam}>{teams[0]?.name || "-"}</Text>
-        <Text style={styles.podiumPoints}>{teams[0]?.points || "-"} P</Text>
+        <Text style={styles.podiumPoints}>{teams[0]?.totalPoints || "-"} P</Text>
       </View>
 
       {/* 3rd Place */}
@@ -85,7 +88,7 @@ const PodioPontuacao = () => {
           style={styles.teamImage}
         />
         <Text style={styles.podiumTeam}>{teams[2]?.name || "-"}</Text>
-        <Text style={styles.podiumPoints}>{teams[2]?.points || "-"} P</Text>
+        <Text style={styles.podiumPoints}>{teams[2]?.totalPoints || "-"} P</Text>
       </View>
     </View>
   );
@@ -114,7 +117,7 @@ const PodioPontuacao = () => {
           />
           <View style={styles.info}>
             <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.points}>{item.points} pontos</Text>
+            <Text style={styles.points}>{item.totalPoints} pontos</Text>
           </View>
 
           <Text

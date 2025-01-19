@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth"; // Importa autenticação Firebase
 import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi"; // Ajuste o caminho para sua configuração do Firestore
@@ -13,7 +12,7 @@ export default function ShakeScreen({ userId }) {
   const [loading, setLoading] = useState(true);
   const [carta, setCarta] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(userId);
-  const navigation = useNavigation();
+  
 
   useEffect(() => {
     // Verifica e obtém o ID do utilizador logado se não fornecido
@@ -101,7 +100,7 @@ const handleValidated = () => {
     );
   }
 
-  // Se houver carta, renderiza o componente CartaSelecionada
+  
   return <CartaSelecionada2 carta={carta} userId={currentUserId} cartaId={carta.id} onValidated={handleValidated} />;
 }
 

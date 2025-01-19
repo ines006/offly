@@ -23,8 +23,12 @@ const DetalhesEquipa = () => {
   const router = useRouter();
 
   const handlePress = () => {
-    // Navega para a página da Caderneta
-    router.push("../caderneta/caderneta"); // Supondo que a página se chame 'caderneta.js'
+    
+    router.push("../caderneta/caderneta"); 
+  };
+  const handlePressDesafio = () => {
+  
+    router.push("../desafio/verificarDesafio");
   };
 
   // Array de URLs das imagens p/ users
@@ -55,7 +59,7 @@ const DetalhesEquipa = () => {
           console.error("Documento não encontrado!");
         }
 
-        // Aqui busca os participantes na subcoleção 'membros/participantes' (firsebase/firestore da Celina)
+        // Aqui busca os participantes na subcoleção 'membros/participantes' 
         const participantsRef = doc(
           db,
           "equipas",
@@ -156,10 +160,7 @@ const DetalhesEquipa = () => {
           <Text style={styles.buttonText}>Ver Caderneta</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => console.log("Ir para Desafio Semanal")}
-        >
+        <TouchableOpacity style={styles.button} onPress={handlePressDesafio}>
 
           <Svg width="100" height="100" viewBox="0 0 63 63" fill="none">
                         {" "}

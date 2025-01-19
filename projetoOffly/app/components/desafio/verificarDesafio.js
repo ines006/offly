@@ -76,11 +76,11 @@ const VerificacaoDesafios = () => {
             const teamDoc = await getDoc(teamDocRef);
 
             if (teamDoc.exists()) {
-              console.log("Equipe encontrada. Redirecionando para desafio semanal...");
+              console.log("Equipa encontrada. Redirecionando para desafio semanal...");
               router.push("/components/desafio/desafioSemanal");
               return;
             } else {
-              console.error("Equipe não encontrada. Redirecionando para descobrir desafio...");
+              console.error("Equipa não encontrada. Redirecionar para descobrir desafio...");
               router.push("/components/desafio/descobrirDesafio");
               return;
             }
@@ -88,7 +88,7 @@ const VerificacaoDesafios = () => {
         }
 
         // Se todas as cartas estiverem validadas, redireciona para descobrirDesafio
-        console.log("Todas as cartas estão validadas. Redirecionando para descobrir desafio...");
+        console.log("Todas as cartas estão validadas. Redirecionar para descobrir desafio...");
         router.push("/components/desafio/descobrirDesafio");
       } catch (error) {
         console.error("Erro ao verificar desafios:", error);
@@ -101,7 +101,7 @@ const VerificacaoDesafios = () => {
       if (user) {
         verificarDesafios(user);
       } else {
-        console.error("Usuário não autenticado.");
+        console.error("Utilizador não autenticado.");
         router.push("/components/entrar/login");
       }
     });
@@ -112,7 +112,7 @@ const VerificacaoDesafios = () => {
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#0000ff" />
-      <Text style={styles.text}>Verificando...</Text>
+      <Text style={styles.text}>A verificar...</Text>
     </View>
   );
 };

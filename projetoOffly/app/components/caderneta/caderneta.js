@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-native";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { auth, db } from "../../firebase/firebaseApi"; // Certifique-se de importar o Firebase Auth e Firestore
+import { auth, db } from "../../firebase/firebaseApi"; 
 import { useRouter } from "expo-router";
 import { Svg, Circle, Path } from "react-native-svg";
 
@@ -46,7 +46,7 @@ const Caderneta = () => {
 
     const fetchWeeklyChallengeCards = async () => {
       try {
-        // Acessa a coleção "desafioSemanal"
+       
         const desafioRef = collection(db, "desafioSemanal");
         const q = query(desafioRef, where("validada", "==", true)); // Buscar apenas cartas com "validada" == true
         const querySnapshot = await getDocs(q);
@@ -56,14 +56,14 @@ const Caderneta = () => {
           ...doc.data(),
         }));
 
-        setWeeklyChallengeCards(desafioCards); // Atualiza o estado com as cartas do desafio semanal validadas
+        setWeeklyChallengeCards(desafioCards); 
       } catch (error) {
         console.error("Erro ao buscar cartas do desafio semanal:", error);
       }
     };
 
     fetchValidatedCards();
-    fetchWeeklyChallengeCards(); // Chama a função para buscar as cartas do desafio semanal
+    fetchWeeklyChallengeCards(); 
   }, []);
 
   return (
@@ -97,7 +97,7 @@ const Caderneta = () => {
           {/* Renderização das cartas do desafio semanal dentro do grid */}
           <View style={styles.cardGrid}>
             {weeklyChallengeCards.map((card) => (
-              <View key={card.id} style={[styles.card, styles.activeCard]}>
+              <View key={card.id} style={[styles.card, styles.activeCard2]}>
               {card.imagem ? (
                 <Image
                   source={{ uri: card.imagem }}
@@ -107,6 +107,7 @@ const Caderneta = () => {
               ) : (
                 <Text style={styles.cardTitle}>Imagem não disponível</Text>
               )}
+               <Text style={styles.weeklyCardTitle}>{card.titulo || "Sem título"}</Text>
             </View>
             ))}
 
@@ -220,12 +221,17 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   activeCard: {
-    backgroundColor: "#D8EAF8", // Fundo para as cartas diárias e desafios semanais validados
+    backgroundColor: "#D8EAF8", 
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  activeCard2: {
+    backgroundColor: "#E3FC87", 
     borderRadius: 8,
     overflow: "hidden",
   },
   inactiveCard: {
-    backgroundColor: "#EDEDF1", // Fundo tracejado para cartas não validadas
+    backgroundColor: "#EDEDF1", 
     borderColor: "#263A83",
     borderWidth: 1,
     borderStyle: "dashed",
@@ -289,10 +295,18 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   cardImage2: {
+    marginTop: 10,
     width: "100%", 
-    height: "100%", 
+    height: "60%", 
     alignSelf: "center", 
     borderRadius: 8, 
+  },
+  weeklyCardTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "black", 
+    textAlign: "center",
+    marginTop: 5,
   },
 });
 

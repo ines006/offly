@@ -159,7 +159,7 @@ const Login = () => {
 
         <View style={styles.textCenter}>
           <Text style={styles.txt1}>Ainda não tens conta?</Text>
-          <TouchableOpacity onPress={() => router.push("./registo")}>
+          <TouchableOpacity onPress={() => router.push("./components/entrar/registo")}>
             <Text style={styles.txt2}>Criar conta</Text>
           </TouchableOpacity>
         </View>

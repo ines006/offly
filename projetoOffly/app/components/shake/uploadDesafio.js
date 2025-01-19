@@ -68,40 +68,10 @@ const UploadDesafio = () => {
       } else {
         console.log("Nenhum documento encontrado para adicionar o campo 'validada'.");
       }
-  
-      // Lógica para atualizar os pontos na coleção "equipas"
-      const equipasCollectionRef = collection(db, "equipas");
-      const equipasSnapshot = await getDocs(
-        query(equipasCollectionRef, where("membros", "array-contains", userId), limit(1))
-      );
-  
-      if (!equipasSnapshot.empty) {
-        const equipaDoc = equipasSnapshot.docs[0];
-        const equipaId = equipaDoc.id;
-        const equipaData = equipaDoc.data();
-  
-        console.log(`Equipa encontrada: ${equipaId} com dados:`, equipaData);
-  
-        // Atualiza o campo "adquiridos" com o valor atual + 5
-        const equipaDocRef = doc(db, "equipas", equipaId);
-        const pontosAtuais = equipaData.adquiridos || 0; // Se "adquiridos" não existe, inicializa como 0
-  
-        console.log(`Pontos atuais antes da atualização: ${pontosAtuais}`);
-  
-        await updateDoc(equipaDocRef, {
-          adquiridos: pontosAtuais + 5, // Adiciona 5 ao campo "adquiridos"
-        });
-  
-        console.log(`Pontos atualizados para: ${pontosAtuais + 5}`);
-      } else {
-        console.log("Nenhuma equipa encontrada para o usuário.");
-      }
     } catch (error) {
-      console.error("Erro ao processar o desafio:", error);
+      console.error("Erro ao adicionar o campo 'validada':", error);
     }
   };
-  
-  
 
   // Função para abrir a galeria e selecionar uma imagem
   const handleSelectImage = async () => {

@@ -176,7 +176,7 @@ const Register = () => {
   };
 
   return (
-    <View accessible={true} accessibilityRole="main" style={styles.container}>
+    <View accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
           Criar Conta
@@ -338,7 +338,7 @@ const Register = () => {
               styles.input,
               (focusField === "password" || password) && styles.focusedInput,
             ]}
-            placeholder="Palavra-passe"
+            placeholder="Defina a sua palavra-passe"
             placeholderTextColor="#adadad"
             value={password}
             secureTextEntry
@@ -386,7 +386,7 @@ const Register = () => {
               (focusField === "confirmPassword" || confirmPassword) &&
                 styles.focusedInput,
             ]}
-            placeholder="Reescreva a Palavra-passe"
+            placeholder="Reescreva a palavra-passe"
             placeholderTextColor="#adadad"
             value={confirmPassword}
             secureTextEntry

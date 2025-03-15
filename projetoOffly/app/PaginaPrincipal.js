@@ -54,30 +54,35 @@ function Caixas_de_Texto_Criar_Equipa(props) {
     placeholder,
     value,
     onChangeText,
-    editable,
+    editable = true, // Garantindo que seja editável por padrão
     error,
     onError,
     placeholderTextColor,
-    accessibilityLabel,
-    accessibilityRole,
   } = props;
 
   return (
-    <View accessible={true}>
-      <Titulos_Criar_Equipa
-        accessibilityLabel={titulo}
-        accessibilityRole="text"
-      >
+    <View style={styles.inputContainer}>
+      {/* Título apenas visual, escondido do VoiceOver */}
+      <Titulos_Criar_Equipa accessibilityElementsHidden={true}>
         {titulo} <Text style={{ color: "#B30000" }}>*</Text>
       </Titulos_Criar_Equipa>
       <Caixa_de_texto
         value={value}
         placeholder={placeholder}
         onChangeText={onChangeText}
-        editable={editable}
-        accessibilityLabel={`${titulo} (obrigatório)`}
+        editable={editable} // Campo editável
+        accessible={true}
+        accessibilityLabel={
+          value
+            ? `${titulo} (obrigatório)`
+            : `${titulo} (obrigatório), ${placeholder}`
+        }
         accessibilityHint={`Insira ${titulo.toLowerCase()}`}
+        accessibilityRole="textbox" // Define explicitamente como campo de texto editável
+        accessibilityValue={{ text: value ? value : "campo vazio" }}
         placeholderTextColor={placeholderTextColor || "rgba(38, 58, 131, 0.5)"}
+        autoCapitalize="sentences" // Facilita a edição
+        returnKeyType="done" // Adiciona um botão "Concluído" no teclado
         onBlur={() => {
           if (!value.trim()) {
             if (titulo === "Dá um nome à tua equipa") {
@@ -631,20 +636,17 @@ export default function PaginaPrincipal() {
                 placeholder="Exemplo: Os incríveis"
                 value={NomeEquipa}
                 onChangeText={setNomeEquipa}
-                editable={true}
+                editable={true} // Explicitamente editável
                 error={nomeEquipaError}
                 onError={setNomeEquipaError}
-                accessibilityLabel="Dá um nome à tua equipa"
-                accessibilityRole="text"
               />
 
               <Caixas_de_Texto_Criar_Equipa
-                accessibilityRole="form"
                 titulo="Adiciona uma descrição"
                 placeholder="Exemplo: Vamos ganhar!"
                 value={DescricaoEquipa}
                 onChangeText={setDescricaoEquipa}
-                editable={true}
+                editable={true} // Explicitamente editável
                 error={descricaoEquipaError}
                 onError={setDescricaoEquipaError}
               />
@@ -664,7 +666,7 @@ export default function PaginaPrincipal() {
                     textStyle={styles.dropdownText}
                     dropdownStyle={styles.dropdownMenu}
                     style={styles.dropdownButton}
-                    renderButtonText={(value) => value} // Garante que o valor selecionado seja exibido
+                    renderButtonText={(value) => value}
                     accessibilityLabel="Quantidade de participantes"
                     accessibilityHint="Selecione o número de participantes"
                     accessibilityRole="spinbutton"
@@ -801,6 +803,9 @@ export default function PaginaPrincipal() {
 }
 
 const styles = StyleSheet.create({
+  inputContainer: {
+    marginBottom: 10, // Espaçamento opcional entre os campos
+  },
   teamIcon: {
     width: 60,
     height: 60,

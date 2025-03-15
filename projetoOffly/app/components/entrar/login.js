@@ -88,12 +88,12 @@ const Login = () => {
   };
 
   return (
-    <View accessible={true} accessibilityRole="main" astyle={styles.container}>
+    <View accessibilityRole="main" astyle={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
           Bem-vindo!
         </Text>
-        <Text style={styles.h4} accessibilityRole="header">
+        <Text style={styles.h4} accessibilityRole="text">
           Início de sessão na Offly
         </Text>
 
@@ -102,9 +102,8 @@ const Login = () => {
             nativeID="emailLabel"
             style={styles.subtitles}
             accessibilityRole="text"
-            accessibilityLabel="Endereço de E-mail"
           >
-            Endereço de E-mail
+            Endereço de Email
           </Text>
           <TextInput
             style={[

@@ -176,7 +176,7 @@ const Register = () => {
   };
 
   return (
-    <View accessibilityRole="main" style={styles.container}>
+    <View accessible={true} accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
           Criar Conta
@@ -188,6 +188,7 @@ const Register = () => {
             nativeID="nameLabel"
             style={styles.subtitles}
             accessibilityRole="text"
+            accessibilityLabel="Nome Completo"
           >
             Nome Completo{" "}
             <Text nativeID="mandatory" style={styles.mandatory}>
@@ -233,6 +234,7 @@ const Register = () => {
             nativeID="usernameLabel"
             style={styles.subtitles}
             accessibilityRole="text"
+            accessibilityLabel="Nome de Utilizador"
           >
             Nome de Utilizador{" "}
             <Text nativeID="mandatory" style={styles.mandatory}>
@@ -274,7 +276,12 @@ const Register = () => {
 
         {/* Email */}
         <View style={styles.wrapInput}>
-          <Text nativeID="emailLabel" style={styles.subtitles}>
+          <Text
+            nativeID="emailLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Endereço de E-mail"
+          >
             Endereço de E-mail{" "}
             <Text nativeID="mandatory" style={styles.mandatory}>
               *
@@ -315,7 +322,12 @@ const Register = () => {
 
         {/* Password */}
         <View style={styles.wrapInput}>
-          <Text nativeID="passwordLabel" style={styles.subtitles}>
+          <Text
+            nativeID="passwordLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Palavra-passe"
+          >
             Palavra-passe{" "}
             <Text nativeID="mandatory" style={styles.mandatory}>
               *
@@ -357,7 +369,12 @@ const Register = () => {
 
         {/* Confirmar Password */}
         <View style={styles.wrapInput}>
-          <Text nativeID="passwordLabel" style={styles.subtitles}>
+          <Text
+            nativeID="passwordLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Confirmar Palavra-passe"
+          >
             Confirmar Palavra-passe{" "}
             <Text nativeID="mandatory" style={styles.mandatory}>
               *
@@ -403,7 +420,11 @@ const Register = () => {
 
         {/* Gênero */}
         <View style={styles.wrapInput}>
-          <Text nativeID="passwordLabel" style={styles.subtitles}>
+          <Text
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Género"
+          >
             Género{" "}
             <Text nativeID="mandatory" style={styles.mandatory}>
               *
@@ -411,6 +432,7 @@ const Register = () => {
           </Text>
           <BotaoNavegacaoContainer>
             <Definir_visibilidade_btn
+              accessibilityRole="button"
               style={{
                 backgroundColor:
                   activeButton === "Masculino" ? "#E3FC87" : "white",
@@ -422,6 +444,7 @@ const Register = () => {
               </Texto_Botoes_Definir_Visibilidade>
             </Definir_visibilidade_btn>
             <Definir_visibilidade_btn
+              accessibilityRole="button"
               style={{
                 backgroundColor:
                   activeButton === "Feminino" ? "#E3FC87" : "white",
@@ -436,15 +459,33 @@ const Register = () => {
         </View>
 
         {/* Botão de Registro */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
-          <Text style={styles.loginButtonText}>Registar-me</Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleSubmit}
+          accessibilityRole="button"
+        >
+          <Text style={styles.loginButtonText} accessibilityLabel="Registar-me">
+            Registar-me
+          </Text>
         </TouchableOpacity>
 
         {/* Link para Login */}
         <View style={styles.textCenter}>
-          <Text style={styles.txt1}>Já tens uma conta?</Text>
+          <Text
+            style={styles.txt1}
+            accessibilityRole="text"
+            accessibilityLabel="Já tens uma conta?"
+          >
+            Já tens uma conta?
+          </Text>
           <TouchableOpacity onPress={() => router.push("./login")}>
-            <Text style={styles.txt2}>Iniciar sessão</Text>
+            <Text
+              style={styles.txt2}
+              accessibilityRole="link"
+              accessibilityLabel="Iniciar sessão"
+            >
+              Iniciar sessão
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -520,6 +561,7 @@ const styles = StyleSheet.create({
     color: "#FFBDBD",
     fontSize: 14,
     marginTop: 10,
+    marginBottom: 20,
     textAlign: "center",
   },
   textCenter: {

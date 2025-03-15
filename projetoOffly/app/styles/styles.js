@@ -516,7 +516,6 @@ export const Texto_Botoes_Pagina_principal_Desativado = styled.Text`
 
 export const Texto_Botoes_Pagina_principal_Voltar = styled.Text`
   color: #414141;
-  text-align: justify;
   font-family: poppins-regular;
   font-size: 15px;
   font-weight: 400;

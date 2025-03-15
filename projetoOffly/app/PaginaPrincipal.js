@@ -58,11 +58,16 @@ function Caixas_de_Texto_Criar_Equipa(props) {
     error,
     onError,
     placeholderTextColor,
+    accessibilityLabel,
+    accessibilityRole,
   } = props;
 
   return (
-    <View>
-      <Titulos_Criar_Equipa>
+    <View accessible={true}>
+      <Titulos_Criar_Equipa
+        accessibilityLabel={titulo}
+        accessibilityRole="text"
+      >
         {titulo} <Text style={{ color: "#B30000" }}>*</Text>
       </Titulos_Criar_Equipa>
       <Caixa_de_texto
@@ -85,7 +90,15 @@ function Caixas_de_Texto_Criar_Equipa(props) {
           }
         }}
       />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <Text
+          style={styles.errorText}
+          accessibilityLiveRegion="assertive"
+          accessibilityRole="alert"
+        >
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -542,15 +555,22 @@ export default function PaginaPrincipal() {
         </ProfileTextContainer>
       </ProfileContainer>
       <Container_Pagina_Pricipal accessibilityRole="main">
-        <Titulos accessibilityRole="header">Começa a competir</Titulos>
-        <Sub_Titulos accessibilityRole="text">
+        <Titulos
+          accessibilityRole="header"
+          accessibilityLabel="Começa a competir"
+        >
+          Começa a competir
+        </Titulos>
+        <Sub_Titulos
+          accessibilityRole="text"
+          accessibilityLabel="Junta-te a uma equipa"
+        >
           Junta-te a uma equipa
         </Sub_Titulos>
 
-        <SearchBarContainer>
+        <SearchBarContainer accessibilityRole="search">
           <SearchIcon />
           <SearchInput
-            accessibilityRole="search"
             placeholder="Pesquisa equipas"
             placeholderTextColor="rgba(38, 58, 131, 0.5)"
             value={searchText}
@@ -570,6 +590,7 @@ export default function PaginaPrincipal() {
                 icon={equipa.imagem}
                 teamName={equipa.nome}
                 playerCount={`${equipa.currentParticipants}/${equipa.numparticipantes}`}
+                accessibilityLabel={`${equipa.nome}, ${equipa.currentParticipants} de ${equipa.numparticipantes} participantes`}
               />
             ))
         ) : (
@@ -579,6 +600,7 @@ export default function PaginaPrincipal() {
         )}
 
         <Botoes_Pagina_principal
+          accessibilityRole="button"
           style={{ marginTop: 45 }}
           onPress={Criar_Equipa}
         >
@@ -597,7 +619,12 @@ export default function PaginaPrincipal() {
             }}
           >
             <CaixaQuestionario>
-              <Titulos accessibilityRole="header">Criar Equipa</Titulos>
+              <Titulos
+                accessibilityRole="header"
+                accessibilityLabel="Criar Equipa"
+              >
+                Criar Equipa
+              </Titulos>
 
               <Caixas_de_Texto_Criar_Equipa
                 titulo="Dá um nome à tua equipa"
@@ -607,6 +634,8 @@ export default function PaginaPrincipal() {
                 editable={true}
                 error={nomeEquipaError}
                 onError={setNomeEquipaError}
+                accessibilityLabel="Dá um nome à tua equipa"
+                accessibilityRole="text"
               />
 
               <Caixas_de_Texto_Criar_Equipa
@@ -621,7 +650,10 @@ export default function PaginaPrincipal() {
               />
 
               <View>
-                <Titulos_Criar_Equipa accessibilityRole="text">
+                <Titulos_Criar_Equipa
+                  accessibilityRole="text"
+                  accessibilityLabel="Define a quantidade de participantes"
+                >
                   Define a quantidade de participantes
                 </Titulos_Criar_Equipa>
                 <View style={styles.dropdownWrapper}>
@@ -635,12 +667,16 @@ export default function PaginaPrincipal() {
                     renderButtonText={(value) => value} // Garante que o valor selecionado seja exibido
                     accessibilityLabel="Quantidade de participantes"
                     accessibilityHint="Selecione o número de participantes"
+                    accessibilityRole="spinbutton"
                   />
                 </View>
               </View>
 
               <View>
-                <Titulos_Criar_Equipa accessibilityRole="text">
+                <Titulos_Criar_Equipa
+                  accessibilityRole="text"
+                  accessibilityLabel="Define a visibilidade da tua equipa"
+                >
                   Define a visibilidade da tua equipa{" "}
                   <Text style={{ color: "#B30000" }}>*</Text>
                 </Titulos_Criar_Equipa>
@@ -652,6 +688,7 @@ export default function PaginaPrincipal() {
                     }}
                     onPress={() => handleButtonClick("public")}
                     accessibilityLabel="Tornar equipa pública"
+                    accessibilityRole="button"
                   >
                     <Texto_Botoes_Definir_Visibilidade accessibilityRole="button">
                       Pública
@@ -664,6 +701,7 @@ export default function PaginaPrincipal() {
                     }}
                     onPress={() => handleButtonClick("private")}
                     accessibilityLabel="Tornar equipa privada"
+                    accessibilityRole="button"
                   >
                     <Texto_Botoes_Definir_Visibilidade accessibilityRole="button">
                       Privada
@@ -680,6 +718,7 @@ export default function PaginaPrincipal() {
                   style={{ backgroundColor: "transparent" }}
                   onPress={() => setModalVisible(false)}
                   accessibilityLabel="Voltar"
+                  accessibilityRole="button"
                 >
                   <Texto_Botoes_Pagina_principal_Voltar>
                     Voltar
@@ -690,6 +729,7 @@ export default function PaginaPrincipal() {
                   style={{ backgroundColor: "#263A83" }}
                   onPress={handleNext}
                   accessibilityLabel="Seguinte"
+                  accessibilityRole="button"
                 >
                   <Texto_Botoes_Pagina_principal>
                     Seguinte
@@ -707,25 +747,48 @@ export default function PaginaPrincipal() {
             transparent={true}
             onRequestClose={() => setModalEquipa(false)}
           >
-            <View style={styles.modalOverlay}>
+            <View accessibility={true} style={styles.modalOverlay}>
               <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Entrar na Equipa</Text>
-                <Text style={styles.modalDescription}>
+                <Text
+                  style={styles.modalTitle}
+                  accessibilityRole="header"
+                  accessibilityLabel="Entrar na Equipa"
+                >
+                  Entrar na Equipa
+                </Text>
+                <Text
+                  style={styles.modalDescription}
+                  accessibilityRole="text"
+                  accessibilityLabel="Tens a certeza de que queres juntar-te à equipa?"
+                >
                   Tens a certeza de que queres juntar-te à equipa?
                 </Text>
 
                 <View style={styles.modalButtonContainer}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={[styles.modalButton, styles.cancelButton]}
                     onPress={() => setModalEquipa(false)}
                   >
-                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                    <Text
+                      style={styles.cancelButtonText}
+                      accessibilityLabel="Cancelar"
+                    >
+                      Cancelar
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={[styles.modalButton, styles.confirmButton]}
                     onPress={handleNext2}
                   >
-                    <Text style={styles.confirmButtonText}>Entrar</Text>
+                    <Text
+                      style={styles.confirmButtonText}
+                      accessibilityRole="button"
+                      accessibilityLabel="Entrar"
+                    >
+                      Entrar
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>

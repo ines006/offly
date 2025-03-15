@@ -88,7 +88,7 @@ const Login = () => {
   };
 
   return (
-    <View accessibilityRole="main" style={styles.container}>
+    <View accessible={true} accessibilityRole="main" astyle={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
           Bem-vindo!
@@ -102,6 +102,7 @@ const Login = () => {
             nativeID="emailLabel"
             style={styles.subtitles}
             accessibilityRole="text"
+            accessibilityLabel="Endereço de E-mail"
           >
             Endereço de E-mail
           </Text>
@@ -144,6 +145,7 @@ const Login = () => {
             nativeID="passwordLabel"
             style={styles.subtitles}
             accessibilityRole="text"
+            accessibilityLabel="Palavra-passe"
           >
             Palavra-passe
           </Text>
@@ -184,16 +186,34 @@ const Login = () => {
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
-          <Text style={styles.loginButtonText}>Entrar</Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleSubmit}
+          accessibilityRole="button"
+        >
+          <Text style={styles.loginButtonText} accessibilityLabel="Entrar">
+            Entrar
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.textCenter}>
-          <Text style={styles.txt1}>Ainda não tens conta?</Text>
+          <Text
+            style={styles.txt1}
+            accessibilityRole="text"
+            accessibilityLabel="Ainda não tens conta?"
+          >
+            Ainda não tens conta?
+          </Text>
           <TouchableOpacity
             onPress={() => router.push("./components/entrar/registo")}
           >
-            <Text style={styles.txt2}>Registar-me</Text>
+            <Text
+              style={styles.txt2}
+              accessibilityRole="link"
+              accessibilityLabel="Registar-me"
+            >
+              Registar-me
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

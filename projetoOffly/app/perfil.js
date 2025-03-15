@@ -211,13 +211,13 @@ const getRandomImage = () => {
       </Header>
 
       <AvatarContainer>
-        <Avatar source={profileImage} />
+        <Avatar accessibilityLabel="Imagem de perfil do utilizador" source={profileImage} />
         <LevelText>Nível 1</LevelText>
         <Stars>
-          <Icon name="star" size={20} color="#263A83" />
-          <Icon name="star" size={20} color="#ccc" />
-          <Icon name="star" size={20} color="#ccc" />
-          <Icon name="star" size={20} color="#ccc" />
+          <Icon accessibilityLabel="estrela nível 1" name="star" size={20} color="#263A83" />
+          <Icon accessibilityLabel="estrela nível 2" name="star" size={20} color="#ccc" />
+          <Icon accessibilityLabel="estrela nível 3" name="star" size={20} color="#ccc" />
+          <Icon accessibilityLabel="estrela nível 4" name="star" size={20} color="#ccc" />
         </Stars>
       </AvatarContainer>
 
@@ -300,10 +300,13 @@ const HeaderTitle = styled.Text`
   color: #263A83;
 `;
 
-const AvatarContainer = styled.View`
+const AvatarContainer = styled.View.attrs({
+  accessible: true,
+})`
   align-items: center;
   margin-bottom: 20px;
 `;
+
 
 const Avatar = styled.Image`
   width: 100px;
@@ -317,7 +320,9 @@ const LevelText = styled.Text`
   color: #263A83;
 `;
 
-const Stars = styled.View`
+const Stars = styled.View.attrs({
+  accessible: true,
+})`
   flex-direction: row;
   margin-top: 4px;
 `;

@@ -100,6 +100,7 @@ const Caderneta = () => {
               <View key={card.id} style={[styles.card, styles.activeCard2]}>
               {card.imagem ? (
                 <Image
+                  accessibilityLabel="Carta do desafio semanal"
                   source={{ uri: card.imagem }}
                   style={styles.cardImage2}
                   resizeMode="cover"
@@ -160,6 +161,7 @@ const Card = ({ number, imageUrl, hasIcon }) => {
     >
       {imageUrl ? (
         <Image
+          accessibilityLabel="Carta do desafio diário"
           source={{ uri: imageUrl }}
           style={styles.cardImage}
           resizeMode="cover"

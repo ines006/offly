@@ -112,7 +112,7 @@ const DetalhesEquipa = () => {
     
     <ScrollView contentContainerStyle={styles.container}>
       
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity accessible={true} accessibilityLabel="Botão voltar atrás" style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backButtonText}>
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle
@@ -134,8 +134,9 @@ const DetalhesEquipa = () => {
 
       <Text style={styles.title}>Torneio XPTO</Text>
 
-      <View style={styles.info}>
+      <View accessible={true} style={styles.info}>
         <Image
+          accessibilityLabel="Imagem de equipa"
           source={require("../../imagens/1.png")}
           style={styles.teamImage}
         />
@@ -181,11 +182,12 @@ const DetalhesEquipa = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.remainingTeamsContainer}>
+      <View accessible={true} style={styles.remainingTeamsContainer}>
         {participants.length > 0 ? (
           participants.map((participant, index) => (
             <View key={index} style={styles.card}>
               <Image
+                accessibilityLabel="Imagem do participante"
                 source={{ uri: getRandomImage() }}
                 style={styles.peopleImage}
               />

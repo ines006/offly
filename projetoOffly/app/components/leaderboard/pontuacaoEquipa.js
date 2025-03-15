@@ -32,6 +32,7 @@ const PontuacaoEquipa = () => {
           </View>
 
           <Image
+            accessibilityLabel="Imagem de equipa"
             source={require("../../imagens/1.png")}
             style={styles.teamIcon}
           />

@@ -156,6 +156,7 @@ export default function Questionario() {
       {mostrarFinal ? (
         <View style={{ flex: 1, position: "relative" }}>
           <Image
+            accessibilityLabel="Ilustração de um smartphone com uma notificação sobre equipas"
             source={require("../assets/images/Group 677.png")}
             style={{
               position: "absolute",

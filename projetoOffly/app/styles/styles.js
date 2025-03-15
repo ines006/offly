@@ -415,12 +415,15 @@ export const ProfileContainer = styled.TouchableOpacity`
   align-self: center;
 `;
 
-export const Avatar = styled.Image`
+export const Avatar = styled.Image.attrs({
+  accessibilityLabel: 'Imagem de perfil do utilizador'
+})`
   width: 70px;
   height: 70px;
   border-radius: 100px;
   margin-right: 15px;
 `;
+
 
 export const ProfileTextContainer = styled.View`
   flex: 1;

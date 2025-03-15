@@ -56,8 +56,9 @@ const PodioPontuacao = () => {
   const Podium = () => (
     <View style={styles.podiumContainer}>
       {/* 2nd Place */}
-      <View style={[styles.podiumSection, styles.secondPlaceSection]}>
+      <View accessible={true} style={[styles.podiumSection, styles.secondPlaceSection]}>
         <Image
+          accessibilityLabel="Imagem da equipa em segundo lugar"
           source={{
             uri: teams[1]?.imageUrl || "https://default-image-url.png",
           }}
@@ -68,8 +69,9 @@ const PodioPontuacao = () => {
       </View>
 
       {/* 1st Place */}
-      <View style={[styles.podiumSection, styles.firstPlaceSection]}>
+      <View accessible={true} style={[styles.podiumSection, styles.firstPlaceSection]}>
         <Image
+          accessibilityLabel="Imagem da equipa em primeiro lugar"
           source={{
             uri: teams[0]?.imageUrl || "https://default-image-url.png",
           }}
@@ -80,8 +82,9 @@ const PodioPontuacao = () => {
       </View>
 
       {/* 3rd Place */}
-      <View style={[styles.podiumSection, styles.thirdPlaceSection]}>
+      <View accessible={true} style={[styles.podiumSection, styles.thirdPlaceSection]}>
         <Image
+          accessibilityLabel="Imagem da equipa em terceiro lugar"
           source={{
             uri: teams[2]?.imageUrl || "https://default-image-url.png",
           }}
@@ -112,6 +115,7 @@ const PodioPontuacao = () => {
           </View>
 
           <Image
+            accessibilityLabel="Imagem da equipa"
             source={{ uri: item.imageUrl || "https://default-image-url.png" }}
             style={styles.teamIcon}
           />
@@ -140,6 +144,8 @@ const PodioPontuacao = () => {
       <Podium />
 
       <ImageBackground
+        accessible={true}
+        accessibilityLabel="Ilustração do pódio com segundo, primeiro e terceiro lugar"
         source={require("../../imagens/podioImagem.png")}
         style={styles.podiumBackground}
         imageStyle={styles.podiumImage}

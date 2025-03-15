@@ -5,7 +5,7 @@ import styled from 'styled-components/native';
 const Card_Equipa = ({ onPress, icon, teamName, playerCount }) => {
     return (
       <CardContainer onPress={onPress}>
-        <IconWrapper>
+        <IconWrapper accessible={true}>
           <Icon>{icon}</Icon>
         </IconWrapper>
         <CardText>{teamName}</CardText>

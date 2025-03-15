@@ -92,6 +92,7 @@ export default function CartaSelecionada() {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
+          accessibilityLabel="Botão voltar atrás"
         >
           <Text style={styles.backButtonText}>
             <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
@@ -115,6 +116,7 @@ export default function CartaSelecionada() {
         <TouchableOpacity
           style={styles.homeButton}
           onPress={() => router.push("../navbar")}
+          accessibilityLabel="Botão fechar"
         >
           <Text style={styles.homeButtonText}>
             <Svg
@@ -158,9 +160,10 @@ export default function CartaSelecionada() {
 
         <Text style={styles.title}>Escolheste a carta {cardNumber}</Text>
 
-        <View style={[styles.mainCard, { marginTop: 20 }]}>
+        <View accessible={true} style={[styles.mainCard, { marginTop: 20 }]}>
           {selectedCard.imagem && (
             <Image
+              accessibilityLabel="Imagem da carta escolhida"
               source={{ uri: selectedCard.imagem }}
               style={styles.cardImage}
               resizeMode="cover"

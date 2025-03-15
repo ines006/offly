@@ -443,7 +443,7 @@ const fetchEquipas = async () => {
   };
 
   const SearchIcon = () => (
-    <Svg width="18" height="18" viewBox="0 0 24 24" fill="#263A83">
+    <Svg accessibilityLabel="ilustração lupa de pesquisa" width="18" height="18" viewBox="0 0 24 24" fill="#263A83">
       <Path
         d="M10.5 2a8.5 8.5 0 1 0 5.53 15.03l3.7 3.7a1.5 1.5 0 1 0 2.12-2.12l-3.7-3.7A8.5 8.5 0 0 0 10.5 2zm0 3a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"
         fill="#1a237e"
@@ -464,6 +464,7 @@ const fetchEquipas = async () => {
   <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>
   <StarsContainer>
     <Svg
+      accessibilityLabel="estrela nível 1"
       width="13"
       height="11"
       viewBox="0 0 13 11"
@@ -476,6 +477,7 @@ const fetchEquipas = async () => {
       />
     </Svg>
     <Svg
+      accessibilityLabel="estrela nível 2"
       width="13"
       height="11"
       viewBox="0 0 13 11"
@@ -488,6 +490,7 @@ const fetchEquipas = async () => {
       />
     </Svg>
     <Svg
+      accessibilityLabel="estrela nível 3"
       width="13"
       height="11"
       viewBox="0 0 13 11"
@@ -500,6 +503,7 @@ const fetchEquipas = async () => {
       />
     </Svg>
     <Svg
+      accessibilityLabel="estrela nível 4"
       width="13"
       height="11"
       viewBox="0 0 13 11"

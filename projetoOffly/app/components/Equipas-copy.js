@@ -7,6 +7,7 @@ const Card_Equipa = ({ onPress, icon, teamName, playerCount }) => {
       <CardContainer onPress={onPress}>
         <IconWrapper>
           <Image
+            accessibilityLabel="Imagem de equipa"
             source={{ uri: icon }}
             style={styles.teamIcon}
           />

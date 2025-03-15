@@ -88,7 +88,7 @@ export default function Cards() {
 
         <View style={styles.topCards}>
           {cards.map((card, index) => (
-            <TouchableOpacity key={index} onPress={() => handleCardSelect(index)}>
+            <TouchableOpacity accessible={true} key={index} onPress={() => handleCardSelect(index)}>
               <Animated.View
                 style={[
                   styles.smallCard,
@@ -101,6 +101,7 @@ export default function Cards() {
               >
                 {revealedCards[index] && card.imagem && ( // Só exibe a imagem se a carta for revelada
                   <Image
+                    accessibilityLabel="Carta minimizada revelada"
                     source={{ uri: card.imagem }}
                     style={styles.smallCardImage}
                     resizeMode="cover"
@@ -112,9 +113,10 @@ export default function Cards() {
         </View>
 
         {selectedCard && (
-          <View style={styles.mainCard}>
+          <View accessible={true} style={styles.mainCard}>
             {selectedCard.imagem && (
               <Image
+                accessibilityLabel="Imagem da carta selecionada"
                 source={{ uri: selectedCard.imagem }}
                 style={styles.cardImage}
                 resizeMode="cover"

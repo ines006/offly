@@ -128,6 +128,8 @@ const screens = [
       "Aqui, vais descobrir como podes reduzir o excesso de tempo de ecrã de forma divertida e em equipa",
     renderContent: () => (
       <Svg
+        accessible={true}
+        accessibilityLabel="Ilustração Offly"
         width="221"
         height="198"
         viewBox="0 0 221 198"
@@ -190,6 +192,8 @@ const screens = [
       "Forma equipas com os teus amigos ou junta-te a outras para competir. Trabalhem juntos para alcançar a vossa meta!",
     renderContent: () => (
       <Svg
+        accessible={true}
+        accessibilityLabel="Ilustração Equipa"
         width="190"
         height="190"
         viewBox="0 0 190 190"
@@ -397,6 +401,8 @@ const screens = [
       "Desafia-te a passar menos tempo no ecrã e a provar que és o melhor.",
     renderContent: () => (
       <Svg
+      accessible={true}  
+      accessibilityLabel="Ilustração Torneio"
         width="193"
         height="195"
         viewBox="0 0 193 195"
@@ -682,6 +688,8 @@ const screens = [
       "Agita o telemóvel, revela três cartas e escolhe o teu próximo desafio!",
     renderContent: () => (
       <Svg
+      accessible={true}  
+      accessibilityLabel="Ilustração Desafio"
         width="190"
         height="191"
         viewBox="0 0 190 191"
@@ -883,6 +891,8 @@ const screens = [
       "Desafios diários e semanais para testar os teus limites, acumular pontos e desbloquear conquistas incríveis.",
     renderContent: () => (
       <Svg
+      accessible={true}  
+      accessibilityLabel="Ilustração Conquistas"
         width="190"
         height="190"
         viewBox="0 0 190 190"
@@ -1081,6 +1091,8 @@ const screens = [
       "Cada vitória conta! Acumula pontos,  sobe de posiçõe e ganha reconhecimento como uma das melhores equipas do torneio.",
     renderContent: () => (
       <Svg
+      accessible={true}  
+      accessibilityLabel="Ilustração Troféu"
         width="190"
         height="190"
         viewBox="0 0 190 190"
@@ -1216,6 +1228,8 @@ const screens = [
       "Guarda e partilha momentos especiais ao completar a tua caderneta de fotos. Cada conquista merece ser lembrada!",
     renderContent: () => (
       <Svg
+      accessible={true}  
+      accessibilityLabel="Ilustração Caderneta"
         width="190"
         height="192"
         viewBox="0 0 190 192"
@@ -2079,6 +2093,8 @@ const App = () => {
             }
           >
             <Svg
+              accessible={true}
+              accessibilityLabel="Botão avançar"
               width="58"
               height="58"
               viewBox="0 0 58 58"

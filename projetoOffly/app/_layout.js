@@ -4,8 +4,15 @@ export default function Layout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false, // Remove o cabeçalho para todas as páginas
+        headerShown: false,
       }}
-    />
+    >
+      <Stack.Screen
+        name="components/entrar/login"
+        options={{
+          title: "Página de inicio de sessão",
+        }}
+      />
+    </Stack>
   );
 }

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore"; 
+import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../../firebase/firebaseApi";
 import {
   StyleSheet,
@@ -35,7 +35,10 @@ const Login = () => {
 
   const handleBlur = (field) => {
     const animatedWidth = field === "email" ? emailBarWidth : passwordBarWidth;
-    if ((field === "email" && email === "") || (field === "password" && password === "")) {
+    if (
+      (field === "email" && email === "") ||
+      (field === "password" && password === "")
+    ) {
       Animated.timing(animatedWidth, {
         toValue: 0,
         duration: 300,
@@ -50,17 +53,21 @@ const Login = () => {
   const handleSubmit = async () => {
     try {
       // Realizar o login
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user; // O usuário autenticado
       console.log("Login realizado com sucesso!", user);
-  
+
       // Após o login, acessar o Firestore para obter o campo 'team'
       const userDocRef = doc(db, "users", user.uid); // Referência ao documento do usuário
       const userDoc = await getDoc(userDocRef);
-  
+
       if (userDoc.exists()) {
         const userData = userDoc.data(); // Dados do documento
-  
+
         if (userData.team) {
           // Se o campo 'team' existir e não estiver vazio, redirecionar para a página principal
           router.push("../../components/navbar");
@@ -74,23 +81,36 @@ const Login = () => {
       }
     } catch (err) {
       console.error("Erro ao fazer login:", err);
-      setError("Falha ao fazer login: " + err.message);
+      setError(
+        "O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!"
+      );
     }
   };
-  
 
   return (
-    <View style={styles.container}>
+    <View accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
-        <Text style={styles.title}>Bem vindo</Text>
+        <Text style={styles.h1} accessibilityRole="header">
+          Bem-vindo!
+        </Text>
+        <Text style={styles.h4} accessibilityRole="header">
+          Início de sessão na Offly
+        </Text>
 
         <View style={styles.wrapInput}>
+          <Text
+            nativeID="emailLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+          >
+            Endereço de E-mail
+          </Text>
           <TextInput
             style={[
               styles.input,
               (focusField === "email" || email !== "") && styles.focusedInput,
             ]}
-            placeholder="Email"
+            placeholder="Escreva o seu email"
             placeholderTextColor="#adadad"
             value={email}
             autoCapitalize="none"
@@ -103,7 +123,9 @@ const Login = () => {
               setFocusField("");
               handleBlur("email");
             }}
+            accessibilityLabel="Endereço de e-mail"
           />
+
           <Animated.View
             style={[
               styles.bar,
@@ -118,12 +140,20 @@ const Login = () => {
         </View>
 
         <View style={styles.wrapInput}>
+          <Text
+            nativeID="passwordLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+          >
+            Palavra-passe
+          </Text>
           <TextInput
             style={[
               styles.input,
-              (focusField === "password" || password !== "") && styles.focusedInput,
+              (focusField === "password" || password !== "") &&
+                styles.focusedInput,
             ]}
-            placeholder="Password"
+            placeholder="Escreva a sua palavra-passe"
             placeholderTextColor="#adadad"
             value={password}
             secureTextEntry
@@ -137,6 +167,7 @@ const Login = () => {
               setFocusField("");
               handleBlur("password");
             }}
+            accessibilityLabel="Palavra-passe"
           />
           <Animated.View
             style={[
@@ -154,13 +185,15 @@ const Login = () => {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
-          <Text style={styles.loginButtonText}>Login</Text>
+          <Text style={styles.loginButtonText}>Entrar</Text>
         </TouchableOpacity>
 
         <View style={styles.textCenter}>
           <Text style={styles.txt1}>Ainda não tens conta?</Text>
-          <TouchableOpacity onPress={() => router.push("./components/entrar/registo")}>
-            <Text style={styles.txt2}>Criar conta</Text>
+          <TouchableOpacity
+            onPress={() => router.push("./components/entrar/registo")}
+          >
+            <Text style={styles.txt2}>Registar-me</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -189,11 +222,12 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  title: {
-    fontSize: 30,
-    color: "azure",
+  h1: {
+    fontSize: 35,
+    fontWeight: "bold",
+    color: "#E3FC87",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 15,
   },
   wrapInput: {
     width: "100%",
@@ -229,11 +263,11 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     color: "black",
-    textTransform: "uppercase",
+    fontWeight: 400,
   },
   errorText: {
     fontSize: 14,
-    color: "#E3FC87",
+    color: "#FFBDBD",
     textAlign: "center",
     marginBottom: 10,
   },
@@ -251,5 +285,17 @@ const styles = StyleSheet.create({
     color: "#E3FC87",
     fontWeight: "bold",
     marginLeft: 5,
+  },
+  subtitles: {
+    fontSize: 15,
+    color: "azure",
+    fontWeight: 500,
+  },
+  h4: {
+    fontSize: 15,
+    color: "#E3FC87",
+    fontWeight: 400,
+    marginBottom: 15,
+    textAlign: "center",
   },
 });

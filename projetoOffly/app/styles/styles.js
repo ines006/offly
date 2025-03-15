@@ -58,11 +58,12 @@ export const PerguntaTexto = styled.Text`
   font-family: "Poppins-Regular";
   color: #414141;
   font-size: 14px;
+  font-weight: bold;
 `;
 
 // Texto selecionar resposta
 export const SelecionaResposta = styled.Text`
-  color: #a7a7a7;
+  color: #414141;
   text-align: justify;
   font-family: "Poppins-Regular";
   font-size: 12px;
@@ -121,7 +122,7 @@ export const BotaoOpcao = styled.TouchableOpacity`
   font-family: "Poppins-Regular";
   font-size: 12px;
   background-color: ${(props) => (props.selecionado ? "#E3FC87" : "#fff")};
-  border: 0.5px solid #9b9b9b;
+  border: 0.5px solid #585858;
   border-radius: 8px;
   justify-content: flex-start;
   margin-bottom: 21px;
@@ -137,12 +138,12 @@ export const Circulo = styled.View`
   justify-content: center;
   background-color: ${(props) => (props.selecionado ? "#263A83" : "#fff")};
   border: ${(props) =>
-    props.selecionado ? "1px solid #263A83" : "1px solid #ccc"};
+    props.selecionado ? "1px solid #263A83" : "1px solid #585858"};
 `;
 
 // Texto do botão de opção
 export const TextoBotao = styled.Text`
-  color: ${(props) => (props.selecionado ? "#263A83" : "#9B9B9B")};
+  color: ${(props) => (props.selecionado ? "#263A83" : "#585858")};
   font-family: "Poppins-Regular";
   font-size: 12px;
 `;
@@ -207,7 +208,7 @@ export const TituloCaixa = styled.Text`
 `;
 
 export const TextoCaixa = styled.Text`
-  color: #9b9b9b;
+  color: #414141;
   font-size: 14px;
   font-weight: 400;
   margin-top: 29px;
@@ -234,7 +235,7 @@ export const TextoBotaoComecar = styled.Text`
 `;
 
 export const TextoCaixaFinal = styled.Text`
-  color: #9b9b9b;
+  color: #414141;
   font-size: 14px;
   font-weight: 400;
   margin-top: 29px;

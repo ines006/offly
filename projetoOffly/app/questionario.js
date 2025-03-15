@@ -189,12 +189,18 @@ export default function Questionario() {
           <CaixaQuestionario>
             <PerguntaTexto>{perguntas[perguntaAtual].texto}</PerguntaTexto>
             <SelecionaResposta>Seleciona uma resposta</SelecionaResposta>
-            <OpcoesContainer>
+
+            <OpcoesContainer 
+              accessibilityRole="radiogroup" 
+              accessibilityLabel="Escolha uma opção">
               {perguntas[perguntaAtual].opcoes.map((opcao, index) => (
                 <BotaoOpcao
                   key={index}
                   selecionado={respostaSelecionada === index}
                   onPress={() => selecionarResposta(index)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={opcao}
+                  accessibilityState={{ selected: respostaSelecionada === index }}
                 >
                   <Circulo selecionado={respostaSelecionada === index}>
                     {respostaSelecionada === index && (
@@ -219,6 +225,7 @@ export default function Questionario() {
                 </BotaoOpcao>
               ))}
             </OpcoesContainer>
+
 
             <BotaoNavegacaoContainer>
               <BotaoNavegacao onPress={voltarPaginaAnterior}>

@@ -51,11 +51,11 @@ const Login = () => {
     try {
       // Realizar o login
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user; // O usuário autenticado
+      const user = userCredential.user; 
       console.log("Login realizado com sucesso!", user);
   
       // Após o login, acessar o Firestore para obter o campo 'team'
-      const userDocRef = doc(db, "users", user.uid); // Referência ao documento do usuário
+      const userDocRef = doc(db, "users", user.uid); 
       const userDoc = await getDoc(userDocRef);
   
       if (userDoc.exists()) {

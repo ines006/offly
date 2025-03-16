@@ -67,11 +67,17 @@ const Caderneta = () => {
   }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollViewContent}>
-      <View style={styles.container}>
+    <ScrollView 
+      contentContainerStyle={styles.scrollViewContent} 
+      keyboardShouldPersistTaps='handled'
+      accessible={false} 
+    >
+      <View style={styles.container} accessible={true} accessibilityLabel="Página da Caderneta">
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
+          accessibilityLabel="Voltar"
+          accessibilityRole="button"
         >
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle
@@ -89,43 +95,69 @@ const Caderneta = () => {
             />
           </Svg>
         </TouchableOpacity>
-        <Text style={styles.title}>Caderneta</Text>
-        <View style={styles.viewcaderneta}>
-          <Text style={styles.sectionTitle}>Desafios semanais</Text>
-          <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
+        
+        <Text style={styles.title} accessibilityRole="header" accessibilityLabel="Título: Caderneta">
+          Caderneta
+        </Text>
+
+      
+        <View style={styles.viewcaderneta} accessible={true}>
+          <TouchableOpacity>
+            <Text style={styles.sectionTitle} accessibilityRole="header" accessibilityLabel="Seção: Desafios semanais">
+              Desafios semanais
+            </Text>
+            <Text style={styles.subtitle} accessibilityRole="text" accessibilityLabel="Vê os desafios das semanas passadas">
+              Vê os desafios das semanas passadas
+            </Text>
+          </TouchableOpacity>
           
-          {/* Renderização das cartas do desafio semanal dentro do grid */}
-          <View style={styles.cardGrid}>
+          <View style={styles.cardGrid} accessible={true} accessibilityLabel={`Existem ${weeklyChallengeCards.length} desafios semanais`}>
             {weeklyChallengeCards.map((card) => (
-              <View key={card.id} style={[styles.card, styles.activeCard2]}>
-              {card.imagem ? (
-                <Image
-                  source={{ uri: card.imagem }}
-                  style={styles.cardImage2}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text style={styles.cardTitle}>Imagem não disponível</Text>
-              )}
-               <Text style={styles.weeklyCardTitle}>{card.titulo || "Sem título"}</Text>
-            </View>
+              <View
+                key={card.id}
+                style={[styles.card, styles.activeCard2]}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={`Desafio semanal: ${card.titulo || "Sem título"}`}
+              >
+                {card.imagem ? (
+                  <Image
+                    source={{ uri: card.imagem }}
+                    style={styles.cardImage2}
+                    resizeMode="cover"
+                    accessible={true}
+                    accessibilityLabel={`Imagem do desafio ${card.titulo}`}
+                  />
+                ) : (
+                  <Text style={styles.cardTitle} accessibilityLabel="Imagem não disponível">Imagem não disponível</Text>
+                )}
+                <Text style={styles.weeklyCardTitle}>{card.titulo || "Sem título"}</Text>
+              </View>
             ))}
 
-            {/* Cartas restantes do desafio semanal com fundo tracejado */}
             {Array.from({ length: 4 - weeklyChallengeCards.length }).map((_, index) => (
-              <View key={weeklyChallengeCards.length + index} style={[styles.card, styles.inactiveCard]}>
+              <View
+                key={weeklyChallengeCards.length + index}
+                style={[styles.card, styles.inactiveCard]}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={`Desafio semanal ${weeklyChallengeCards.length + index + 1} ainda não disponível`}
+              >
                 <Text style={styles.cardNumber}>{weeklyChallengeCards.length + index + 1}</Text>
               </View>
             ))}
           </View>
 
-          <View style={styles.divider} />
-
-          <Text style={styles.sectionTitle}>Desafios diários</Text>
-          <Text style={styles.subtitle}>
-            Consulta os desafios dos teus colegas de equipa
-          </Text>
-          <View style={styles.cardGrid}>
+          <View style={styles.divider} accessible={false} />
+          <TouchableOpacity>
+            <Text style={styles.sectionTitle} accessibilityRole="header" accessibilityLabel="Seção: Desafios diários">
+              Desafios diários
+            </Text>
+            <Text style={styles.subtitle} accessibilityRole="text" accessibilityLabel="Consulta os desafios dos teus colegas de equipa">
+              Consulta os desafios dos teus colegas de equipa
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.cardGrid} accessible={true} accessibilityLabel={`Existem ${validatedCards.length} desafios diários validados`}>
             {Array.from({ length: 31 }).map((_, index) => {
               if (index < validatedCards.length) {
                 const card = validatedCards[index];
@@ -135,6 +167,9 @@ const Caderneta = () => {
                     number={card.id}
                     hasIcon={true}
                     imageUrl={card.imagem} 
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Desafio diário ${card.id} disponível`}
                   />
                 );
               }
@@ -143,6 +178,9 @@ const Caderneta = () => {
                   key={index}
                   number={index + 1}
                   hasIcon={false}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Desafio diário ${index + 1} ainda não disponível`}
                 />
               );
             })}
@@ -157,22 +195,28 @@ const Card = ({ number, imageUrl, hasIcon }) => {
   return (
     <View
       style={[styles.card, hasIcon ? styles.activeCard : styles.inactiveCard]}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={hasIcon ? `Desafio diário ${number} disponível` : `Desafio diário ${number} ainda não disponível`}
     >
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
           style={styles.cardImage}
           resizeMode="cover"
+          accessible={true}
+          accessibilityLabel={`Imagem do desafio ${number}`}
         />
       ) : (
-        <View style={styles.cardContentContainer}>
-          <Text style={styles.cardPlaceholder}>?</Text>
-          <Text style={styles.cardNumber}>{number}</Text>
+        <View style={styles.cardContentContainer} accessible={true}>
+          <Text style={styles.cardPlaceholder} accessible={true}>?</Text>
+          <Text style={styles.cardNumber} accessible={true}>{number}</Text>
         </View>
       )}
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   scrollViewContent: {

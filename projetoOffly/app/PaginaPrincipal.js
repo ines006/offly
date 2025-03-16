@@ -10,7 +10,6 @@ import {
   Alert,
   TouchableOpacity,
 } from "react-native";
-import ModalDropdown from "react-native-modal-dropdown";
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import Card_Equipa from "./components/Equipas-copy";
@@ -54,7 +53,7 @@ function Caixas_de_Texto_Criar_Equipa(props) {
     placeholder,
     value,
     onChangeText,
-    editable = true, // Garantindo que seja editável por padrão
+    editable = true,
     error,
     onError,
     placeholderTextColor,
@@ -62,7 +61,6 @@ function Caixas_de_Texto_Criar_Equipa(props) {
 
   return (
     <View style={styles.inputContainer}>
-      {/* Título apenas visual, escondido do VoiceOver */}
       <Titulos_Criar_Equipa accessibilityElementsHidden={true}>
         {titulo} <Text style={{ color: "#B30000" }}>*</Text>
       </Titulos_Criar_Equipa>
@@ -70,7 +68,7 @@ function Caixas_de_Texto_Criar_Equipa(props) {
         value={value}
         placeholder={placeholder}
         onChangeText={onChangeText}
-        editable={editable} // Campo editável
+        editable={editable}
         accessible={true}
         accessibilityLabel={
           value
@@ -78,11 +76,11 @@ function Caixas_de_Texto_Criar_Equipa(props) {
             : `${titulo} (obrigatório), ${placeholder}`
         }
         accessibilityHint={`Insira ${titulo.toLowerCase()}`}
-        accessibilityRole="textbox" // Define explicitamente como campo de texto editável
+        accessibilityRole="textbox"
         accessibilityValue={{ text: value ? value : "campo vazio" }}
         placeholderTextColor={placeholderTextColor || "rgba(38, 58, 131, 0.5)"}
-        autoCapitalize="sentences" // Facilita a edição
-        returnKeyType="done" // Adiciona um botão "Concluído" no teclado
+        autoCapitalize="sentences"
+        returnKeyType="done"
         onBlur={() => {
           if (!value.trim()) {
             if (titulo === "Dá um nome à tua equipa") {
@@ -91,7 +89,7 @@ function Caixas_de_Texto_Criar_Equipa(props) {
               onError("A tua equipa deve ter uma descrição que a caraterize");
             }
           } else {
-            onError(""); // Limpa o erro se preenchido
+            onError("");
           }
         }}
       />
@@ -109,17 +107,14 @@ function Caixas_de_Texto_Criar_Equipa(props) {
 }
 
 export default function PaginaPrincipal() {
-  // Fontes personalizadas
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
-  // Estado para equipas
   const [equipas, setEquipas] = useState([]);
   const [filteredEquipas, setFilteredEquipas] = useState([]);
   const [searchText, setSearchText] = useState("");
 
-  // Estados para o modal e inputs
   const [modalVisible, setModalVisible] = useState(false);
   const [NomeEquipa, setNomeEquipa] = useState("");
   const [DescricaoEquipa, setDescricaoEquipa] = useState("");
@@ -137,11 +132,9 @@ export default function PaginaPrincipal() {
   const [userName, setUserName] = useState("");
   const [profileImage, setProfileImage] = useState(null);
 
-  // Para entrar na equipa
   const [selectedEquipaId, setSelectedEquipaId] = useState(null);
   const [modalEquipa, setModalEquipa] = useState(false);
 
-  // Array de URLs das imagens p/ equipas
   const imageTeamUrls = [
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.50.14-removebg-preview.png",
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.51.27-removebg-preview.png",
@@ -155,7 +148,6 @@ export default function PaginaPrincipal() {
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.56.03-removebg-preview.png",
   ];
 
-  // Array de URLs das imagens p/ users
   const imageUserUrls = [
     "https://celina05.sirv.com/avatares/avatar4.png",
     "https://celina05.sirv.com/avatares/avatar5.png",
@@ -179,13 +171,11 @@ export default function PaginaPrincipal() {
     "https://celina05.sirv.com/avatares/avatar19.png",
   ];
 
-  // Função para obter uma URL aleatória
   const getRandomImage = (tipo) => {
     const randomIndex = Math.floor(Math.random() * tipo.length);
     return tipo[randomIndex];
   };
 
-  // Verificação de utilizador logado
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
@@ -196,7 +186,6 @@ export default function PaginaPrincipal() {
     }
   }, []);
 
-  // Função para obter os dados do utilizador
   useEffect(() => {
     const userData = async () => {
       try {
@@ -226,7 +215,6 @@ export default function PaginaPrincipal() {
     userData();
   }, [userId]);
 
-  // Função para buscar equipas da DB
   const fetchEquipas = async () => {
     try {
       const equipasCollectionRef = collection(db, "equipas");
@@ -262,12 +250,10 @@ export default function PaginaPrincipal() {
     }
   };
 
-  // Carregar equipas ao montar o componente
   useEffect(() => {
     fetchEquipas();
   }, []);
 
-  // Atualizar equipas filtradas com base no texto da pesquisa
   useEffect(() => {
     const filtered = equipas.filter(
       (equipa) =>
@@ -351,7 +337,6 @@ export default function PaginaPrincipal() {
     }
   };
 
-  // Função para entrar numa equipa
   const handleEntrarnaEquipa = async () => {
     if (!userId || !selectedEquipaId) return;
 
@@ -410,7 +395,6 @@ export default function PaginaPrincipal() {
     }
   };
 
-  // Validação do formulário
   const validateForm = () => {
     let isValid = true;
 
@@ -465,7 +449,7 @@ export default function PaginaPrincipal() {
   const handleButtonClick = (button) => {
     setActiveButton(button);
     if (button) {
-      setVisibilidadeError(""); // Limpa o erro ao selecionar uma opção
+      setVisibilidadeError("");
     }
   };
 
@@ -508,49 +492,25 @@ export default function PaginaPrincipal() {
           <UserName accessibilityRole="text">{userName}</UserName>
           <UserLevel accessibilityRole="text">Nível 1</UserLevel>
           <StarsContainer accessibilityRole="progressbar">
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
               <Path
                 d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
                 fill="#263A83"
               />
             </Svg>
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
               <Path
                 d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
                 fill="#BEC4DA"
               />
             </Svg>
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
               <Path
                 d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
                 fill="#BEC4DA"
               />
             </Svg>
-            <Svg
-              width="13"
-              height="11"
-              viewBox="0 0 13 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
               <Path
                 d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
                 fill="#BEC4DA"
@@ -636,7 +596,7 @@ export default function PaginaPrincipal() {
                 placeholder="Exemplo: Os incríveis"
                 value={NomeEquipa}
                 onChangeText={setNomeEquipa}
-                editable={true} // Explicitamente editável
+                editable={true}
                 error={nomeEquipaError}
                 onError={setNomeEquipaError}
               />
@@ -646,7 +606,7 @@ export default function PaginaPrincipal() {
                 placeholder="Exemplo: Vamos ganhar!"
                 value={DescricaoEquipa}
                 onChangeText={setDescricaoEquipa}
-                editable={true} // Explicitamente editável
+                editable={true}
                 error={descricaoEquipaError}
                 onError={setDescricaoEquipaError}
               />
@@ -658,19 +618,36 @@ export default function PaginaPrincipal() {
                 >
                   Define a quantidade de participantes
                 </Titulos_Criar_Equipa>
-                <View style={styles.dropdownWrapper}>
-                  <ModalDropdown
-                    options={options}
-                    defaultValue={selectedValue}
-                    onSelect={(index, value) => setSelectedValue(value)}
-                    textStyle={styles.dropdownText}
-                    dropdownStyle={styles.dropdownMenu}
-                    style={styles.dropdownButton}
-                    renderButtonText={(value) => value}
-                    accessibilityLabel="Quantidade de participantes"
-                    accessibilityHint="Selecione o número de participantes"
-                    accessibilityRole="spinbutton"
-                  />
+                <View style={styles.participantsContainer}>
+                  {options.map((option) => (
+                    <TouchableOpacity
+                      key={option}
+                      style={[
+                        styles.optionButton,
+                        selectedValue === option && styles.optionButtonSelected,
+                      ]}
+                      onPress={() => setSelectedValue(option)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${option} participantes`}
+                      accessibilityHint={
+                        selectedValue === option
+                          ? "Opção selecionada"
+                          : "Toque para selecionar " + option + " participantes"
+                      }
+                      accessibilityState={{
+                        selected: selectedValue === option,
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          selectedValue === option && styles.optionTextSelected,
+                        ]}
+                      >
+                        {option}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
 
@@ -804,7 +781,7 @@ export default function PaginaPrincipal() {
 
 const styles = StyleSheet.create({
   inputContainer: {
-    marginBottom: 10, // Espaçamento opcional entre os campos
+    marginBottom: 10,
   },
   teamIcon: {
     width: 60,
@@ -876,38 +853,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
   },
-  // Estilos do Dropdown
-  dropdownWrapper: {
-    width: 60,
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
+  // Estilos para os botões de seleção de participantes
+  participantsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 10,
   },
-  dropdownButton: {
-    width: "100%",
-    height: "100%",
+  optionButton: {
+    width: 60,
+    height: 40,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#263A83",
-    borderRadius: 8,
-    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 5,
   },
-  dropdownText: {
+  optionButtonSelected: {
+    backgroundColor: "#263A83",
+    borderColor: "#263A83",
+  },
+  optionText: {
     fontSize: 16,
     color: "#263A83",
-    textAlign: "center",
-    fontWeight: "normal",
   },
-  dropdownMenu: {
-    textAlign: "center",
-    height: 110,
-    width: 60,
-    borderWidth: 1,
-    borderColor: "#263A83",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    marginTop: 10,
+  optionTextSelected: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

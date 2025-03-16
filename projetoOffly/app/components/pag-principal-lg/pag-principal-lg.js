@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components/native";
-import { Alert, TouchableOpacity } from "react-native";
+import { Alert, TouchableOpacity, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -296,51 +296,107 @@ useEffect(() => {
         </ProfileTextContainer>
       </ProfileContainer>
       <TittleTorneio>Torneio XPTO</TittleTorneio>
-      <CardContainer>
-        <Header>
-          <IconContainer>
-            <FontAwesome name="plane" size={20} color="#34459E" />
-          </IconContainer>
 
-          <TeamName>{teamId}</TeamName>
+      <View
+        accessible={false} 
+        accessibilityRole="button"
+      >
+        <CardContainer accessible={false} accessibilityLabel={`Cartão da equipe ${teamId}`}>
+          <Header>
+            <IconContainer accessibilityLabel="Ícone de equipe">
+              <FontAwesome name="plane" size={20} color="#34459E" accessible={false} />
+            </IconContainer>
 
-          <Points>
-            <FontAwesome name="star" size={12} color="#D4F34A" /> 
-            {teamPoints}
-          </Points>
-        </Header>
+            <TeamName accessibilityLabel={`Nome da equipe: ${teamId}`}>
+              {teamId}
+            </TeamName>
 
-        <Stats>
-          <StatItem>
-            <StatText>Dias em competição</StatText>
-            <StatValue>
-              9/30 <FontAwesome name="calendar" size={14} color="#ffffff" />
-            </StatValue>
-          </StatItem>
-          <StatItem>
-            <StatText>Desafios completos</StatText>
-            <StatValue>
-              7/30 <FontAwesome name="image" size={14} color="#ffffff" />
-            </StatValue>
-          </StatItem>
-        </Stats>
+            <Points accessibilityLabel={`Pontos da equipe: ${teamPoints}`}>
+              <FontAwesome name="star" size={12} color="#D4F34A" accessible={false} />
+              {teamPoints}
+            </Points>
+          </Header>
 
-        <Footer>
-          <FooterText>{teamMembers}/{teamMembers}</FooterText>
-          <FontAwesome name="group" size={16} color="#ffffff" />
-        </Footer>
+            <View>
+              <Stats accessibilityRole="summary">
+              <StatItem 
+                  accessible={true} 
+                  accessibilityLabel={`7 de 30`}
+                >
+                  <StatText 
+                  accessibilityLabel="Dias em competição"
+                  accessibilityRole="button">
+                    Dias em competição
+                  </StatText>
+                  <StatValue 
+                  accessibilityLabel="quantidade de dias">
+                    7/30 <FontAwesome name="calendar" size={14} color="#ffffff" accessible={false} />
+                  </StatValue>
+                </StatItem>
 
-        {isUploadedToday  ? (
-          <CountdownButton>
-            <FontAwesome name="clock-o" size={20} color="#ffffff" />
-            <CountdownText>{formatTime(timeRemaining)}</CountdownText>
-          </CountdownButton>
-        ) : (
-          <BottomCircle onPress={handleCirclePress}>
-            <FontAwesome name="image" size={20} color="#ffffff" />
-          </BottomCircle>
-        )}
-      </CardContainer>
+                <StatItem 
+                  accessible={true} 
+                  accessibilityLabel={`7 de 30`}
+                >
+                  <StatText 
+                  accessibilityLabel="Dias em competição"
+                  accessibilityRole="button">
+                    Dias em competição
+                  </StatText>
+                  <StatValue 
+                  accessibilityLabel="quantidade de dias">
+                    7/30 <FontAwesome name="calendar" size={14} color="#ffffff" accessible={false} />
+                  </StatValue>
+                </StatItem>
+            </Stats>  
+
+            <View accessible={true}>
+              <Footer 
+                accessible={true} 
+                accessibilityRole="summary" 
+                accessibilityLabel={`Membros da equipe: ${teamMembers} de ${teamMembers}`}
+              >
+                <FooterText 
+                  accessible={true} 
+                  accessibilityLabel={`Membros da equipe: ${teamMembers}/${teamMembers}`}
+                >
+                  {teamMembers}/{teamMembers}
+                </FooterText>
+
+                <FontAwesome 
+                  name="group" 
+                  size={16} 
+                  color="#ffffff" 
+                  accessible={true} 
+                  accessibilityLabel="Ícone de grupo"
+                />
+              </Footer>
+      </View>
+
+           </View>
+
+            {isUploadedToday ? (
+              <CountdownButton 
+                accessibilityLabel={`Tempo restante para fazer novamente upload: ${formatTime(timeRemaining)}`}
+                accessibilityRole="button"
+              >
+                <FontAwesome name="clock-o" size={20} color="#ffffff" accessible={false} />
+                <CountdownText>{formatTime(timeRemaining)}</CountdownText>
+              </CountdownButton>
+            ) : (
+              <BottomCircle 
+                onPress={handleCirclePress} 
+                accessibilityLabel="Enviar o upload do screen time"
+                accessibilityRole="button"
+              >
+                <FontAwesome name="image" size={20} color="#ffffff" accessible={false} />
+              </BottomCircle>
+            )}
+        </CardContainer>
+      </View>
+
+
+
 
       <TittleTorneio>Desafios</TittleTorneio>
       <DesafioContainer>

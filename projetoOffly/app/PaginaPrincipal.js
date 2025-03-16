@@ -538,7 +538,13 @@ const fetchEquipas = async () => {
             onPress={() => handleModalEquipa(equipa.id)}
             icon={equipa.imagem}
             teamName={equipa.nome}
-            playerCount={`${equipa.currentParticipants}/${equipa.numparticipantes}`}
+            playerCount={
+              <View accessible={true} accessibilityLabel={`${equipa.currentParticipants} barra ${equipa.numparticipantes} participantes`}>
+                <Text aria-hidden="true">
+                  {`${equipa.currentParticipants}/${equipa.numparticipantes}`}
+                </Text>
+              </View>
+            }
           />
         ))
       ) : (

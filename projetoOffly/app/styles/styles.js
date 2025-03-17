@@ -460,7 +460,7 @@ export const Star = styled.View`
 // PÁGINA PRINCIPAL ESTILOS
 
 // Container
-export const Container_Pagina_Pricipal = styled.View`
+export const Container_Pagina_Principal = styled.View`
   display: flex;
   flex: 1;
   padding: 10px 27px 27px 27px;

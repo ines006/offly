@@ -24,7 +24,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "./firebase/firebaseApi";
 import {
-  Container_Pagina_Pricipal,
+  Container_Pagina_Principal,
   Sub_Titulos,
   Titulos,
   Botoes_Pagina_principal,
@@ -44,7 +44,9 @@ import {
   UserName,
   UserLevel,
   StarsContainer,
+
 } from "./styles/styles";
+
 
 // Componente para os campos de texto de criação de equipa
 function Caixas_de_Texto_Criar_Equipa(props) {
@@ -474,52 +476,46 @@ export default function PaginaPrincipal() {
       />
     </Svg>
   );
-
-  if (!fontsLoaded) {
-    return <Text>A carregar...</Text>;
-  }
-
+  
   return (
     <>
-      <ProfileContainer
-        style={{ backgroundColor: "#fff" }}
-        accessibilityRole="section"
-      >
+      <ProfileContainer style={{ backgroundColor: "#fff" }} accessibilityRole="section"> 
         <TouchableOpacity onPress={handlePerfil}>
-          <Avatar source={profileImage} accessibilityRole="imagebutton" />
-        </TouchableOpacity>
-        <ProfileTextContainer>
-          <UserName accessibilityRole="text">{userName}</UserName>
-          <UserLevel accessibilityRole="text">Nível 1</UserLevel>
-          <StarsContainer accessibilityRole="progressbar">
-            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#263A83"
-              />
-            </Svg>
-            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#BEC4DA"
-              />
-            </Svg>
-            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#BEC4DA"
-              />
-            </Svg>
-            <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
-              <Path
-                d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                fill="#BEC4DA"
-              />
-            </Svg>
-          </StarsContainer>
-        </ProfileTextContainer>
+            <Avatar source={profileImage} accessibilityRole="imagebutton" />
+          </TouchableOpacity>
+          <ProfileTextContainer>
+            <UserName accessibilityRole="text">{userName}</UserName>
+            <UserLevel accessibilityRole="text">Nível 1</UserLevel>
+            <StarsContainer accessibilityRole="progressbar">
+              <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
+                <Path
+                  d="M6.6912 0.0 515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+                  fill="#263A83"
+                />
+              </Svg>
+              <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
+                <Path
+                  d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+                  fill="#BEC4DA"
+                />
+              </Svg>
+              <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
+                <Path
+                  d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+                  fill="#BEC4DA"
+                />
+              </Svg>
+              <Svg width="13" height="11" viewBox="0 0 13 11" fill="none">
+                <Path
+                  d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+                  fill="#BEC4DA"
+                />
+              </Svg>
+            </StarsContainer>
+          </ProfileTextContainer>
       </ProfileContainer>
-      <Container_Pagina_Pricipal accessibilityRole="main">
+      
+      <Container_Pagina_Principal accessibilityRole="main">
         <Titulos
           accessibilityRole="header"
           accessibilityLabel="Começa a competir"
@@ -533,10 +529,6 @@ export default function PaginaPrincipal() {
           Junta-te a uma equipa
         </Sub_Titulos>
 
-    <Container_Pagina_Pricipal>
-      <Titulos>Começa a competir</Titulos>
-      <Sub_Titulos>Junta-te a uma equipa</Sub_Titulos>
-
       {/* Barra de Pesquisa */}
       <SearchBarContainer>
         <SearchIcon />
@@ -547,33 +539,6 @@ export default function PaginaPrincipal() {
           onChangeText={setSearchText}
         />
       </SearchBarContainer>
-
-      {/* Mostra as equipas filtradas */}
-      {filteredEquipas.length > 0 ? (
-        filteredEquipas.slice(0, 4).map((equipa) => (
-          <Card_Equipa
-            key={equipa.id}
-            onPress={() => handleModalEquipa(equipa.id)}
-            icon={equipa.imagem}
-            teamName={equipa.nome}
-            playerCount={
-              <View accessible={true} accessibilityLabel={`${equipa.currentParticipants} barra ${equipa.numparticipantes} participantes`}>
-                <Text aria-hidden="true">
-                  {`${equipa.currentParticipants}/${equipa.numparticipantes}`}
-                </Text>
-              </View>
-            }>
-
-        <SearchBarContainer accessibilityRole="search">
-          <SearchIcon />
-          <SearchInput
-            placeholder="Pesquisa equipas"
-            placeholderTextColor="rgba(38, 58, 131, 0.5)"
-            value={searchText}
-            onChangeText={setSearchText}
-            accessibilityLabel="Pesquisa Equipas"
-          />
-        </SearchBarContainer>
 
         {filteredEquipas.length > 0 ? (
           filteredEquipas
@@ -805,7 +770,7 @@ export default function PaginaPrincipal() {
             </View>
           </Modal>
         )}
-      </Container_Pagina_Pricipal>
+      </Container_Pagina_Principal>
     </>
   );
 }

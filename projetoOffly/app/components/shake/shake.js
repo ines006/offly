@@ -14,6 +14,7 @@ import Animated, {
   runOnJS,
   Easing,
 } from "react-native-reanimated";
+import { TittlePagina } from "../../styles/styles";
 
 export default function Shake() {
   const router = useRouter();
@@ -144,6 +145,9 @@ export default function Shake() {
 
   return (
     <View style={styles.background}>
+      <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Shake">
+            <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Shake"> Shake </TittlePagina>
+          </View>
       <View style={styles.container}>
         {/* Carta principal */}
         <Animated.View style={[styles.card, combinedStyle]}>

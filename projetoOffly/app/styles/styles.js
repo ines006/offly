@@ -356,6 +356,17 @@ export const TittleTorneio = styled.Text`
   align-self: center;
 `;
 
+export const TittlePagina = styled.Text`
+  font-size: 30px;
+  font-weight: 600;
+  color: #263a83;
+  margin-bottom: -50;
+  margin-top: 70;
+  text-align: center;
+  width: 90%;
+  align-self: center;
+`;
+
 export const CardsDesafios = styled.View`
   background-color: #27368f;
   border-radius: 16px;

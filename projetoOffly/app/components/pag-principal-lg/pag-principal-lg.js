@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components/native";
-import { Alert, TouchableOpacity, View } from "react-native";
+import { Alert, TouchableOpacity, View, ScrollView} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -18,6 +18,7 @@ import {
   FooterText,
   BottomCircle,
   TittleTorneio,
+  TittlePagina,
   DesafioContainer,
   DesafioCard,
   DesafioIcon,
@@ -235,6 +236,10 @@ useEffect(() => {
 
   return (
     <>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, paddingBottom: 150 }}>
+    <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page">
+      <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page">Home Page</TittlePagina>
+    </View>
       <ProfileContainer> 
       <TouchableOpacity onPress={handlePerfilPress}>
         <Avatar 
@@ -242,7 +247,7 @@ useEffect(() => {
         />
       </TouchableOpacity>
         <ProfileTextContainer>
-          <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>
+          <UserName>{userName}</UserName> <UserLevel> Nível 1 </UserLevel>
           <StarsContainer>
             <Svg
               width="13"
@@ -349,6 +354,7 @@ useEffect(() => {
                   </StatValue>
                 </StatItem>
             </Stats>  
+          </View>
 
             <View accessible={true}>
               <Footer 
@@ -371,9 +377,7 @@ useEffect(() => {
                   accessibilityLabel="Ícone de grupo"
                 />
               </Footer>
-      </View>
-
-           </View>
+            </View>
 
             {isUploadedToday ? (
               <CountdownButton 
@@ -435,6 +439,7 @@ useEffect(() => {
           <DesafioText>Desafio Semanal</DesafioText>
         </DesafioCard>
       </DesafioContainer>
+      </ScrollView>
     </>
   );
 }
@@ -460,4 +465,13 @@ const CountdownText = styled.Text`
   font-size: 9px;
   font-weight: bold;
   margin-top: 4px;
+`;
+
+const TittleHomePage = styled.View`
+  color: rgba(38, 58, 131, 1.00);
+  font-size: 24px;
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: -20px;
+  font-weight: 600;
 `;

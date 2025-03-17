@@ -165,7 +165,7 @@ const PodioPontuacao = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Torneio XPTO</Text>
+      <Text style={styles.title}>Leaderboard - Torneio XPTO</Text>
       <Podium />
 
       <ImageBackground

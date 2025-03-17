@@ -468,7 +468,6 @@ export const Container_Pagina_Pricipal = styled.View`
   background-color: white;
 `;
 
-
 // Titulos
 export const Titulos = styled.Text`
   font-family: "Poppins-Regular";
@@ -481,7 +480,6 @@ export const Titulos = styled.Text`
 // Sub Titulos
 export const Sub_Titulos = styled.Text`
   color: #414141;
-  text-align: justify;
   font-family: Poppins-regular;
   font-size: 15px;
   font-weight: 400;
@@ -529,7 +527,6 @@ export const Texto_Botoes_Pagina_principal_Desativado = styled.Text`
 
 export const Texto_Botoes_Pagina_principal_Voltar = styled.Text`
   color: #414141;
-  text-align: justify;
   font-family: poppins-regular;
   font-size: 15px;
   font-weight: 400;
@@ -610,7 +607,6 @@ export const Definir_visibilidade_btn = styled.TouchableOpacity`
 
 export const Texto_Botoes_Definir_Visibilidade = styled.Text`
   color: #263a83;
-  text-align: justify;
   font-family: poppins-regular;
   font-size: 15px;
   font-weight: 400;
@@ -642,7 +638,7 @@ export const SearchInput = styled.TextInput`
 
 // Container
 export const Container_Pagina_Equipa_Criada = styled.View`
-  margin-top:80;
+  margin-top: 80;
   padding: 60px 27px 27px 27px;
   align-items: center;
   background-color: white;

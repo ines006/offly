@@ -305,15 +305,8 @@ useEffect(() => {
         </ProfileTextContainer>
       </ProfileContainer>
       <TittleTorneio>Torneio XPTO</TittleTorneio>
-<<<<<<< HEAD
-=======
-      <CardContainer accessible={true}>
-        <Header>
-          <IconContainer>
-            <FontAwesome name="plane" size={20} color="#34459E" />
-          </IconContainer>
->>>>>>> acessibilidade-ines
 
+      <CardContainer accessible={true}>
       <View
         accessible={false} 
         accessibilityRole="button"
@@ -411,10 +404,6 @@ useEffect(() => {
         </CardContainer>
       </View>
 
-
-
-<<<<<<< HEAD
-=======
         {isUploadedToday  ? (
           <CountdownButton accessible={true} accessibilityLabel="Botão upload do tempo de ecrã desativado">
             <FontAwesome name="clock-o" size={20} color="#ffffff" />
@@ -426,7 +415,6 @@ useEffect(() => {
           </BottomCircle>
         )}
       </CardContainer>
->>>>>>> acessibilidade-ines
 
       <TittleTorneio>Desafios</TittleTorneio>
       <DesafioContainer>

@@ -92,6 +92,7 @@ export default function CartaSelecionada2({ userId, carta, onValidated }) {
         <View style={styles.mainCard}>
           {carta.imagem && (
             <Image
+              accessibilityLabel="Imagem da carta do desafio diário"
               source={{ uri: carta.imagem }}
               style={styles.cardImage}
               resizeMode="cover"

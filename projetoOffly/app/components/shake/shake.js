@@ -153,6 +153,7 @@ export default function Shake() {
         <Animated.View style={[styles.card, combinedStyle]}>
           {imageURL ? (
             <Image
+              accessibilityLabel="Imagem de ilustração da carta de shake"
               source={{ uri: imageURL }}
               style={{ width: "100%", height: "100%", borderRadius: 15 }}
               resizeMode="cover"

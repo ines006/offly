@@ -250,6 +250,7 @@ export default function EquipaCriada() {
               {participants.map((participant, index) => (
                 <View key={index} style={styles.card}>
                   <Image
+                    accessibilityLabel="Imagem do participante"
                     source={{
                       uri:
                         participant === userName

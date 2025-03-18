@@ -219,7 +219,7 @@ useEffect(() => {
 
 
   const handleCirclePress = () => {
-    router.push('../uploadScreenTime/UploadScreen');
+    router.push('../components/uploadScreenTime/UploadScreen');
   };
 
   const handleCadernetaPress = () => {
@@ -236,9 +236,8 @@ useEffect(() => {
 
   return (
     <>
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, paddingBottom: 150 }}>
     <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page">
-      <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page">Home Page</TittlePagina>
+      <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page"></TittlePagina>
     </View>
       <ProfileContainer> 
       <TouchableOpacity onPress={handlePerfilPress}>
@@ -383,24 +382,6 @@ useEffect(() => {
                 />
               </Footer>
             </View>
-
-            {isUploadedToday ? (
-              <CountdownButton 
-                accessibilityLabel={`Tempo restante para fazer novamente upload: ${formatTime(timeRemaining)}`}
-                accessibilityRole="button"
-              >
-                <FontAwesome name="clock-o" size={20} color="#ffffff" accessible={false} />
-                <CountdownText>{formatTime(timeRemaining)}</CountdownText>
-              </CountdownButton>
-            ) : (
-              <BottomCircle 
-                onPress={handleCirclePress} 
-                accessibilityLabel="Enviar o upload do screen time"
-                accessibilityRole="button"
-              >
-                <FontAwesome name="image" size={20} color="#ffffff" accessible={false} />
-              </BottomCircle>
-            )}
         </CardContainer>
       </View>
 
@@ -453,7 +434,6 @@ useEffect(() => {
           <DesafioText>Desafio Semanal</DesafioText>
         </DesafioCard>
       </DesafioContainer>
-      </ScrollView>
     </>
   );
 }

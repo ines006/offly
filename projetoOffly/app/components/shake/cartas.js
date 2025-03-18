@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     color: "#4C4B49",
     fontWeight: "bold",
     marginBottom: 20,
-    marginTop: -45,
+    marginTop: -20,
   },
   topCards: {
     flexDirection: "row",

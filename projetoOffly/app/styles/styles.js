@@ -252,7 +252,7 @@ export const TextoCaixaFinal = styled.Text`
 export const CardContainer = styled.View`
   background-color: #27368f;
   border-radius: 16px;
-  padding: 16px;
+  padding: 3px;
   width: 90%;
   align-self: center;
   margin-vertical: 20px;
@@ -358,14 +358,6 @@ export const TittleTorneio = styled.Text`
 `;
 
 export const TittlePagina = styled.Text`
-  font-size: 30px;
-  font-weight: 600;
-  color: #263a83;
-  margin-bottom: -50;
-  margin-top: 70;
-  text-align: center;
-  width: 90%;
-  align-self: center;
 `;
 
 export const CardsDesafios = styled.View`
@@ -422,7 +414,6 @@ export const ProfileContainer = styled.TouchableOpacity`
   align-items: center;
   padding: 20px;
   width: 100%;
-  margin-top: 50;
   align-self: center;
 `;
 

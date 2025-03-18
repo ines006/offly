@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  AccessibilityInfo,
 } from "react-native";
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
@@ -44,9 +45,7 @@ import {
   UserName,
   UserLevel,
   StarsContainer,
-
 } from "./styles/styles";
-
 
 // Componente para os campos de texto de criação de equipa
 function Caixas_de_Texto_Criar_Equipa(props) {
@@ -399,9 +398,11 @@ export default function PaginaPrincipal() {
 
   const validateForm = () => {
     let isValid = true;
+    let errorMessages = [];
 
     if (!NomeEquipa.trim()) {
       setNomeEquipaError("Tens de definir um nome para a tua equipa");
+      errorMessages.push("Tens de definir um nome para a tua equipa");
       isValid = false;
     } else {
       setNomeEquipaError("");
@@ -409,6 +410,9 @@ export default function PaginaPrincipal() {
 
     if (!DescricaoEquipa.trim()) {
       setDescricaoEquipaError(
+        "A tua equipa deve ter uma descrição que a caraterize"
+      );
+      errorMessages.push(
         "A tua equipa deve ter uma descrição que a caraterize"
       );
       isValid = false;
@@ -420,22 +424,36 @@ export default function PaginaPrincipal() {
       setVisibilidadeError(
         "Tens de definir a visibilidade da tua equipa para os outros utilizadores"
       );
+      errorMessages.push(
+        "Tens de definir a visibilidade da tua equipa para os outros utilizadores"
+      );
       isValid = false;
     } else {
       setVisibilidadeError("");
     }
 
-    return isValid;
+    return { isValid, errorMessages };
   };
 
   const handleNext = () => {
-    if (validateForm()) {
+    const { isValid, errorMessages } = validateForm();
+
+    if (isValid) {
       criarEquipa();
       setModalVisible(false);
       router.push({
         pathname: "./EquipaCriada",
         params: { teamId: NomeEquipa },
       });
+    } else {
+      // Garante que o estado dos erros seja atualizado antes do anúncio
+      setTimeout(() => {
+        if (errorMessages.length > 0) {
+          const announcement = errorMessages.join(". ");
+          console.log("Anunciando erros:", announcement); // Para depuração
+          AccessibilityInfo.announceForAccessibility(announcement);
+        }
+      }, 100); // Pequeno atraso para garantir que o estado foi atualizado
     }
   };
 
@@ -469,24 +487,30 @@ export default function PaginaPrincipal() {
   };
 
   const SearchIcon = () => (
-    <Svg accessibilityLabel="ilustração lupa de pesquisa" width="18" height="18" viewBox="0 0 24 24" fill="#263A83">
+    <Svg
+      accessibilityLabel="ilustração lupa de pesquisa"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="#263A83"
+    >
       <Path
         d="M10.5 2a8.5 8.5 0 1 0 5.53 15.03l3.7 3.7a1.5 1.5 0 1 0 2.12-2.12l-3.7-3.7A8.5 8.5 0 0 0 10.5 2zm0 3a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"
         fill="#1a237e"
       />
     </Svg>
   );
-  
+
   return (
     <>
-      <ProfileContainer style={{ backgroundColor: "#fff" }} accessibilityRole="section"> 
+      <ProfileContainer style={{ backgroundColor: "#fff" }} accessibilityRole="section">
         <TouchableOpacity onPress={handlePerfil}>
-            <Avatar source={profileImage} accessibilityRole="imagebutton" />
-          </TouchableOpacity>
-          <ProfileTextContainer>
-            <UserName accessibilityRole="text">{userName}</UserName>
-            <UserLevel accessibilityRole="text">Nível 1</UserLevel>
-            <StarsContainer accessibilityRole="progressbar">
+          <Avatar source={profileImage} accessibilityRole="imagebutton" />
+        </TouchableOpacity>
+        <ProfileTextContainer>
+          <UserName accessibilityRole="text">{userName}</UserName>
+          <UserLevel accessibilityRole="text">Nível 1</UserLevel>
+          <StarsContainer accessibilityRole="progressbar">
             <Svg
               accessibilityLabel="estrela nível 1"
               width="13"
@@ -539,10 +563,10 @@ export default function PaginaPrincipal() {
                 fill="#BEC4DA"
               />
             </Svg>
-            </StarsContainer>
-          </ProfileTextContainer>
+          </StarsContainer>
+        </ProfileTextContainer>
       </ProfileContainer>
-      
+
       <Container_Pagina_Principal accessibilityRole="main">
         <Titulos
           accessibilityRole="header"
@@ -557,16 +581,16 @@ export default function PaginaPrincipal() {
           Junta-te a uma equipa
         </Sub_Titulos>
 
-      {/* Barra de Pesquisa */}
-      <SearchBarContainer>
-        <SearchIcon />
-        <SearchInput
-          placeholder="Pesquisa equipas"
-          placeholderTextColor="rgba(38, 58, 131, 0.5)"
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-      </SearchBarContainer>
+        {/* Barra de Pesquisa */}
+        <SearchBarContainer>
+          <SearchIcon />
+          <SearchInput
+            placeholder="Pesquisa equipas"
+            placeholderTextColor="rgba(38, 58, 131, 0.5)"
+            value={searchText}
+            onChangeText={setSearchText}
+          />
+        </SearchBarContainer>
 
         {filteredEquipas.length > 0 ? (
           filteredEquipas
@@ -712,7 +736,13 @@ export default function PaginaPrincipal() {
                   </Definir_visibilidade_btn>
                 </BotaoNavegacaoContainer>
                 {visibilidadeError ? (
-                  <Text style={styles.errorText}>{visibilidadeError}</Text>
+                  <Text
+                    style={styles.errorText}
+                    accessibilityLiveRegion="assertive"
+                    accessibilityRole="alert"
+                  >
+                    {visibilidadeError}
+                  </Text>
                 ) : null}
               </View>
 
@@ -877,7 +907,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
   },
-  // Estilos para os botões de seleção de participantes
   participantsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -134,7 +134,6 @@ const DetalhesEquipa = () => {
 
       <Text style={styles.title}>Torneio XPTO</Text>
 
-<<<<<<< HEAD
       <TouchableOpacity
         style={styles.info}
         accessible={true}
@@ -142,11 +141,7 @@ const DetalhesEquipa = () => {
         accessibilityRole="button"
         activeOpacity={1} 
       >
-=======
-      <View accessible={true} style={styles.info}>
->>>>>>> acessibilidade-ines
         <Image
-          accessibilityLabel="Imagem de equipa"
           source={require("../../imagens/1.png")}
           style={styles.teamImage}
           accessibilityLabel={`Imagem da equipa ${teamId}`}
@@ -195,7 +190,6 @@ const DetalhesEquipa = () => {
         </TouchableOpacity>
       </View>
 
-<<<<<<< HEAD
       <View style={styles.remainingTeamsContainer}>
         <FlatList
           data={participants}
@@ -207,14 +201,8 @@ const DetalhesEquipa = () => {
               accessibilityLabel={`Participante ${index + 1}: ${item}`}
               accessibilityRole="button"
             >
-=======
-      <View accessible={true} style={styles.remainingTeamsContainer}>
-        {participants.length > 0 ? (
-          participants.map((participant, index) => (
-            <View key={index} style={styles.card}>
->>>>>>> acessibilidade-ines
+
               <Image
-                accessibilityLabel="Imagem do participante"
                 source={{ uri: getRandomImage() }}
                 style={styles.peopleImage}
                 accessible={true}

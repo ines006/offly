@@ -3,7 +3,6 @@ import { TouchableOpacity, StyleSheet, Image } from "react-native";
 import styled from "styled-components/native";
 
 const Card_Equipa = ({ onPress, icon, teamName, playerCount }) => {
-<<<<<<< HEAD
   return (
     <CardContainer
       onPress={onPress}
@@ -21,22 +20,6 @@ const Card_Equipa = ({ onPress, icon, teamName, playerCount }) => {
     </CardContainer>
   );
 };
-=======
-    return (
-      <CardContainer onPress={onPress}>
-        <IconWrapper>
-          <Image
-            accessibilityLabel="Imagem de equipa"
-            source={{ uri: icon }}
-            style={styles.teamIcon}
-          />
-        </IconWrapper>
-        <CardText>{teamName}</CardText>
-        <MemberCount>{playerCount}</MemberCount>
-      </CardContainer>
-    );
-  };
->>>>>>> acessibilidade-ines
 
 export default Card_Equipa;
 

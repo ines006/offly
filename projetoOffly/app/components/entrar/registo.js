@@ -123,8 +123,19 @@ const Register = () => {
   };
 
   const handleSubmit = async () => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
+      setError("Por favor, insira um email válido.");
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError("As palavras-passes não coincidem.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("A palavra-passe deve conter no mínimo 6 caracteres.");
       return;
     }
 
@@ -164,20 +175,32 @@ const Register = () => {
     setGender(button);
   };
 
-
   return (
-    <View style={styles.container}>
+    <View accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
-        <Text style={styles.title}>Criar Conta</Text>
+        <Text style={styles.h1} accessibilityRole="header">
+          Criar Conta
+        </Text>
 
         {/* Nome Completo */}
         <View style={styles.wrapInput}>
+          <Text
+            nativeID="nameLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Nome Completo"
+          >
+            Nome Completo{" "}
+            <Text nativeID="mandatory" style={styles.mandatory}>
+              *
+            </Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
               (focusField === "fullName" || fullName) && styles.focusedInput,
             ]}
-            placeholder="Nome Completo"
+            placeholder="Escreva o seu nome completo"
             placeholderTextColor="#adadad"
             value={fullName}
             autoCapitalize="words"
@@ -190,6 +213,7 @@ const Register = () => {
               setFocusField("");
               handleBlur("fullName", fullName);
             }}
+            accessibilityLabel="Nome completo"
           />
           <Animated.View
             style={[
@@ -206,6 +230,17 @@ const Register = () => {
 
         {/* Nome de Utilizador */}
         <View style={styles.wrapInput}>
+          <Text
+            nativeID="usernameLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Nome de Utilizador"
+          >
+            Nome de Utilizador{" "}
+            <Text nativeID="mandatory" style={styles.mandatory}>
+              *
+            </Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
@@ -224,6 +259,7 @@ const Register = () => {
               setFocusField("");
               handleBlur("username", username);
             }}
+            accessibilityLabel="Nome de utilizador"
           />
           <Animated.View
             style={[
@@ -240,12 +276,23 @@ const Register = () => {
 
         {/* Email */}
         <View style={styles.wrapInput}>
+          <Text
+            nativeID="emailLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Endereço de E-mail"
+          >
+            Endereço de E-mail{" "}
+            <Text nativeID="mandatory" style={styles.mandatory}>
+              *
+            </Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
               (focusField === "email" || email) && styles.focusedInput,
             ]}
-            placeholder="Email"
+            placeholder="exemplo@email.com"
             placeholderTextColor="#adadad"
             value={email}
             autoCapitalize="none"
@@ -258,6 +305,7 @@ const Register = () => {
               setFocusField("");
               handleBlur("email", email);
             }}
+            accessibilityLabel="Endereço de email"
           />
           <Animated.View
             style={[
@@ -274,12 +322,23 @@ const Register = () => {
 
         {/* Password */}
         <View style={styles.wrapInput}>
+          <Text
+            nativeID="passwordLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Palavra-passe"
+          >
+            Palavra-passe{" "}
+            <Text nativeID="mandatory" style={styles.mandatory}>
+              *
+            </Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
               (focusField === "password" || password) && styles.focusedInput,
             ]}
-            placeholder="Password"
+            placeholder="Defina a sua palavra-passe"
             placeholderTextColor="#adadad"
             value={password}
             secureTextEntry
@@ -293,6 +352,7 @@ const Register = () => {
               setFocusField("");
               handleBlur("password", password);
             }}
+            accessibilityLabel="Palavra-passe"
           />
           <Animated.View
             style={[
@@ -309,13 +369,24 @@ const Register = () => {
 
         {/* Confirmar Password */}
         <View style={styles.wrapInput}>
+          <Text
+            nativeID="passwordLabel"
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Confirmar Palavra-passe"
+          >
+            Confirmar Palavra-passe{" "}
+            <Text nativeID="mandatory" style={styles.mandatory}>
+              *
+            </Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
               (focusField === "confirmPassword" || confirmPassword) &&
                 styles.focusedInput,
             ]}
-            placeholder="Confirmar Password"
+            placeholder="Reescreva a palavra-passe"
             placeholderTextColor="#adadad"
             value={confirmPassword}
             secureTextEntry
@@ -329,6 +400,7 @@ const Register = () => {
               setFocusField("");
               handleBlur("confirmPassword", confirmPassword);
             }}
+            accessibilityLabel="Confirmar palavra-passe"
           />
           <Animated.View
             style={[
@@ -348,8 +420,19 @@ const Register = () => {
 
         {/* Gênero */}
         <View style={styles.wrapInput}>
+          <Text
+            style={styles.subtitles}
+            accessibilityRole="text"
+            accessibilityLabel="Género"
+          >
+            Género{" "}
+            <Text nativeID="mandatory" style={styles.mandatory}>
+              *
+            </Text>
+          </Text>
           <BotaoNavegacaoContainer>
             <Definir_visibilidade_btn
+              accessibilityRole="button"
               style={{
                 backgroundColor:
                   activeButton === "Masculino" ? "#E3FC87" : "white",
@@ -361,6 +444,7 @@ const Register = () => {
               </Texto_Botoes_Definir_Visibilidade>
             </Definir_visibilidade_btn>
             <Definir_visibilidade_btn
+              accessibilityRole="button"
               style={{
                 backgroundColor:
                   activeButton === "Feminino" ? "#E3FC87" : "white",
@@ -374,17 +458,34 @@ const Register = () => {
           </BotaoNavegacaoContainer>
         </View>
 
-
         {/* Botão de Registro */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
-          <Text style={styles.loginButtonText}>Registar</Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleSubmit}
+          accessibilityRole="button"
+        >
+          <Text style={styles.loginButtonText} accessibilityLabel="Registar-me">
+            Registar-me
+          </Text>
         </TouchableOpacity>
 
         {/* Link para Login */}
         <View style={styles.textCenter}>
-          <Text style={styles.txt1}>Já tens uma conta?</Text>
+          <Text
+            style={styles.txt1}
+            accessibilityRole="text"
+            accessibilityLabel="Já tens uma conta?"
+          >
+            Já tens uma conta?
+          </Text>
           <TouchableOpacity onPress={() => router.push("./login")}>
-            <Text style={styles.txt2}>Fazer Login</Text>
+            <Text
+              style={styles.txt2}
+              accessibilityRole="link"
+              accessibilityLabel="Iniciar sessão"
+            >
+              Iniciar sessão
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -413,9 +514,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  title: {
-    fontSize: 30,
-    color: "azure",
+  h1: {
+    fontSize: 35,
+    fontWeight: "bold",
+    color: "#E3FC87",
     textAlign: "center",
     marginBottom: 30,
   },
@@ -453,13 +555,14 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     color: "black",
-    textTransform: "uppercase",
+    fontWeight: 400,
   },
   errorText: {
+    color: "#FFBDBD",
     fontSize: 14,
-    color: "#E3FC87",
+    marginTop: 10,
+    marginBottom: 20,
     textAlign: "center",
-    marginBottom: 10,
   },
   textCenter: {
     flexDirection: "row",
@@ -475,5 +578,13 @@ const styles = StyleSheet.create({
     color: "#E3FC87",
     fontWeight: "bold",
     marginLeft: 5,
+  },
+  subtitles: {
+    fontSize: 15,
+    color: "azure",
+    fontWeight: 500,
+  },
+  mandatory: {
+    color: "#FF8F8F",
   },
 });

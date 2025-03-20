@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components/native";
-import { Alert, TouchableOpacity } from "react-native";
+import { Alert, TouchableOpacity, View, ScrollView} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -18,6 +18,7 @@ import {
   FooterText,
   BottomCircle,
   TittleTorneio,
+  TittlePagina,
   DesafioContainer,
   DesafioCard,
   DesafioIcon,
@@ -218,7 +219,7 @@ useEffect(() => {
 
 
   const handleCirclePress = () => {
-    router.push('./uploadScreenTime/UploadScreen');
+    router.push('../components/uploadScreenTime/UploadScreen');
   };
 
   const handleCadernetaPress = () => {
@@ -235,6 +236,9 @@ useEffect(() => {
 
   return (
     <>
+    <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page">
+      <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page"></TittlePagina>
+    </View>
       <ProfileContainer> 
       <TouchableOpacity onPress={handlePerfilPress}>
         <Avatar 
@@ -242,9 +246,10 @@ useEffect(() => {
         />
       </TouchableOpacity>
         <ProfileTextContainer>
-          <UserName>{userName}</UserName> <UserLevel>Nível 1</UserLevel>
+          <UserName>{userName}</UserName> <UserLevel> Nível 1 </UserLevel>
           <StarsContainer>
             <Svg
+              accessibilityLabel="estrela nível 1"
               width="13"
               height="11"
               viewBox="0 0 13 11"
@@ -257,6 +262,7 @@ useEffect(() => {
               />
             </Svg>
             <Svg
+              accessibilityLabel="estrela nível 2"
               width="13"
               height="11"
               viewBox="0 0 13 11"
@@ -269,6 +275,7 @@ useEffect(() => {
               />
             </Svg>
             <Svg
+              accessibilityLabel="estrela nível 3"
               width="13"
               height="11"
               viewBox="0 0 13 11"
@@ -281,6 +288,7 @@ useEffect(() => {
               />
             </Svg>
             <Svg
+              accessibilityLabel="estrela nível 4"
               width="13"
               height="11"
               viewBox="0 0 13 11"
@@ -296,47 +304,94 @@ useEffect(() => {
         </ProfileTextContainer>
       </ProfileContainer>
       <TittleTorneio>Torneio XPTO</TittleTorneio>
-      <CardContainer>
-        <Header>
-          <IconContainer>
-            <FontAwesome name="plane" size={20} color="#34459E" />
-          </IconContainer>
 
-          <TeamName>{teamId}</TeamName>
+      <CardContainer accessible={true}>
+      <View
+        accessible={false} 
+        accessibilityRole="button"
+      >
+        <CardContainer accessible={false} accessibilityLabel={`Cartão da equipe ${teamId}`}>
+          <Header>
+            <IconContainer accessibilityLabel="Ícone de equipe">
+              <FontAwesome name="plane" size={20} color="#34459E" accessible={false} />
+            </IconContainer>
 
-          <Points>
-            <FontAwesome name="star" size={12} color="#D4F34A" /> 
-            {teamPoints}
-          </Points>
-        </Header>
+            <TeamName accessibilityLabel={`Nome da equipe: ${teamId}`}>
+              {teamId}
+            </TeamName>
 
-        <Stats>
-          <StatItem>
-            <StatText>Dias em competição</StatText>
-            <StatValue>
-              9/30 <FontAwesome name="calendar" size={14} color="#ffffff" />
-            </StatValue>
-          </StatItem>
-          <StatItem>
-            <StatText>Desafios completos</StatText>
-            <StatValue>
-              7/30 <FontAwesome name="image" size={14} color="#ffffff" />
-            </StatValue>
-          </StatItem>
-        </Stats>
+            <Points accessibilityLabel={`Pontos da equipe: ${teamPoints}`}>
+              <FontAwesome name="star" size={12} color="#D4F34A" accessible={false} />
+              {teamPoints}
+            </Points>
+          </Header>
 
-        <Footer>
-          <FooterText>{teamMembers}/{teamMembers}</FooterText>
-          <FontAwesome name="group" size={16} color="#ffffff" />
-        </Footer>
+            <View>
+              <Stats accessibilityRole="summary">
+              <StatItem 
+                  accessible={true} 
+                  accessibilityLabel={`7 de 30`}
+                >
+                  <StatText 
+                  accessibilityLabel="Dias em competição"
+                  accessibilityRole="button">
+                    Dias em competição
+                  </StatText>
+                  <StatValue 
+                  accessibilityLabel="quantidade de dias">
+                    7/30 <FontAwesome name="calendar" size={14} color="#ffffff" accessible={false} />
+                  </StatValue>
+                </StatItem>
+
+                <StatItem 
+                  accessible={true} 
+                  accessibilityLabel={`7 de 30`}
+                >
+                  <StatText 
+                  accessibilityLabel="Dias em competição"
+                  accessibilityRole="button">
+                    Dias em competição
+                  </StatText>
+                  <StatValue 
+                  accessibilityLabel="quantidade de dias">
+                    7/30 <FontAwesome name="calendar" size={14} color="#ffffff" accessible={false} />
+                  </StatValue>
+                </StatItem>
+            </Stats>  
+          </View>
+
+            <View accessible={true}>
+              <Footer 
+                accessible={true} 
+                accessibilityRole="summary" 
+                accessibilityLabel={`Membros da equipe: ${teamMembers} de ${teamMembers}`}
+              >
+                <FooterText 
+                  accessible={true} 
+                  accessibilityLabel={`Membros da equipe: ${teamMembers}/${teamMembers}`}
+                >
+                  {teamMembers}/{teamMembers}
+                </FooterText>
+
+                <FontAwesome 
+                  name="group" 
+                  size={16} 
+                  color="#ffffff" 
+                  accessible={true} 
+                  accessibilityLabel="Ícone de grupo"
+                />
+              </Footer>
+            </View>
+        </CardContainer>
+      </View>
 
         {isUploadedToday  ? (
-          <CountdownButton>
+          <CountdownButton accessible={true} accessibilityLabel="Botão upload do tempo de ecrã desativado">
             <FontAwesome name="clock-o" size={20} color="#ffffff" />
             <CountdownText>{formatTime(timeRemaining)}</CountdownText>
           </CountdownButton>
         ) : (
-          <BottomCircle onPress={handleCirclePress}>
+          <BottomCircle onPress={handleCirclePress} accessible={true} accessibilityLabel="Botão upload do tempo de ecrã ativo">
             <FontAwesome name="image" size={20} color="#ffffff" />
           </BottomCircle>
         )}
@@ -346,7 +401,7 @@ useEffect(() => {
       <DesafioContainer>
         <DesafioCard onPress={() => handleCadernetaPress(1)}>
           <DesafioIcon>
-            <Svg width="55" height="55" viewBox="0 0 55 55" fill="none">
+            <Svg accessibilityLabel="Ilustração caderneta" width="55" height="55" viewBox="0 0 55 55" fill="none">
               {" "}
               <Path
                 d="M25.2654 20.8129L25.2683 55.0055L9.66159 55.0074C4.50969 55.0074 0.299525 50.9754 0.0152943 45.8946L0 45.3463V20.8129H25.2654ZM29.7245 38.6494H54.9958L54.9982 45.3463C54.9976 50.6818 50.6722 55.0074 45.3365 55.0074L29.7275 55.0055L29.7245 38.6494ZM45.3384 0.000732422C50.4903 0.000732422 54.7005 4.03281 54.9847 9.11368L55 9.66193L54.9958 34.1903H29.7245L29.7275 0.000732422H45.3384ZM25.2683 0.000732422L25.2654 16.3538H0L0.00178536 9.66198C0.00240643 4.32641 4.32778 0.000732422 9.66335 0.000732422H25.2683Z"
@@ -359,7 +414,7 @@ useEffect(() => {
 
         <DesafioCard onPress={() => handleDesafioPress(1)}>
           <DesafioIcon>
-            <Svg width="63" height="63" viewBox="0 0 63 63" fill="none">
+            <Svg accessibilityLabel="Ilustração desafio semanal" width="63" height="63" viewBox="0 0 63 63" fill="none">
               {" "}
               <Path
                 d="M55.1147 15.7471V29.1951C52.7034 28.1416 50.0406 27.5574 47.2411 27.5574C36.3702 27.5574 27.5573 36.3702 27.5573 47.2412C27.5573 50.0406 28.1416 52.7034 29.195 55.1147H9.84191C4.40638 55.1147 0 50.7083 0 45.2728V15.7471H55.1147Z"
@@ -404,4 +459,13 @@ const CountdownText = styled.Text`
   font-size: 9px;
   font-weight: bold;
   margin-top: 4px;
+`;
+
+const TittleHomePage = styled.View`
+  color: rgba(38, 58, 131, 1.00);
+  font-size: 24px;
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: -20px;
+  font-weight: 600;
 `;

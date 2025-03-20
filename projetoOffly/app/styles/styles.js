@@ -58,6 +58,7 @@ export const PerguntaTexto = styled.Text`
   font-family: "Poppins-Regular";
   color: #414141;
   font-size: 14px;
+  font-weight: bold;
 `;
 
 // Texto selecionar resposta
@@ -121,7 +122,7 @@ export const BotaoOpcao = styled.TouchableOpacity`
   font-family: "Poppins-Regular";
   font-size: 12px;
   background-color: ${(props) => (props.selecionado ? "#E3FC87" : "#fff")};
-  border: 0.5px solid #9b9b9b;
+  border: 0.5px solid #585858;
   border-radius: 8px;
   justify-content: flex-start;
   margin-bottom: 21px;
@@ -137,12 +138,16 @@ export const Circulo = styled.View`
   justify-content: center;
   background-color: ${(props) => (props.selecionado ? "#263A83" : "#fff")};
   border: ${(props) =>
-    props.selecionado ? "1px solid #263A83" : "1px solid #ccc"};
+    props.selecionado ? "1px solid #263A83" : "1px solid #585858"};
 `;
 
 // Texto do botão de opção
 export const TextoBotao = styled.Text`
+<<<<<<< HEAD
   color: ${(props) => (props.selecionado ? "#263A83" : "#414141")};
+=======
+  color: ${(props) => (props.selecionado ? "#263A83" : "#585858")};
+>>>>>>> ce8fe3af82be170dd88929644a3fffc6f1bc142d
   font-family: "Poppins-Regular";
   font-size: 12px;
 `;
@@ -207,7 +212,11 @@ export const TituloCaixa = styled.Text`
 `;
 
 export const TextoCaixa = styled.Text`
+<<<<<<< HEAD
   color:#414141;
+=======
+  color: #414141;
+>>>>>>> ce8fe3af82be170dd88929644a3fffc6f1bc142d
   font-size: 14px;
   font-weight: 400;
   margin-top: 29px;
@@ -234,7 +243,7 @@ export const TextoBotaoComecar = styled.Text`
 `;
 
 export const TextoCaixaFinal = styled.Text`
-  color: #9b9b9b;
+  color: #414141;
   font-size: 14px;
   font-weight: 400;
   margin-top: 29px;
@@ -251,7 +260,7 @@ export const TextoCaixaFinal = styled.Text`
 export const CardContainer = styled.View`
   background-color: #27368f;
   border-radius: 16px;
-  padding: 16px;
+  padding: 3px;
   width: 90%;
   align-self: center;
   margin-vertical: 20px;
@@ -356,6 +365,9 @@ export const TittleTorneio = styled.Text`
   align-self: center;
 `;
 
+export const TittlePagina = styled.Text`
+`;
+
 export const CardsDesafios = styled.View`
   background-color: #27368f;
   border-radius: 16px;
@@ -410,16 +422,18 @@ export const ProfileContainer = styled.TouchableOpacity`
   align-items: center;
   padding: 20px;
   width: 100%;
-  margin-top: 50;
   align-self: center;
 `;
 
-export const Avatar = styled.Image`
+export const Avatar = styled.Image.attrs({
+  accessibilityLabel: 'Imagem de perfil do utilizador'
+})`
   width: 70px;
   height: 70px;
   border-radius: 100px;
   margin-right: 15px;
 `;
+
 
 export const ProfileTextContainer = styled.View`
   flex: 1;
@@ -449,14 +463,13 @@ export const Star = styled.View`
 // PÁGINA PRINCIPAL ESTILOS
 
 // Container
-export const Container_Pagina_Pricipal = styled.View`
+export const Container_Pagina_Principal = styled.View`
   display: flex;
   flex: 1;
   padding: 10px 27px 27px 27px;
   align-items: center;
   background-color: white;
 `;
-
 
 // Titulos
 export const Titulos = styled.Text`
@@ -470,7 +483,6 @@ export const Titulos = styled.Text`
 // Sub Titulos
 export const Sub_Titulos = styled.Text`
   color: #414141;
-  text-align: justify;
   font-family: Poppins-regular;
   font-size: 15px;
   font-weight: 400;
@@ -518,7 +530,6 @@ export const Texto_Botoes_Pagina_principal_Desativado = styled.Text`
 
 export const Texto_Botoes_Pagina_principal_Voltar = styled.Text`
   color: #414141;
-  text-align: justify;
   font-family: poppins-regular;
   font-size: 15px;
   font-weight: 400;
@@ -599,7 +610,6 @@ export const Definir_visibilidade_btn = styled.TouchableOpacity`
 
 export const Texto_Botoes_Definir_Visibilidade = styled.Text`
   color: #263a83;
-  text-align: justify;
   font-family: poppins-regular;
   font-size: 15px;
   font-weight: 400;
@@ -631,7 +641,7 @@ export const SearchInput = styled.TextInput`
 
 // Container
 export const Container_Pagina_Equipa_Criada = styled.View`
-  margin-top:80;
+  margin-top: 80;
   padding: 60px 27px 27px 27px;
   align-items: center;
   background-color: white;

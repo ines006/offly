@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import Svg, { Circle, Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
 import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
@@ -188,18 +189,31 @@ const DesafioSemanal = () => {
   const progresso = Math.max(0, Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2)));
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push("../../components/navbar")}
-      >
-        <Text style={styles.backButtonText}>&lt;</Text>
+    <ScrollView  contentContainerStyle={styles.container}>
+      {/* Botão de Voltar atrás */}
+            <TouchableOpacity style={styles.backButton} onPress={() => router.push("../../components/navbar")} accessibilityLabel="Botão voltar atrás">
+                <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+                  <Circle
+                    cx="18.1351"
+                    cy="17.1713"
+                    r="16.0177"
+                    stroke="#263A83"
+                    strokeWidth={2}
+                  />
+                  <Path
+                    d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+                    stroke="#263A83"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  />
+                </Svg>
       </TouchableOpacity>
+
       <Text style={styles.title}>Desafio da Semana</Text>
 
       {currentCarta ? (
         <>
-          <View style={styles.timerContainer}>
+          <View  accessible={true} style={styles.timerContainer}>
             <View style={styles.timer}>
               <Text style={styles.timerText}>
                 {timer.days}d {timer.hours}h {timer.minutes}m {timer.seconds}s
@@ -207,10 +221,11 @@ const DesafioSemanal = () => {
             </View>
           </View>
 
-          <View style={styles.cardContainer}>
+          <View  accessible={true} style={styles.cardContainer}>
           <View style={styles.mainCard}>
             {currentCarta.imagem && (
               <Image
+                accessibilityLabel="Carta do desafio semanal"
                 source={{ uri: currentCarta.imagem }} // Usar o campo 'imagem' como fonte
                 style={styles.cardImage} // Adicionar estilo para a imagem
                 resizeMode="cover" // Ajustar como a imagem será exibida
@@ -220,7 +235,7 @@ const DesafioSemanal = () => {
           </View>
           </View>
 
-          <View style={styles.progressContainer}>
+          <View  accessible={true} style={styles.progressContainer}>
             <View style={styles.progressBarBackground}>
               <LinearGradient
                 colors={["rgba(38, 58, 131, 1)", "rgba(38, 58, 131, 0)"]}
@@ -233,11 +248,12 @@ const DesafioSemanal = () => {
             </View>
           </View>
 
-          <View style={styles.participantsContainer}>
+          <View  accessible={true} style={styles.participantsContainer}>
             <Text style={styles.participantsTitle}>Participantes</Text>
             {participantes.map((participante, index) => (
               <View key={index} style={styles.card}>
                 <Image
+                  accessibilityLabel="Imagem do participante"
                   source={require("../../imagens/2.png")}
                   style={styles.peopleImage}
                 />

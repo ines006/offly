@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
+  FlatList,
 } from "react-native";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/firebaseApi";
@@ -23,7 +24,6 @@ const DetalhesEquipa = () => {
   const router = useRouter();
 
   const handlePress = () => {
-    
     router.push("../caderneta/caderneta"); 
   };
   const handlePressDesafio = () => {
@@ -112,7 +112,7 @@ const DetalhesEquipa = () => {
     
     <ScrollView contentContainerStyle={styles.container}>
       
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity accessible={true} accessibilityLabel="Botão voltar atrás" style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backButtonText}>
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle
@@ -134,17 +134,26 @@ const DetalhesEquipa = () => {
 
       <Text style={styles.title}>Torneio XPTO</Text>
 
-      <View style={styles.info}>
+      <TouchableOpacity
+        style={styles.info}
+        accessible={true}
+        accessibilityLabel={`Equipa ${teamId}, ${teamDetails.pontos} pontos`}
+        accessibilityRole="button"
+        activeOpacity={1} 
+      >
         <Image
           source={require("../../imagens/1.png")}
           style={styles.teamImage}
+          accessibilityLabel={`Imagem da equipa ${teamId}`}
         />
 
         <View style={styles.textContainer}>
           <Text style={styles.labelnome}>{teamId}</Text>
           <Text style={styles.labelpontos}>{teamDetails.pontos} pontos</Text>
         </View>
-      </View>
+      </TouchableOpacity>
+
+
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handlePress}>
@@ -182,21 +191,35 @@ const DetalhesEquipa = () => {
       </View>
 
       <View style={styles.remainingTeamsContainer}>
-        {participants.length > 0 ? (
-          participants.map((participant, index) => (
-            <View key={index} style={styles.card}>
+        <FlatList
+          data={participants}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              style={styles.card}
+              accessible={true}
+              accessibilityLabel={`Participante ${index + 1}: ${item}`}
+              accessibilityRole="button"
+            >
+
               <Image
                 source={{ uri: getRandomImage() }}
                 style={styles.peopleImage}
+                accessible={true}
+                accessibilityLabel={`Foto do participante ${index + 1}, ${item}`}
               />
-              <Text style={styles.participantText}>{participant}</Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.noParticipants}>
-            Nenhum participante encontrado.
-          </Text>
-        )}
+              <Text
+                style={styles.participantText}
+                accessible={true}
+                accessibilityRole="text"
+              >
+                {item}
+              </Text>
+            </TouchableOpacity>
+          )}
+          accessibilityRole="list"
+          accessibilityLabel="Lista de participantes da equipe"
+        />
       </View>
     </ScrollView>
   );

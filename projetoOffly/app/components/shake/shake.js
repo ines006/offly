@@ -14,6 +14,8 @@ import Animated, {
   runOnJS,
   Easing,
 } from "react-native-reanimated";
+import { TittlePagina } from "../../styles/styles";
+import { AccessibilityInfo, BackHandler } from "react-native";
 
 export default function Shake() {
   const router = useRouter();
@@ -63,10 +65,11 @@ export default function Shake() {
   }, []);
 
   useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => true);
     const subscription = Accelerometer.addListener(({ x, y, z }) => {
       const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
-      if (totalForce > 2) {
+      if (totalForce > 1) {
         shakeCount.current += 1;
 
         if (shakeCount.current >= 5 && !isNavigating) {
@@ -77,12 +80,17 @@ export default function Shake() {
 
     Accelerometer.setUpdateInterval(100);
 
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      backHandler.remove();
+    };
   }, [isNavigating]);
 
   const triggerCardAnimation = (subscription) => {
     setIsNavigating(true);
     subscription?.remove();
+
+    AccessibilityInfo.announceForAccessibility("O Shake foi feito");
 
     rotateAnimation.value = withTiming(360, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
       rotateAnimation.value = 0;
@@ -144,11 +152,15 @@ export default function Shake() {
 
   return (
     <View style={styles.background}>
+      <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Shake">
+            <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Shake"> Shake </TittlePagina>
+          </View>
       <View style={styles.container}>
         {/* Carta principal */}
         <Animated.View style={[styles.card, combinedStyle]}>
           {imageURL ? (
             <Image
+              accessibilityLabel="Imagem de ilustração da carta de shake"
               source={{ uri: imageURL }}
               style={{ width: "100%", height: "100%", borderRadius: 15 }}
               resizeMode="cover"

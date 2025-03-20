@@ -210,26 +210,37 @@ export default function EquipaCriada() {
   return (
     <ScrollView style={{ backgroundColor: "#fff" }}>
       <Container_Pagina_Equipa_Criada>
-              {/* Botão de Voltar atrás */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
-          <Circle
-            cx="18.1351"
-            cy="17.1713"
-            r="16.0177"
-            stroke="#263A83"
-            strokeWidth={2}
-          />
-          <Path
-            d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
-            stroke="#263A83"
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-        </Svg>
-      </TouchableOpacity>
-        <Titulos_Equipa_Criada>{teamDetails?.nome}</Titulos_Equipa_Criada>
-        <Sub_Titulos_Criar_Equipa>
+        {/* Botão de Voltar atrás */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+            <Circle
+              cx="18.1351"
+              cy="17.1713"
+              r="16.0177"
+              stroke="#263A83"
+              strokeWidth={2}
+            />
+            <Path
+              d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+              stroke="#263A83"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </Svg>
+        </TouchableOpacity>
+        <Titulos_Equipa_Criada
+          accessibilityRole="text"
+          accessibilityLabel={teamDetails?.nome}
+        >
+          {teamDetails?.nome}
+        </Titulos_Equipa_Criada>
+        <Sub_Titulos_Criar_Equipa
+          accessibilityRole="text"
+          accessibilityLabel={teamDetails?.descricao}
+        >
           {teamDetails?.descricao}
         </Sub_Titulos_Criar_Equipa>
 
@@ -239,6 +250,7 @@ export default function EquipaCriada() {
               {participants.map((participant, index) => (
                 <View key={index} style={styles.card}>
                   <Image
+                    accessibilityLabel="Imagem do participante"
                     source={{
                       uri:
                         participant === userName
@@ -247,11 +259,20 @@ export default function EquipaCriada() {
                     }}
                     style={styles.peopleImage}
                   />
-                  <Text style={styles.participantText}>{participant}</Text>
+                  <Text
+                    style={styles.participantText}
+                    accessibilityRole="text"
+                    accessibilityLabel={participant}
+                  >
+                    {participant}
+                  </Text>
                 </View>
               ))}
               <Botoes_Pagina_principal onPress={handleTorneio}>
-                <Texto_Botoes_Pagina_principal>
+                <Texto_Botoes_Pagina_principal
+                  accessibilityRole="button"
+                  accessibilityLabel="Entrar no Torneio"
+                >
                   Entrar no Torneio
                 </Texto_Botoes_Pagina_principal>
               </Botoes_Pagina_principal>

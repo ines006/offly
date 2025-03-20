@@ -14,7 +14,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   const tabWidth = SCREEN_WIDTH / state.routes.length;
   const insets = useSafeAreaInsets();
-  const tabBarHeight = Math.max(SCREEN_HEIGHT * 0.08, 20) + insets.bottom;
+  const tabBarHeight = Math.max(SCREEN_HEIGHT * 0.06, 20) + insets.bottom;
 
   const getPath = (index) => {
     const centerX = tabWidth * (index + 0.5);

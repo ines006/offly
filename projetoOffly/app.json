@@ -1,12 +1,15 @@
 {
   "expo": {
-    "name": "MyApp",
-    "slug": "MyApp",
+    "name": "Oflly",
+    "slug": "offly",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+    "developer": {
+          "enabled": false
+        },
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -16,6 +19,7 @@
         "NSPhotoLibraryAddUsageDescription": "Este aplicativo requer permissão para salvar fotos na galeria."
       }
     },
+
     "android": {
       "permissions": [
         "CAMERA",

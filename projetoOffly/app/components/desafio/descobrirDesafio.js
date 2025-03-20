@@ -165,6 +165,7 @@ export default function Descobrir() {
         <Animated.View style={[styles.card, animatedMainCardStyle]}>
           {imageURL ? (
             <Image
+              accessibilityLabel="Imagem para descobrir carta do desafio semanal"
               source={{ uri: imageURL }}
               style={{ width: "100%", height: "100%", borderRadius: 9 }}
               resizeMode="cover"
@@ -179,7 +180,7 @@ export default function Descobrir() {
           Descobre o desafio semanal que vais fazer em equipa.
         </Text>
 
-        <TouchableOpacity style={styles.discoverButton} onPress={triggerAnimation} disabled={isLoading}>
+        <TouchableOpacity  style={styles.discoverButton} onPress={triggerAnimation} disabled={isLoading}>
           <Text style={styles.discoverButtonText}>{isLoading ? "Carregando..." : "Descobrir"}</Text>
         </TouchableOpacity>
       </View>

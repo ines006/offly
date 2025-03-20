@@ -54,43 +54,72 @@ const PodioPontuacao = () => {
   }, []);
 
   const Podium = () => (
-    <View style={styles.podiumContainer}>
+    <TouchableOpacity>
+    <View style={styles.podiumContainer} accessible={true} accessibilityLabel="Pódio das equipas">
       {/* 2nd Place */}
-      <View style={[styles.podiumSection, styles.secondPlaceSection]}>
-        <Image
-          source={{
-            uri: teams[1]?.imageUrl || "https://default-image-url.png",
-          }}
-          style={styles.teamImage}
-        />
-        <Text style={styles.podiumTeam}>{teams[1]?.name || "-"}</Text>
-        <Text style={styles.podiumPoints}>{teams[1]?.totalPoints || "-"} P</Text>
-      </View>
-
+      <TouchableOpacity>
+        <View 
+          style={[styles.podiumSection, styles.secondPlaceSection]} 
+          accessible={true} 
+          accessibilityRole="header" 
+          accessibilityLabel={`Segundo lugar: ${teams[1]?.name || "Sem equipa"}, ${teams[1]?.totalPoints || "0"} pontos`}
+        >
+          <Image
+            source={{
+              uri: teams[1]?.imageUrl || "https://default-image-url.png",
+            }}
+            style={styles.teamImage}
+            accessible={true}
+            accessibilityLabel={`Imagem da equipa ${teams[1]?.name || "Sem equipa"}`}
+          />
+          <Text style={styles.podiumTeam}>{teams[1]?.name || "-"}</Text>
+          <Text style={styles.podiumPoints}>{teams[1]?.totalPoints || "-"} P</Text>
+        </View>
+      </TouchableOpacity>
+      
       {/* 1st Place */}
-      <View style={[styles.podiumSection, styles.firstPlaceSection]}>
-        <Image
-          source={{
-            uri: teams[0]?.imageUrl || "https://default-image-url.png",
-          }}
-          style={styles.teamImage}
-        />
-        <Text style={styles.podiumTeam}>{teams[0]?.name || "-"}</Text>
-        <Text style={styles.podiumPoints}>{teams[0]?.totalPoints || "-"} P</Text>
-      </View>
+      <TouchableOpacity>
+        <View 
+          style={[styles.podiumSection, styles.firstPlaceSection]} 
+          accessible={true} 
+          accessibilityRole="header" 
+          accessibilityLabel={`Primeiro lugar: ${teams[0]?.name || "Sem equipa"}, ${teams[0]?.totalPoints || "0"} pontos`}
+        >
+          <Image
+            source={{
+              uri: teams[0]?.imageUrl || "https://default-image-url.png",
+            }}
+            style={styles.teamImage}
+            accessible={true}
+            accessibilityLabel={`Imagem da equipa ${teams[0]?.name || "Sem equipa"}`}
+          />
+          <Text style={styles.podiumTeam}>{teams[0]?.name || "-"}</Text>
+          <Text style={styles.podiumPoints}>{teams[0]?.totalPoints || "-"} P</Text>
+        </View>
+      </TouchableOpacity>
 
       {/* 3rd Place */}
-      <View style={[styles.podiumSection, styles.thirdPlaceSection]}>
+      <TouchableOpacity>
+      <View 
+        style={[styles.podiumSection, styles.thirdPlaceSection]} 
+        accessible={true} 
+        accessibilityRole="header" 
+        accessibilityLabel={`Terceiro lugar: ${teams[2]?.name || "Sem equipe"}, ${teams[2]?.totalPoints || "0"} pontos`}
+      >
         <Image
           source={{
             uri: teams[2]?.imageUrl || "https://default-image-url.png",
           }}
           style={styles.teamImage}
+          accessible={true}
+          accessibilityLabel={`Imagem da equipa ${teams[2]?.name || "Sem equipa"}`}
         />
         <Text style={styles.podiumTeam}>{teams[2]?.name || "-"}</Text>
         <Text style={styles.podiumPoints}>{teams[2]?.totalPoints || "-"} P</Text>
       </View>
+      </TouchableOpacity>
     </View>
+    </TouchableOpacity>
   );
 
   const RemainingTeams = () => (
@@ -112,6 +141,7 @@ const PodioPontuacao = () => {
           </View>
 
           <Image
+            accessibilityLabel="Imagem da equipa"
             source={{ uri: item.imageUrl || "https://default-image-url.png" }}
             style={styles.teamIcon}
           />
@@ -136,10 +166,12 @@ const PodioPontuacao = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Torneio XPTO</Text>
+      <Text style={styles.title}> Torneio XPTO </Text>
       <Podium />
 
       <ImageBackground
+        accessible={true}
+        accessibilityLabel="Ilustração do pódio com segundo, primeiro e terceiro lugar"
         source={require("../../imagens/podioImagem.png")}
         style={styles.podiumBackground}
         imageStyle={styles.podiumImage}

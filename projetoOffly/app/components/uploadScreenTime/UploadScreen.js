@@ -188,7 +188,7 @@ const UploadScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
       {/* Botão de Voltar atrás */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Botão voltar atrás">
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle
               cx="18.1351"
@@ -212,10 +212,10 @@ const UploadScreen = () => {
       <View style={styles.dashedBox}>
         {/* Mostra a imagem selecionada ou o ícone de upload */}
         {selectedImage ? (
-          <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+          <Image accessibilityLabel="Imagem selecionada" source={{ uri: selectedImage }} style={styles.imagePreview} />
         ) : (
           <>
-          <TouchableOpacity onPress={handleSelectImage}>
+          <TouchableOpacity onPress={handleSelectImage} accessibilityLabel="Faz upload do print do tempo de ecrã.">
             <Svg width={49} height={49} viewBox="0 0 49 49" fill="none">
             <Path
               d="M0.125 8.25C0.125 3.7627 3.7627 0.125 8.25 0.125H40.75C45.2374 0.125 48.875 3.7627 48.875 8.25V24.559C47.2351 23.509 45.4094 22.7236 43.4583 22.2626V8.25C43.4583 6.75424 42.2458 5.54167 40.75 5.54167H8.25C6.75424 5.54167 5.54167 6.75424 5.54167 8.25V40.75C5.54167 42.2458 6.75424 43.4583 8.25 43.4583H22.2626C22.7236 45.4094 23.509 47.2351 24.559 48.875H8.25C3.7627 48.875 0.125 45.2374 0.125 40.75V8.25Z"

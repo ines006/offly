@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { sequelize, testConnection } = require("./config/database");
+const { sequelize, testConnection } = require("./models"); // Importa do index.js
 const participantsRoutes = require("./routes/participantsRoutes");
 
 require("dotenv").config();

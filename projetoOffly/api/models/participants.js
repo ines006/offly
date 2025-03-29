@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database"); // Desestruturação explícita
+const Teams = require("./teams");
 
 const Participants = sequelize.define("participants", {
   id_participants: {

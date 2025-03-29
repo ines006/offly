@@ -1,4 +1,5 @@
-const Participants = require("../models/participants");
+const { Participants, Teams } = require("../models");
+const { Sequelize } = require("sequelize");
 
 // Listar todos os participantes
 exports.getAllParticipants = async (req, res) => {
@@ -108,3 +109,38 @@ exports.deleteParticipant = async (req, res) => {
     res.status(500).json({ message: "Erro ao eliminar participante", error });
   }
 };
+
+// Listar equipas com menos de 5 participantes
+exports.getTeamsUnderFive = async (req, res) => {
+  try {
+    const teams = await Teams.findAll({
+      attributes: [
+        "team_name",
+        "capacity",
+        [
+          Sequelize.fn("COUNT", Sequelize.col("participants.id_participants")),
+          "participant_count",
+        ],
+      ],
+      include: [
+        {
+          model: Participants,
+          attributes: [],
+        },
+      ],
+      group: ["Teams.id_teams", "Teams.team_name", "Teams.capacity"],
+      having: Sequelize.literal("COUNT(`participants`.`id_participants`) < 5"),
+      raw: true,
+    });
+
+    res.json(teams);
+  } catch (error) {
+    console.error(
+      "Erro ao listar equipas com menos de 5 participantes:",
+      error
+    );
+    res.status(500).json({ message: "Erro ao listar equipas", error });
+  }
+};
+
+module.exports = exports;

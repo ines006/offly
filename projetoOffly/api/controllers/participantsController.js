@@ -1,4 +1,4 @@
-const { Participants, Teams } = require("../models");
+const { Participants, Teams, Answers } = require("../models"); // Adicionado Answers
 const { Sequelize } = require("sequelize");
 
 // Listar todos os participantes
@@ -143,4 +143,32 @@ exports.getTeamsUnderFive = async (req, res) => {
   }
 };
 
+// Listar respostas de um participante ao questionário inicial
+
+exports.getParticipantAnswers = async (req, res) => {
+  try {
+    const participant = await Participants.findByPk(req.params.id, {
+      include: [
+        {
+          model: Answers,
+          attributes: ["answers"],
+          as: "answer",
+          required: false,
+        },
+      ],
+    });
+
+    if (!participant) {
+      return res.status(404).json({ message: "Participante não encontrado" });
+    }
+
+    res.json({
+      id_participants: participant.id_participants,
+      answers: participant.answer ? participant.answer.answers : null,
+    });
+  } catch (error) {
+    console.error("Erro ao buscar respostas do participante:", error);
+    res.status(500).json({ message: "Erro ao buscar respostas", error });
+  }
+};
 module.exports = exports;

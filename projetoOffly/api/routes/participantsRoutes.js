@@ -12,4 +12,7 @@ router.post("/", participantsController.createParticipant);
 router.put("/:id", participantsController.updateParticipant);
 router.delete("/:id", participantsController.deleteParticipant);
 
+// Listar respostas de um participante ao questionário inicial
+router.get("/:id/answers", participantsController.getParticipantAnswers);
+
 module.exports = router;

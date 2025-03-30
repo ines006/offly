@@ -15,31 +15,31 @@ const Teams = sequelize.define(
     },
     team_description: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     points: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
     capacity: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
     visibility: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    competions_id_competions: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
+    },
+    competitions_id_competitions: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     team_passbooks_id_team_passbooks: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
     team_admin: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
   },
   {

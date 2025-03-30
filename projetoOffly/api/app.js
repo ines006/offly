@@ -3,6 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const { sequelize, testConnection } = require("./models"); // Importa do index.js
 const participantsRoutes = require("./routes/participantsRoutes");
+const teamsRoutes = require("./routes/teamsRoutes");
 
 require("dotenv").config();
 
@@ -14,6 +15,7 @@ app.use(bodyParser.json());
 
 // Rotas
 app.use("/participants", participantsRoutes);
+app.use("/teams", teamsRoutes);
 
 // Testar a conexão e sincronizar a base de dados
 testConnection()

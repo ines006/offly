@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const { sequelize, testConnection } = require("./models"); // Importa do index.js
 const participantsRoutes = require("./routes/participantsRoutes");
 const teamsRoutes = require("./routes/teamsRoutes");
+const competitionsRoutes = require("./routes/competitionsRoutes");
 
 require("dotenv").config();
 
@@ -16,6 +17,7 @@ app.use(bodyParser.json());
 // Rotas
 app.use("/participants", participantsRoutes);
 app.use("/teams", teamsRoutes);
+app.use("/competitions", competitionsRoutes);
 
 // Testar a conexão e sincronizar a base de dados
 testConnection()

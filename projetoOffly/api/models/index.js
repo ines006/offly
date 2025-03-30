@@ -3,6 +3,8 @@ const Participants = require("./participants");
 const Teams = require("./teams");
 const Answers = require("./answers");
 const Competitions = require("./competitions");
+const Challenges = require("./challenges");
+const ParticipantsHasChallenges = require("./participantsHasChallenges");
 
 // Definir relações entre as tabelas
 Teams.hasMany(Participants, {
@@ -38,6 +40,26 @@ Teams.belongsTo(Competitions, {
   as: "competition",
 });
 
+Participants.belongsToMany(Challenges, {
+  through: ParticipantsHasChallenges,
+  foreignKey: "participants_id_participants",
+  otherKey: "challenges_id_challenges",
+});
+Challenges.belongsToMany(Participants, {
+  through: ParticipantsHasChallenges,
+  foreignKey: "challenges_id_challenges",
+  otherKey: "participants_id_participants",
+});
+
+ParticipantsHasChallenges.belongsTo(Participants, {
+  foreignKey: "participants_id_participants",
+  targetKey: "id_participants",
+});
+ParticipantsHasChallenges.belongsTo(Challenges, {
+  foreignKey: "challenges_id_challenges",
+  targetKey: "id_challenges",
+});
+
 module.exports = {
   sequelize,
   testConnection,
@@ -45,4 +67,6 @@ module.exports = {
   Teams,
   Answers,
   Competitions,
+  Challenges,
+  ParticipantsHasChallenges,
 };

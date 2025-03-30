@@ -125,6 +125,7 @@ exports.getTeamsUnderFive = async (req, res) => {
       include: [
         {
           model: Participants,
+          as: "participants",
           attributes: [],
         },
       ],
@@ -175,7 +176,6 @@ exports.getParticipantAnswers = async (req, res) => {
 //  Adicionar respostas do questionário inicial
 exports.addParticipantAnswers = async (req, res) => {
   try {
-    console.log("Chamando addParticipantAnswers com ID:", req.params.id);
     const participant = await Participants.findByPk(req.params.id);
 
     if (!participant) {
@@ -210,8 +210,6 @@ exports.addParticipantAnswers = async (req, res) => {
       // Associa ao participante
       await participant.update({ answers_id_answers: answer.id_answers });
     }
-
-    console.log("Resposta salva:", answer.toJSON());
 
     res.status(201).json({
       id_participants: participant.id_participants,

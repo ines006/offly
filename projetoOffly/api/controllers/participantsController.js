@@ -1,4 +1,4 @@
-const { Participants, Teams, Answers } = require("../models"); // Adicionado Answers
+const { Participants, Teams, Answers } = require("../models");
 const { Sequelize } = require("sequelize");
 
 // Listar todos os participantes
@@ -171,4 +171,56 @@ exports.getParticipantAnswers = async (req, res) => {
     res.status(500).json({ message: "Erro ao buscar respostas", error });
   }
 };
+
+//  Adicionar respostas do questionário inicial
+exports.addParticipantAnswers = async (req, res) => {
+  try {
+    console.log("Chamando addParticipantAnswers com ID:", req.params.id);
+    const participant = await Participants.findByPk(req.params.id);
+
+    if (!participant) {
+      return res.status(404).json({ message: "Participante não encontrado" });
+    }
+
+    const { answers } = req.body; // Espera um array ou string JSON no corpo da requisição
+    if (!answers) {
+      return res.status(400).json({ message: "As respostas são obrigatórias" });
+    }
+
+    // Converte o array em string JSON, se necessário
+    const answersString = Array.isArray(answers)
+      ? JSON.stringify(answers)
+      : answers;
+
+    // Verifica se já existe uma resposta associada
+    let answer;
+    if (participant.answers_id_answers) {
+      // Atualiza a resposta existente
+      [answer] = await Answers.update(
+        { answers: answersString },
+        {
+          where: { id_answers: participant.answers_id_answers },
+          returning: true,
+        }
+      );
+      answer = await Answers.findByPk(participant.answers_id_answers);
+    } else {
+      // Cria uma nova resposta
+      answer = await Answers.create({ answers: answersString });
+      // Associa ao participante
+      await participant.update({ answers_id_answers: answer.id_answers });
+    }
+
+    console.log("Resposta salva:", answer.toJSON());
+
+    res.status(201).json({
+      id_participants: participant.id_participants,
+      answers: answer.answers,
+    });
+  } catch (error) {
+    console.error("Erro ao adicionar respostas do participante:", error);
+    res.status(500).json({ message: "Erro ao adicionar respostas", error });
+  }
+};
+
 module.exports = exports;

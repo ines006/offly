@@ -10,7 +10,7 @@ const Answers = sequelize.define(
       primaryKey: true,
     },
     answers: {
-      type: DataTypes.JSON,
+      type: DataTypes.STRING,
       allowNull: false,
     },
   },

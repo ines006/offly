@@ -211,7 +211,7 @@ exports.getTeamChallenges = async (req, res) => {
         {
           model: Challenges,
           as: "Challenge", // Alias padrão do belongsTo
-          attributes: ["challenge_title"],
+          attributes: ["challenge_title", "challenge_description"],
         },
       ],
       order: [["completed_date", "ASC"]],
@@ -229,6 +229,7 @@ exports.getTeamChallenges = async (req, res) => {
         team_description: challenge.participant.team.team_description,
         participant_name: challenge.participant.participant_name,
         challenge_title: challenge.Challenge.challenge_title,
+        challenge_description: challenge.Challenge.challenge_description,
         starting_date: challenge.starting_date,
         end_date: challenge.end_date,
         completed_date: challenge.completed_date,
@@ -240,6 +241,88 @@ exports.getTeamChallenges = async (req, res) => {
     res
       .status(500)
       .json({ message: "Erro ao listar desafios", error: error.message });
+  }
+};
+
+//Listar as streak's dos participantes de uma equipa
+
+exports.getTeamParticipantsStreaks = async (req, res) => {
+  try {
+    const teamId = req.params.id;
+
+    // Verificar se a equipa existe
+    const team = await Teams.findByPk(teamId);
+    if (!team) {
+      return res.status(404).json({ message: "Equipe não encontrada" });
+    }
+
+    const streaks = await ParticipantsHasChallenges.findAll({
+      where: {
+        validated: 1,
+        streak: { [Op.ne]: null },
+        [Op.and]: literal(
+          "TIMESTAMPDIFF(DAY, ParticipantsHasChallenges.starting_date, ParticipantsHasChallenges.end_date) <= 7"
+        ),
+      },
+      include: [
+        {
+          model: Participants,
+          as: "participant",
+          where: { teams_id_teams: teamId },
+          attributes: ["participant_name"],
+          include: [
+            {
+              model: Teams,
+              as: "team",
+              attributes: ["id_teams"],
+              include: [
+                {
+                  model: Competitions,
+                  as: "competition",
+                  attributes: ["competition_name"],
+                  required: true,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          model: Challenges,
+          as: "Challenge",
+          attributes: ["challenge_description"],
+          required: false,
+        },
+      ],
+      order: [
+        [{ model: Participants, as: "participant" }, "participant_name", "ASC"],
+      ],
+    });
+
+    if (!streaks.length) {
+      return res.status(404).json({
+        message: "Nenhum participante com streak encontrado para esta equipe",
+      });
+    }
+
+    // Converter os objetos Sequelize em objetos JavaScript puros antes do map
+    const streaksData = streaks.map((s) => s.toJSON());
+
+    res.json(
+      streaksData.map((streak) => ({
+        participant_name: streak.participant.participant_name,
+        streak: streak.streak,
+        competition_name: streak.participant.team.competition.competition_name,
+        challenge_description: streak.Challenge.challenge_description,
+      }))
+    );
+  } catch (error) {
+    console.error(
+      "Erro detalhado ao listar streaks dos participantes:",
+      error.stack
+    );
+    res
+      .status(500)
+      .json({ message: "Erro ao listar streaks", error: error.message });
   }
 };
 

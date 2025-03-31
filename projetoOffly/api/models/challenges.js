@@ -13,6 +13,7 @@ const Challenges = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    challenge_description: { type: DataTypes.STRING, allowNull: true },
   },
   {
     tableName: "challenges",

@@ -28,33 +28,20 @@ exports.getParticipantById = async (req, res) => {
 // Criar um novo participante
 exports.createParticipant = async (req, res) => {
   try {
-    const {
-      participant_name,
-      participant_username,
-      email,
-      password_hash,
-      participant_gender,
-      upload,
-    } = req.body;
+    const { name, username, email, password_hash, gender, upload } = req.body;
 
-    if (
-      !participant_name ||
-      !participant_username ||
-      !email ||
-      !password_hash ||
-      !participant_gender
-    ) {
+    if (!name || !username || !email || !password_hash || !gender) {
       return res
         .status(400)
         .json({ message: "Todos os campos são obrigatórios." });
     }
 
     const newParticipant = await Participants.create({
-      participant_name,
-      participant_username,
+      name,
+      username,
       email,
       password_hash,
-      participant_gender,
+      gender,
       upload,
     });
     res.status(201).json(newParticipant);
@@ -66,23 +53,14 @@ exports.createParticipant = async (req, res) => {
 // Atualizar os dados de um participante
 exports.updateParticipant = async (req, res) => {
   try {
-    const {
-      participant_name,
-      participant_username,
-      email,
-      password_hash,
-      participant_gender,
-      upload,
-    } = req.body;
+    const { name, username, email, password_hash } = req.body;
 
     const [updated] = await Participants.update(
       {
-        participant_name,
-        participant_username,
+        name,
+        username,
         email,
         password_hash,
-        participant_gender,
-        upload,
       },
       { where: { id_participants: req.params.id } }
     );
@@ -115,7 +93,7 @@ exports.getTeamsUnderFive = async (req, res) => {
   try {
     const teams = await Teams.findAll({
       attributes: [
-        "team_name",
+        "name",
         "capacity",
         [
           Sequelize.fn("COUNT", Sequelize.col("participants.id_participants")),
@@ -129,7 +107,7 @@ exports.getTeamsUnderFive = async (req, res) => {
           attributes: [],
         },
       ],
-      group: ["Teams.id_teams", "Teams.team_name", "Teams.capacity"],
+      group: ["Teams.id_teams", "Teams.name", "Teams.capacity"],
       having: Sequelize.literal("COUNT(`participants`.`id_participants`) < 5"),
       raw: true,
     });

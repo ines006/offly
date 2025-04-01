@@ -9,11 +9,11 @@ const Teams = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    team_name: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    team_description: {
+    description: {
       type: DataTypes.STRING,
       allowNull: false,
     },

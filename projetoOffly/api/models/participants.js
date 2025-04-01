@@ -8,11 +8,11 @@ const Participants = sequelize.define("participants", {
     autoIncrement: true,
     primaryKey: true,
   },
-  participant_name: {
+  name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  participant_username: {
+  username: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
@@ -29,7 +29,7 @@ const Participants = sequelize.define("participants", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  participant_gender: {
+  gender: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },

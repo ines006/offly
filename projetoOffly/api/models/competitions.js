@@ -9,7 +9,7 @@ const Competitions = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    competition_name: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },

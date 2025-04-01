@@ -9,11 +9,11 @@ const Challenges = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    challenge_title: {
+    title: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    challenge_description: { type: DataTypes.STRING, allowNull: true },
+    description: { type: DataTypes.STRING, allowNull: true },
   },
   {
     tableName: "challenges",

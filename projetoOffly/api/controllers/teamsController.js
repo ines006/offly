@@ -12,18 +12,18 @@ const { Op, literal } = require("sequelize");
 exports.getTeamParticipants = async (req, res) => {
   try {
     const team = await Teams.findByPk(req.params.id, {
-      attributes: ["team_name", "points", "capacity"],
+      attributes: ["name", "points", "capacity"],
       include: [
         {
           model: Participants,
           as: "participants",
-          attributes: ["id_participants", "participant_name"],
+          attributes: ["id_participants", "name"],
           required: false,
         },
         {
           model: Competitions,
           as: "competition",
-          attributes: ["competition_name"],
+          attributes: ["name"],
           required: false,
         },
       ],
@@ -34,15 +34,13 @@ exports.getTeamParticipants = async (req, res) => {
     }
 
     res.json({
-      team_name: team.team_name,
+      name: team.name,
       points: team.points,
       capacity: team.capacity,
-      competition_name: team.competition
-        ? team.competition.competition_name
-        : null,
+      name: team.competition ? team.competition.name : null,
       participants: team.participants.map((p) => ({
         id_participants: p.id_participants,
-        participant_name: p.participant_name,
+        name: p.name,
       })),
     });
   } catch (error) {
@@ -60,8 +58,8 @@ exports.getTeamParticipants = async (req, res) => {
 exports.createTeam = async (req, res) => {
   try {
     const {
-      team_name,
-      team_description,
+      name,
+      description,
       points,
       capacity,
       visibility,
@@ -70,7 +68,7 @@ exports.createTeam = async (req, res) => {
       team_admin,
     } = req.body;
 
-    if (!team_name) {
+    if (!name) {
       return res
         .status(400)
         .json({ message: "O nome da equipe é obrigatório" });
@@ -86,8 +84,8 @@ exports.createTeam = async (req, res) => {
     }
 
     const newTeam = await Teams.create({
-      team_name,
-      team_description,
+      name,
+      description,
       points: 100,
       capacity,
       visibility,
@@ -98,8 +96,8 @@ exports.createTeam = async (req, res) => {
 
     res.status(201).json({
       id_teams: newTeam.id_teams,
-      team_name: newTeam.team_name,
-      team_description: newTeam.team_description,
+      name: newTeam.name,
+      description: newTeam.description,
       points: newTeam.points,
       capacity: newTeam.capacity,
       visibility: newTeam.visibility,
@@ -122,7 +120,7 @@ exports.getCompetitionRanking = async (req, res) => {
 
     // Pesquisar pelo nome da competição
     const competition = await Competitions.findByPk(competitionId, {
-      attributes: ["competition_name"],
+      attributes: ["name"],
     });
     if (!competition) {
       return res.status(404).json({ message: "Competição não encontrada" });
@@ -133,7 +131,7 @@ exports.getCompetitionRanking = async (req, res) => {
       where: {
         competitions_id_competitions: competitionId,
       },
-      attributes: ["team_name", "points"],
+      attributes: ["name", "points"],
       order: [["points", "DESC"]], // Ordenar os pontos em ordem descendente
     });
 
@@ -144,9 +142,9 @@ exports.getCompetitionRanking = async (req, res) => {
     }
 
     res.json({
-      competition_name: competition.competition_name,
+      name: competition.name,
       ranking: teams.map((team) => ({
-        team_name: team.team_name,
+        name: team.name,
         points: team.points,
       })),
     });
@@ -199,19 +197,19 @@ exports.getTeamChallenges = async (req, res) => {
           model: Participants,
           as: "participant", // Alias padrão do belongsTo
           where: { teams_id_teams: teamId },
-          attributes: ["participant_name"],
+          attributes: ["name"],
           include: [
             {
               model: Teams,
               as: "team",
-              attributes: ["team_description"],
+              attributes: ["description"],
             },
           ],
         },
         {
           model: Challenges,
           as: "Challenge", // Alias padrão do belongsTo
-          attributes: ["challenge_title", "challenge_description"],
+          attributes: ["title", "description"],
         },
       ],
       order: [["completed_date", "ASC"]],
@@ -226,10 +224,10 @@ exports.getTeamChallenges = async (req, res) => {
 
     res.json(
       challenges.map((challenge) => ({
-        team_description: challenge.participant.team.team_description,
-        participant_name: challenge.participant.participant_name,
-        challenge_title: challenge.Challenge.challenge_title,
-        challenge_description: challenge.Challenge.challenge_description,
+        description: challenge.participant.team.description,
+        name: challenge.participant.name,
+        title: challenge.Challenge.title,
+        description: challenge.Challenge.description,
         starting_date: challenge.starting_date,
         end_date: challenge.end_date,
         completed_date: challenge.completed_date,
@@ -269,7 +267,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
           model: Participants,
           as: "participant",
           where: { teams_id_teams: teamId },
-          attributes: ["participant_name"],
+          attributes: ["name"],
           include: [
             {
               model: Teams,
@@ -279,7 +277,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
                 {
                   model: Competitions,
                   as: "competition",
-                  attributes: ["competition_name"],
+                  attributes: ["name"],
                   required: true,
                 },
               ],
@@ -289,13 +287,11 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
         {
           model: Challenges,
           as: "Challenge",
-          attributes: ["challenge_description"],
+          attributes: ["description"],
           required: false,
         },
       ],
-      order: [
-        [{ model: Participants, as: "participant" }, "participant_name", "ASC"],
-      ],
+      order: [[{ model: Participants, as: "participant" }, "name", "ASC"]],
     });
 
     if (!streaks.length) {
@@ -309,10 +305,10 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
 
     res.json(
       streaksData.map((streak) => ({
-        participant_name: streak.participant.participant_name,
+        participant_name: streak.participant.name,
         streak: streak.streak,
-        competition_name: streak.participant.team.competition.competition_name,
-        challenge_description: streak.Challenge.challenge_description,
+        competition_name: streak.participant.team.competition.name,
+        description: streak.Challenge.description,
       }))
     );
   } catch (error) {

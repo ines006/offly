@@ -4,11 +4,11 @@ const { sequelize } = require("../config/database");
 const ParticipantsHasChallenges = sequelize.define(
   "ParticipantsHasChallenges",
   {
-    participants_id_participants: {
+    participants_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
     },
-    challenges_id_challenges: {
+    challenges_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
     },

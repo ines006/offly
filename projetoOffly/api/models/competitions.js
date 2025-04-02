@@ -4,7 +4,7 @@ const { sequelize } = require("../config/database");
 const Competitions = sequelize.define(
   "Competitions",
   {
-    id_competitions: {
+    id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,

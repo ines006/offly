@@ -3,7 +3,7 @@ const { sequelize } = require("../config/database"); // Desestruturação explí
 const Teams = require("./teams");
 
 const Participants = sequelize.define("participants", {
-  id_participants: {
+  id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
@@ -17,11 +17,6 @@ const Participants = sequelize.define("participants", {
     allowNull: false,
     unique: true,
   },
-  level: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 1,
-  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -29,6 +24,11 @@ const Participants = sequelize.define("participants", {
     validate: {
       isEmail: true,
     },
+  },
+  level: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
   },
   password_hash: {
     type: DataTypes.STRING,
@@ -43,11 +43,11 @@ const Participants = sequelize.define("participants", {
     allowNull: true,
   },
 
-  answers_id_answers: {
+  answers_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-  teams_id_teams: {
+  teams_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
   },

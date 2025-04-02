@@ -1,4 +1,10 @@
-const { Participants, Teams, Answers, ParticipantsHasChallenges, Challenges } = require("../models");
+const {
+  Participants,
+  Teams,
+  Answers,
+  ParticipantsHasChallenges,
+  Challenges,
+} = require("../models");
 const { Sequelize, Op } = require("sequelize");
 
 // Listar todos os participantes
@@ -28,7 +34,8 @@ exports.getParticipantById = async (req, res) => {
 // Criar um novo participante
 exports.createParticipant = async (req, res) => {
   try {
-    const { name, username, level, email, password_hash, gender, upload } = req.body;
+    const { name, username, level, email, password_hash, gender, upload } =
+      req.body;
 
     if (!name || !username || !level || !email || !password_hash || !gender) {
       return res
@@ -63,7 +70,7 @@ exports.updateParticipant = async (req, res) => {
         email,
         password_hash,
       },
-      { where: { id_participants: req.params.id } }
+      { where: { id: req.params.id } }
     );
 
     updated
@@ -78,7 +85,7 @@ exports.updateParticipant = async (req, res) => {
 exports.deleteParticipant = async (req, res) => {
   try {
     const deleted = await Participants.destroy({
-      where: { id_participants: req.params.id },
+      where: { id: req.params.id },
     });
 
     deleted
@@ -97,7 +104,7 @@ exports.getTeamsUnderFive = async (req, res) => {
         "name",
         "capacity",
         [
-          Sequelize.fn("COUNT", Sequelize.col("participants.id_participants")),
+          Sequelize.fn("COUNT", Sequelize.col("participants.id")),
           "participant_count",
         ],
       ],
@@ -108,8 +115,8 @@ exports.getTeamsUnderFive = async (req, res) => {
           attributes: [],
         },
       ],
-      group: ["Teams.id_teams", "Teams.name", "Teams.capacity"],
-      having: Sequelize.literal("COUNT(`participants`.`id_participants`) < 5"),
+      group: ["Teams.id", "Teams.name", "Teams.capacity"],
+      having: Sequelize.literal("COUNT(`participants`.`id`) < 5"),
       raw: true,
     });
 
@@ -143,7 +150,7 @@ exports.getParticipantAnswers = async (req, res) => {
     }
 
     res.json({
-      id_participants: participant.id_participants,
+      id: participant.id,
       answers: participant.answer ? participant.answer.answers : null,
     });
   } catch (error) {
@@ -173,25 +180,25 @@ exports.addParticipantAnswers = async (req, res) => {
 
     // Verifica se já existe uma resposta associada
     let answer;
-    if (participant.answers_id_answers) {
+    if (participant.answers_id) {
       // Atualiza a resposta existente
       [answer] = await Answers.update(
         { answers: answersString },
         {
-          where: { id_answers: participant.answers_id_answers },
+          where: { id: participant.answers_id },
           returning: true,
         }
       );
-      answer = await Answers.findByPk(participant.answers_id_answers);
+      answer = await Answers.findByPk(participant.answers_id);
     } else {
       // Cria uma nova resposta
       answer = await Answers.create({ answers: answersString });
       // Associa ao participante
-      await participant.update({ answers_id_answers: answer.id_answers });
+      await participant.update({ answers_id: answer.id });
     }
 
     res.status(201).json({
-      id_participants: participant.id_participants,
+      id: participant.id,
       answers: answer.answers,
     });
   } catch (error) {
@@ -207,7 +214,7 @@ exports.getDailyChallenge = async (req, res) => {
 
     const challenge = await ParticipantsHasChallenges.findOne({
       where: {
-        participants_id_participants: id,
+        participants_id: id,
         validated: 0,
         starting_date: { [Op.lte]: new Date() },
         end_date: { [Op.gte]: new Date() },
@@ -224,10 +231,15 @@ exports.getDailyChallenge = async (req, res) => {
     if (challenge) {
       return res.json({ active: true, challenge });
     } else {
-      return res.json({ active: false, message: "Nenhum desafio ativo encontrado." });
+      return res.json({
+        active: false,
+        message: "Nenhum desafio ativo encontrado.",
+      });
     }
   } catch (error) {
-    return res.status(500).json({ error: "Erro ao buscar desafio diário", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Erro ao buscar desafio diário", details: error.message });
   }
 };
 
@@ -238,7 +250,9 @@ exports.createDailyChallenge = async (req, res) => {
     const { title, description, level } = req.body;
 
     if (!title || !description || !level) {
-      return res.status(400).json({ error: "Os campos 'title', 'description' e 'level' são obrigatórios." });
+      return res.status(400).json({
+        error: "Os campos 'title', 'description' e 'level' são obrigatórios.",
+      });
     }
 
     // Criar novo desafio e garantir que retorna um ID
@@ -248,14 +262,14 @@ exports.createDailyChallenge = async (req, res) => {
       challenge_types_id_challenge_types: 1,
     });
 
-    if (!newChallenge || !newChallenge.id_challenges) {
+    if (!newChallenge || !newChallenge.id) {
       return res.status(500).json({ error: "Falha ao criar o desafio." });
     }
 
     // Associar ao participante garantindo valores padrão
     await ParticipantsHasChallenges.create({
-      participants_id_participants: id,
-      challenges_id_challenges: newChallenge.id_challenges, // Agora garantindo que estamos pegando o ID corretamente
+      participants_id: id,
+      challenges_id: newChallenge.id, // Agora garantindo que estamos pegando o ID corretamente
       starting_date: new Date(),
       end_date: new Date(new Date().setHours(23, 59, 59)), // Termina às 23h59 do mesmo dia
       validated: 0,
@@ -270,28 +284,39 @@ exports.createDailyChallenge = async (req, res) => {
       challenge: newChallenge,
     });
   } catch (error) {
-    return res.status(500).json({ error: "Erro ao criar desafio", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Erro ao criar desafio", details: error.message });
   }
 };
 
 // PUT → Marcar desafio como concluído
 exports.completeDailyChallenge = async (req, res) => {
   try {
-      const { id } = req.params; // ID do participante
-      const { challengeId, userImg } = req.body;
+    const { id } = req.params; // ID do participante
+    const { challengeId, userImg } = req.body;
 
-      const updated = await ParticipantsHasChallenges.update(
-          { validated: 1, completed_date: new Date(), user_img: userImg },
-          { where: { participants_id_participants: id, challenges_id_challenges: challengeId } }
-      );
-
-      if (updated[0] > 0) {
-          return res.json({ message: "Desafio concluído com sucesso!" });
-      } else {
-          return res.status(404).json({ message: "Nenhum desafio encontrado para atualizar" });
+    const updated = await ParticipantsHasChallenges.update(
+      { validated: 1, completed_date: new Date(), user_img: userImg },
+      {
+        where: {
+          participants_id: id,
+          challenges_id: challengeId,
+        },
       }
+    );
+
+    if (updated[0] > 0) {
+      return res.json({ message: "Desafio concluído com sucesso!" });
+    } else {
+      return res
+        .status(404)
+        .json({ message: "Nenhum desafio encontrado para atualizar" });
+    }
   } catch (error) {
-      return res.status(500).json({ error: "Erro ao concluir desafio", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Erro ao concluir desafio", details: error.message });
   }
 };
 

@@ -17,7 +17,7 @@ exports.getTeamParticipants = async (req, res) => {
         {
           model: Participants,
           as: "participants",
-          attributes: ["id_participants", "name"],
+          attributes: ["id", "name"],
           required: false,
         },
         {
@@ -39,7 +39,7 @@ exports.getTeamParticipants = async (req, res) => {
       capacity: team.capacity,
       name: team.competition ? team.competition.name : null,
       participants: team.participants.map((p) => ({
-        id_participants: p.id_participants,
+        id: p.id,
         name: p.name,
       })),
     });
@@ -63,7 +63,7 @@ exports.createTeam = async (req, res) => {
       points,
       capacity,
       visibility,
-      competitions_id_competitions,
+      competitions_id,
       team_passbooks_id_team_passbooks,
       team_admin,
     } = req.body;
@@ -74,10 +74,8 @@ exports.createTeam = async (req, res) => {
         .json({ message: "O nome da equipe é obrigatório" });
     }
 
-    if (competitions_id_competitions) {
-      const competition = await Competitions.findByPk(
-        competitions_id_competitions
-      );
+    if (competitions_id) {
+      const competition = await Competitions.findByPk(competitions_id);
       if (!competition) {
         return res.status(404).json({ message: "Competição não encontrada" });
       }
@@ -89,19 +87,19 @@ exports.createTeam = async (req, res) => {
       points: 100,
       capacity,
       visibility,
-      competitions_id_competitions,
+      competitions_id,
       team_passbooks_id_team_passbooks,
       team_admin,
     });
 
     res.status(201).json({
-      id_teams: newTeam.id_teams,
+      id: newTeam.id,
       name: newTeam.name,
       description: newTeam.description,
       points: newTeam.points,
       capacity: newTeam.capacity,
       visibility: newTeam.visibility,
-      competitions_id_competitions: newTeam.competitions_id_competitions,
+      competitions_id: newTeam.competitions_id,
       team_passbooks_id_team_passbooks:
         newTeam.team_passbooks_id_team_passbooks,
       team_admin: newTeam.team_admin,
@@ -129,7 +127,7 @@ exports.getCompetitionRanking = async (req, res) => {
     // Listar todas as equipas da competição
     const teams = await Teams.findAll({
       where: {
-        competitions_id_competitions: competitionId,
+        competitions_id: competitionId,
       },
       attributes: ["name", "points"],
       order: [["points", "DESC"]], // Ordenar os pontos em ordem descendente
@@ -196,7 +194,7 @@ exports.getTeamChallenges = async (req, res) => {
         {
           model: Participants,
           as: "participant", // Alias padrão do belongsTo
-          where: { teams_id_teams: teamId },
+          where: { teams_id: teamId },
           attributes: ["name"],
           include: [
             {
@@ -266,13 +264,13 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
         {
           model: Participants,
           as: "participant",
-          where: { teams_id_teams: teamId },
+          where: { teams_id: teamId },
           attributes: ["name"],
           include: [
             {
               model: Teams,
               as: "team",
-              attributes: ["id_teams"],
+              attributes: ["id"],
               include: [
                 {
                   model: Competitions,

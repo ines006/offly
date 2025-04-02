@@ -22,7 +22,9 @@ app.use("/competitions", competitionsRoutes);
 // Testar a conexão e sincronizar a base de dados
 testConnection()
   .then(() => {
-    return sequelize.sync();
+    return sequelize.sync({
+      force: true,
+    });
   })
   .then(() => {
     console.log("📌 Base de dados conectada!");

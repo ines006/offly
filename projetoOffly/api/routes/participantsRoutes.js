@@ -17,4 +17,12 @@ router.get("/:id/answers", participantsController.getParticipantAnswers);
 // Adicionar respostas ao questionário inicial
 router.post("/:id/answers", participantsController.addParticipantAnswers);
 
+
+// Verificar desafio diário ativo
+router.get("/:id/daily-challenge", participantsController.getDailyChallenge);
+// Criar novo desafio diário
+router.post("/:id/daily-challenge", participantsController.createDailyChallenge);
+// Concluir desafio diário
+router.put("/:id/daily-challenge/complete", participantsController.completeDailyChallenge);
+
 module.exports = router;

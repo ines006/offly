@@ -1,5 +1,5 @@
-const { Participants, Teams, Answers } = require("../models");
-const { Sequelize } = require("sequelize");
+const { Participants, Teams, Answers, ParticipantsHasChallenges, Challenges } = require("../models");
+const { Sequelize, Op } = require("sequelize");
 
 // Listar todos os participantes
 exports.getAllParticipants = async (req, res) => {
@@ -28,9 +28,9 @@ exports.getParticipantById = async (req, res) => {
 // Criar um novo participante
 exports.createParticipant = async (req, res) => {
   try {
-    const { name, username, email, password_hash, gender, upload } = req.body;
+    const { name, username, level, email, password_hash, gender, upload } = req.body;
 
-    if (!name || !username || !email || !password_hash || !gender) {
+    if (!name || !username || !level || !email || !password_hash || !gender) {
       return res
         .status(400)
         .json({ message: "Todos os campos são obrigatórios." });
@@ -39,6 +39,7 @@ exports.createParticipant = async (req, res) => {
     const newParticipant = await Participants.create({
       name,
       username,
+      level,
       email,
       password_hash,
       gender,
@@ -196,6 +197,101 @@ exports.addParticipantAnswers = async (req, res) => {
   } catch (error) {
     console.error("Erro ao adicionar respostas do participante:", error);
     res.status(500).json({ message: "Erro ao adicionar respostas", error });
+  }
+};
+
+// GET → Verificar se o participante tem desafio ativo hoje
+exports.getDailyChallenge = async (req, res) => {
+  try {
+    const { id } = req.params; // ID do participante
+
+    const challenge = await ParticipantsHasChallenges.findOne({
+      where: {
+        participants_id_participants: id,
+        validated: 0,
+        starting_date: { [Op.lte]: new Date() },
+        end_date: { [Op.gte]: new Date() },
+      },
+      include: [
+        {
+          model: Challenges,
+          as: "Challenge", // Certifique-se de que este alias corresponde ao modelo
+          attributes: ["title", "description"],
+        },
+      ],
+    });
+
+    if (challenge) {
+      return res.json({ active: true, challenge });
+    } else {
+      return res.json({ active: false, message: "Nenhum desafio ativo encontrado." });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao buscar desafio diário", details: error.message });
+  }
+};
+
+// POST → Criar um novo desafio e associá-lo ao participante
+exports.createDailyChallenge = async (req, res) => {
+  try {
+    const { id } = req.params; // ID do participante
+    const { title, description, level } = req.body;
+
+    if (!title || !description || !level) {
+      return res.status(400).json({ error: "Os campos 'title', 'description' e 'level' são obrigatórios." });
+    }
+
+    // Criar novo desafio e garantir que retorna um ID
+    const newChallenge = await Challenges.create({
+      title,
+      description,
+      challenge_types_id_challenge_types: 1,
+    });
+
+    if (!newChallenge || !newChallenge.id_challenges) {
+      return res.status(500).json({ error: "Falha ao criar o desafio." });
+    }
+
+    // Associar ao participante garantindo valores padrão
+    await ParticipantsHasChallenges.create({
+      participants_id_participants: id,
+      challenges_id_challenges: newChallenge.id_challenges, // Agora garantindo que estamos pegando o ID corretamente
+      starting_date: new Date(),
+      end_date: new Date(new Date().setHours(23, 59, 59)), // Termina às 23h59 do mesmo dia
+      validated: 0,
+      streak: 0,
+      challenge_levels_id_challenge_levels: level,
+      completed_date: null,
+      user_img: "",
+    });
+
+    return res.status(201).json({
+      message: "Desafio criado e associado ao participante!",
+      challenge: newChallenge,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao criar desafio", details: error.message });
+  }
+};
+
+// PUT → Marcar desafio como concluído
+exports.completeDailyChallenge = async (req, res) => {
+  try {
+      const { id } = req.params; // ID do participante
+      const { challengeId, userImg } = req.body;
+
+      const updated = await ParticipantsHasChallenges.update(
+          { validated: 1, completed_date: new Date(), user_img: userImg },
+          { where: { participants_id_participants: id, challenges_id_challenges: challengeId } }
+      );
+
+      if (updated[0] > 0) {
+          return res.json({ message: "Desafio concluído com sucesso!" });
+      } else {
+          return res.status(404).json({ message: "Nenhum desafio encontrado para atualizar" });
+      }
+  } catch (error) {
+      return res.status(500).json({ error: "Erro ao concluir desafio", details: error.message });
   }
 };
 

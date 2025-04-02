@@ -17,6 +17,11 @@ const Participants = sequelize.define("participants", {
     allowNull: false,
     unique: true,
   },
+  level: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,

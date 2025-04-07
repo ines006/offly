@@ -15,7 +15,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { TittlePagina } from "../../styles/styles";
-import { AccessibilityInfo, BackHandler } from "react-native";
+import { AccessibilityInfo } from "react-native";
 
 export default function Shake() {
   const router = useRouter();
@@ -65,11 +65,10 @@ export default function Shake() {
   }, []);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => true);
     const subscription = Accelerometer.addListener(({ x, y, z }) => {
       const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
-      if (totalForce > 1) {
+      if (totalForce > 2) {
         shakeCount.current += 1;
 
         if (shakeCount.current >= 5 && !isNavigating) {
@@ -80,10 +79,7 @@ export default function Shake() {
 
     Accelerometer.setUpdateInterval(100);
 
-    return () => {
-      subscription.remove();
-      backHandler.remove();
-    };
+    return () => subscription.remove();
   }, [isNavigating]);
 
   const triggerCardAnimation = (subscription) => {

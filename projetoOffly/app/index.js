@@ -1,6 +1,11 @@
 import { View, Text, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import Login from './components/entrar/login'
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'Text strings must be rendered within a <Text> component'
+]);
 
 export default function Index() {
   const router = useRouter();

@@ -96,40 +96,6 @@ exports.deleteParticipant = async (req, res) => {
   }
 };
 
-// Listar equipas com menos de 5 participantes
-exports.getTeamsUnderFive = async (req, res) => {
-  try {
-    const teams = await Teams.findAll({
-      attributes: [
-        "name",
-        "capacity",
-        [
-          Sequelize.fn("COUNT", Sequelize.col("participants.id")),
-          "participant_count",
-        ],
-      ],
-      include: [
-        {
-          model: Participants,
-          as: "participants",
-          attributes: [],
-        },
-      ],
-      group: ["Teams.id", "Teams.name", "Teams.capacity"],
-      having: Sequelize.literal("COUNT(`participants`.`id`) < 5"),
-      raw: true,
-    });
-
-    res.json(teams);
-  } catch (error) {
-    console.error(
-      "Erro ao listar equipas com menos de 5 participantes:",
-      error
-    );
-    res.status(500).json({ message: "Erro ao listar equipas", error });
-  }
-};
-
 // Listar respostas de um participante ao questionário inicial
 
 exports.getParticipantAnswers = async (req, res) => {

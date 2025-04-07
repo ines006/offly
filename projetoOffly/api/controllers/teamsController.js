@@ -1,3 +1,4 @@
+const { Sequelize } = require("sequelize"); // Importa o Sequelize principal
 const {
   Participants,
   Teams,
@@ -64,7 +65,7 @@ exports.createTeam = async (req, res) => {
       capacity,
       visibility,
       competitions_id,
-      team_passbooks_id_team_passbooks,
+      team_passbooks_id,
       team_admin,
     } = req.body;
 
@@ -88,7 +89,7 @@ exports.createTeam = async (req, res) => {
       capacity,
       visibility,
       competitions_id,
-      team_passbooks_id_team_passbooks,
+      team_passbooks_id,
       team_admin,
     });
 
@@ -100,8 +101,7 @@ exports.createTeam = async (req, res) => {
       capacity: newTeam.capacity,
       visibility: newTeam.visibility,
       competitions_id: newTeam.competitions_id,
-      team_passbooks_id_team_passbooks:
-        newTeam.team_passbooks_id_team_passbooks,
+      team_passbooks_id: newTeam.team_passbooks_id,
       team_admin: newTeam.team_admin,
     });
   } catch (error) {
@@ -115,6 +115,7 @@ exports.createTeam = async (req, res) => {
 exports.getCompetitionRanking = async (req, res) => {
   try {
     const competitionId = req.params.id;
+    const { sort } = req.query; // Pega o query param 'sort'
 
     // Pesquisar pelo nome da competição
     const competition = await Competitions.findByPk(competitionId, {
@@ -124,13 +125,16 @@ exports.getCompetitionRanking = async (req, res) => {
       return res.status(404).json({ message: "Competição não encontrada" });
     }
 
+    // Configurar opções de ordenação com base no query param
+    const order = sort === "ranking" ? [["points", "DESC"]] : [];
+
     // Listar todas as equipas da competição
     const teams = await Teams.findAll({
       where: {
         competitions_id: competitionId,
       },
       attributes: ["name", "points"],
-      order: [["points", "DESC"]], // Ordenar os pontos em ordem descendente
+      order, // Aplica ordenação se sort=ranking, senão retorna sem ordenação específica
     });
 
     if (!teams.length) {
@@ -140,20 +144,20 @@ exports.getCompetitionRanking = async (req, res) => {
     }
 
     res.json({
-      name: competition.name,
-      ranking: teams.map((team) => ({
+      competition_name: competition.name,
+      teams: teams.map((team) => ({
         name: team.name,
         points: team.points,
       })),
     });
   } catch (error) {
     console.error(
-      "Erro detalhado ao listar ranking da competição:",
+      "Erro detalhado ao listar equipas da competição:",
       error.stack
     );
     res
       .status(500)
-      .json({ message: "Erro ao listar ranking", error: error.message });
+      .json({ message: "Erro ao listar equipas", error: error.message });
   }
 };
 
@@ -317,6 +321,53 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
     res
       .status(500)
       .json({ message: "Erro ao listar streaks", error: error.message });
+  }
+};
+
+// Listar equipas com filtro opcional de lotação < 5 participantes
+exports.getTeams = async (req, res) => {
+  try {
+    const { capacity } = req.query; // Pega o query param 'capacity'
+
+    // Condição base
+    let havingCondition = null;
+    if (capacity === "under_5") {
+      havingCondition = Sequelize.literal("COUNT(`participants`.`id`) < 5");
+    }
+
+    const teams = await Teams.findAll({
+      attributes: [
+        "name",
+        "capacity",
+        [
+          Sequelize.fn("COUNT", Sequelize.col("participants.id")),
+          "participant_count",
+        ],
+      ],
+      include: [
+        {
+          model: Participants,
+          as: "participants",
+          attributes: [],
+        },
+      ],
+      group: ["Teams.id", "Teams.name", "Teams.capacity"],
+      having: havingCondition, // Aplica o filtro apenas se capacity=under_5
+      raw: true,
+    });
+
+    if (!teams.length && capacity === "under_5") {
+      return res.status(404).json({
+        message: "Nenhuma equipa encontrada com menos de 5 participantes",
+      });
+    }
+
+    res.json(teams);
+  } catch (error) {
+    console.error("Erro ao listar equipas:", error);
+    res
+      .status(500)
+      .json({ message: "Erro ao listar equipas", error: error.message });
   }
 };
 

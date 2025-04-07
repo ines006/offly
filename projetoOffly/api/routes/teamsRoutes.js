@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const teamsController = require("../controllers/teamsController");
 
-router.get("/:id/teaminfo", teamsController.getTeamParticipants);
+// Listar equipas com filtro opcional de lotação < 5
+router.get("/", teamsController.getTeams);
+router.get("/:id", teamsController.getTeamParticipants);
 router.post("/", teamsController.createTeam);
 router.get("/:id/daily-challenges", teamsController.getTeamChallenges);
 router.get(

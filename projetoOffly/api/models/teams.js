@@ -33,7 +33,7 @@ const Teams = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    team_passbooks_id_team_passbooks: {
+    team_passbooks_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

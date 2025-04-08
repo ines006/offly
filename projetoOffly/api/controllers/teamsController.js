@@ -112,9 +112,10 @@ exports.createTeam = async (req, res) => {
   }
 };
 
-exports.getCompetitionRanking = async (req, res) => {
+// Listar equipas de uma competição com ordenação opcional por ranking
+exports.getTeamsByCompetition = async (req, res) => {
   try {
-    const competitionId = req.params.id;
+    const competitionId = req.params.id; // ID da competição
     const { sort } = req.query; // Pega o query param 'sort'
 
     // Pesquisar pelo nome da competição
@@ -176,7 +177,7 @@ exports.getTeamChallenges = async (req, res) => {
     // Verificar se a equipa existe
     const team = await Teams.findByPk(teamId);
     if (!team) {
-      return res.status(404).json({ message: "Equipe não encontrada" });
+      return res.status(404).json({ message: "Equipa não encontrada" });
     }
 
     const challenges = await ParticipantsHasChallenges.findAll({
@@ -220,7 +221,7 @@ exports.getTeamChallenges = async (req, res) => {
     if (!challenges.length) {
       return res.status(404).json({
         message:
-          "Nenhum desafio encontrado para esta equipe na data especificada",
+          "Nenhum desafio encontrado para esta equipa na data especificada",
       });
     }
 
@@ -237,54 +238,79 @@ exports.getTeamChallenges = async (req, res) => {
       }))
     );
   } catch (error) {
-    console.error("Erro detalhado ao listar desafios da equipe:", error.stack);
+    console.error("Erro detalhado ao listar desafios da equipa:", error.stack);
     res
       .status(500)
       .json({ message: "Erro ao listar desafios", error: error.message });
   }
 };
 
-//Listar as streak's dos participantes de uma equipa
-
+// Listar streaks dos participantes de uma equipa em desafios semanais
 exports.getTeamParticipantsStreaks = async (req, res) => {
   try {
     const teamId = req.params.id;
+    const { week } = req.query; // Ex.: ?week=2025-03-31 (segunda-feira da semana)
 
-    // Verificar se a equipa existe
-    const team = await Teams.findByPk(teamId);
-    if (!team) {
-      return res.status(404).json({ message: "Equipe não encontrada" });
+    // Validação: semana é obrigatória
+    if (!week || !/^\d{4}-\d{2}-\d{2}$/.test(week)) {
+      return res.status(400).json({
+        message:
+          "A semana é obrigatória e deve estar no formato YYYY-MM-DD (ex.: 2025-03-31)",
+      });
     }
 
-    const streaks = await ParticipantsHasChallenges.findAll({
+    // Verificar se a data é uma segunda-feira
+    const startDate = new Date(week);
+    if (startDate.getDay() !== 1) {
+      // 1 = segunda-feira
+      return res
+        .status(400)
+        .json({ message: "A data deve ser uma segunda-feira" });
+    }
+
+    // Verificar se a equipa existe
+    const team = await Teams.findByPk(teamId, {
+      include: [
+        {
+          model: Competitions,
+          as: "competition",
+          attributes: ["name"],
+          required: true,
+        },
+      ],
+    });
+    if (!team) {
+      return res.status(404).json({ message: "Equipa não encontrada" });
+    }
+
+    // Determinar o intervalo da semana (segunda a domingo)
+    const startDateStr = startDate.toISOString().split("T")[0]; // Ex.: 2025-03-31
+
+    // Calcular endDateStr como startDate + 7 dias (para corresponder ao end_date na base de dados)
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 7); // 7 dias a partir de startDate (inclusive)
+    const endDateStr = endDate.toISOString().split("T")[0]; // Ex.: 2025-04-07
+
+    // Buscar desafios semanais para a equipa na semana especificada
+    const weeklyChallenges = await ParticipantsHasChallenges.findAll({
       where: {
-        validated: 1,
-        streak: { [Op.ne]: null },
-        [Op.and]: literal(
-          "TIMESTAMPDIFF(DAY, ParticipantsHasChallenges.starting_date, ParticipantsHasChallenges.end_date) <= 7"
-        ),
+        starting_date: {
+          [Op.between]: [
+            `${startDateStr} 00:00:00`,
+            `${startDateStr} 23:59:59`,
+          ], // Começa no dia especificado
+        },
+        end_date: {
+          [Op.between]: [`${endDateStr} 00:00:00`, `${endDateStr} 23:59:59`], // Termina 7 dias depois
+        },
+        [Op.and]: literal("TIMESTAMPDIFF(DAY, starting_date, end_date) = 7"),
       },
       include: [
         {
           model: Participants,
           as: "participant",
           where: { teams_id: teamId },
-          attributes: ["name"],
-          include: [
-            {
-              model: Teams,
-              as: "team",
-              attributes: ["id"],
-              include: [
-                {
-                  model: Competitions,
-                  as: "competition",
-                  attributes: ["name"],
-                  required: true,
-                },
-              ],
-            },
-          ],
+          attributes: ["id", "name"],
         },
         {
           model: Challenges,
@@ -293,26 +319,60 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
           required: false,
         },
       ],
-      order: [[{ model: Participants, as: "participant" }, "name", "ASC"]],
     });
 
-    if (!streaks.length) {
+    if (!weeklyChallenges.length) {
+      // Log adicional para verificar todos os desafios da equipa (sem filtro de data)
+      const allChallenges = await ParticipantsHasChallenges.findAll({
+        include: [
+          {
+            model: Participants,
+            as: "participant",
+            where: { teams_id: teamId },
+            attributes: ["id", "name"],
+          },
+        ],
+      });
+
       return res.status(404).json({
-        message: "Nenhum participante com streak encontrado para esta equipe",
+        message:
+          "Nenhum desafio semanal encontrado para esta equipa na semana especificada",
       });
     }
 
-    // Converter os objetos Sequelize em objetos JavaScript puros antes do map
-    const streaksData = streaks.map((s) => s.toJSON());
+    // Mapear os desafios para a resposta, parseando o streak
+    const streaks = weeklyChallenges.map((challenge) => {
+      // Parsear o streak (assumindo que é uma string JSON)
+      let streak;
+      try {
+        streak =
+          typeof challenge.streak === "string"
+            ? JSON.parse(challenge.streak)
+            : challenge.streak;
+        if (typeof streak === "string") {
+          streak = JSON.parse(streak);
+        }
+      } catch (error) {
+        console.error("Erro ao parsear o streak:", error.message);
+        streak = ["0", "0", "0", "0", "0", "0", "0"];
+      }
 
-    res.json(
-      streaksData.map((streak) => ({
-        participant_name: streak.participant.name,
-        streak: streak.streak,
-        competition_name: streak.participant.team.competition.name,
-        description: streak.Challenge.description,
-      }))
-    );
+      // Verificar se o streak é um array válido com 7 elementos
+      if (!Array.isArray(streak) || streak.length !== 7) {
+        console.warn("Streak inválido, usando padrão:", streak);
+        streak = ["0", "0", "0", "0", "0", "0", "0"];
+      }
+
+      return {
+        participant_name: challenge.participant.name,
+        streak,
+        competition_name: team.competition.name,
+        challenge_description:
+          challenge.Challenge?.description || "Sem descrição",
+      };
+    });
+
+    res.json(streaks);
   } catch (error) {
     console.error(
       "Erro detalhado ao listar streaks dos participantes:",

@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const participantsController = require("../controllers/participantsController");
+const authenticateToken = require("../middlewares/auth");
+const authorizeSelf = require("../middlewares/authorize");
 
 //Manusear participantes -> adicionar, atualizar, eliminar, filtrar
 router.get("/", participantsController.getAllParticipants);
@@ -10,9 +12,20 @@ router.put("/:id", participantsController.updateParticipant);
 router.delete("/:id", participantsController.deleteParticipant);
 
 // Listar respostas de um participante ao questionário inicial
-router.get("/:id/answers", participantsController.getParticipantAnswers);
-// Adicionar respostas ao questionário inicial
-router.post("/:id/answers", participantsController.addParticipantAnswers);
+router.get(
+  "/:id/answers",
+  authenticateToken,
+  authorizeSelf,
+  participantsController.getParticipantAnswers
+);
+
+// Adicionar ou atualizar respostas do questionário inicial
+router.post(
+  "/:id/answers",
+  authenticateToken,
+  authorizeSelf,
+  participantsController.addParticipantAnswers
+);
 
 // Verificar desafio diário ativo
 router.get("/:id/daily-challenge", participantsController.getDailyChallenge);

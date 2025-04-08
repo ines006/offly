@@ -6,6 +6,7 @@ const {
   Challenges,
 } = require("../models");
 const { Sequelize, Op } = require("sequelize");
+const bcrypt = require("bcryptjs");
 
 // Listar todos os participantes
 exports.getAllParticipants = async (req, res) => {
@@ -34,27 +35,32 @@ exports.getParticipantById = async (req, res) => {
 // Criar um novo participante
 exports.createParticipant = async (req, res) => {
   try {
-    const { name, username, level, email, password_hash, gender, upload } =
-      req.body;
+    const { name, username, email, password, gender, level = 1 } = req.body;
 
-    if (!name || !username || !level || !email || !password_hash || !gender) {
+    if (!name || !username || !email || !password || !gender) {
       return res
         .status(400)
-        .json({ message: "Todos os campos são obrigatórios." });
+        .json({ message: "Todos os campos são obrigatórios" });
     }
 
-    const newParticipant = await Participants.create({
+    // Hashear a senha com bcrypt
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const participant = await Participants.create({
       name,
       username,
-      level,
       email,
       password_hash,
       gender,
-      upload,
+      level,
     });
-    res.status(201).json(newParticipant);
+
+    res.status(201).json({ id: participant.id, email: participant.email });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao criar participante", error });
+    console.error("Erro ao criar participante:", error.stack);
+    res
+      .status(500)
+      .json({ message: "Erro ao criar participante", error: error.message });
   }
 };
 
@@ -97,7 +103,6 @@ exports.deleteParticipant = async (req, res) => {
 };
 
 // Listar respostas de um participante ao questionário inicial
-
 exports.getParticipantAnswers = async (req, res) => {
   try {
     const participant = await Participants.findByPk(req.params.id, {
@@ -120,12 +125,14 @@ exports.getParticipantAnswers = async (req, res) => {
       answers: participant.answer ? participant.answer.answers : null,
     });
   } catch (error) {
-    console.error("Erro ao buscar respostas do participante:", error);
-    res.status(500).json({ message: "Erro ao buscar respostas", error });
+    console.error("Erro ao buscar respostas do participante:", error.stack);
+    res
+      .status(500)
+      .json({ message: "Erro ao buscar respostas", error: error.message });
   }
 };
 
-//  Adicionar respostas do questionário inicial
+// Adicionar ou atualizar respostas do questionário inicial
 exports.addParticipantAnswers = async (req, res) => {
   try {
     const participant = await Participants.findByPk(req.params.id);
@@ -168,8 +175,10 @@ exports.addParticipantAnswers = async (req, res) => {
       answers: answer.answers,
     });
   } catch (error) {
-    console.error("Erro ao adicionar respostas do participante:", error);
-    res.status(500).json({ message: "Erro ao adicionar respostas", error });
+    console.error("Erro ao adicionar respostas do participante:", error.stack);
+    res
+      .status(500)
+      .json({ message: "Erro ao adicionar respostas", error: error.message });
   }
 };
 

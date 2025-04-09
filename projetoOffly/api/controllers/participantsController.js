@@ -11,7 +11,9 @@ const bcrypt = require("bcryptjs");
 // Listar todos os participantes
 exports.getAllParticipants = async (req, res) => {
   try {
-    const participants = await Participants.findAll();
+    const participants = await Participants.findAll({
+      attributes: { exclude: ["password_hash"] },
+    });
     res.json(participants);
   } catch (error) {
     res.status(500).json({ message: "Erro ao pesquisar participantes", error });
@@ -21,7 +23,9 @@ exports.getAllParticipants = async (req, res) => {
 // Procurar um participante por ID
 exports.getParticipantById = async (req, res) => {
   try {
-    const participant = await Participants.findByPk(req.params.id);
+    const participant = await Participants.findByPk(req.params.id, {
+      attributes: { exclude: ["password_hash"] },
+    });
     participant
       ? res.json(participant)
       : res.status(404).json({ message: "Participante não encontrado" });

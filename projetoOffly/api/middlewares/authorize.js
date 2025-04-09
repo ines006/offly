@@ -1,4 +1,3 @@
-// middleware/authorize.js
 const authorizeSelf = (req, res, next) => {
   const participantId = parseInt(req.params.id, 10); // ID do participante na URL
   const user = req.user; // Dados do participante autenticado (do token)

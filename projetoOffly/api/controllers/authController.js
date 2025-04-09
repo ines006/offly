@@ -10,7 +10,7 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res
         .status(400)
-        .json({ message: "Email e senha são obrigatórios" });
+        .json({ message: "Email e palavra-passe são obrigatórios" });
     }
 
     // Buscar o participante pelo email

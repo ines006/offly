@@ -431,4 +431,80 @@ exports.getTeams = async (req, res) => {
   }
 };
 
+// Novo endpoint: Pesquisar equipas por nome
+exports.searchTeamsByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res
+        .status(400)
+        .json({ message: "O parâmetro 'name' é obrigatório" });
+    }
+
+    const teams = await Teams.findAll({
+      where: {
+        name: {
+          [Op.like]: `%${name}%`, // Usa LIKE em vez de ILIKE
+        },
+      },
+      attributes: [
+        "id",
+        "name",
+        "description",
+        "points",
+        "capacity",
+        "visibility",
+        "competitions_id",
+        "team_passbooks_id",
+        "team_admin",
+      ],
+      include: [
+        {
+          model: Participants,
+          as: "participants",
+          attributes: ["id", "name"],
+          required: false,
+        },
+        {
+          model: Competitions,
+          as: "competition",
+          attributes: ["name"],
+          required: false,
+        },
+      ],
+    });
+
+    if (!teams.length) {
+      return res
+        .status(404)
+        .json({ message: "Nenhuma equipa encontrada com esse nome" });
+    }
+
+    res.json(
+      teams.map((team) => ({
+        id: team.id,
+        name: team.name,
+        description: team.description,
+        points: team.points,
+        capacity: team.capacity,
+        visibility: team.visibility,
+        competitions_id: team.competitions_id,
+        competition_name: team.competition ? team.competition.name : null,
+        team_passbooks_id: team.team_passbooks_id,
+        team_admin: team.team_admin,
+        participants: team.participants.map((p) => ({
+          id: p.id,
+          name: p.name,
+        })),
+      }))
+    );
+  } catch (error) {
+    console.error("Erro ao pesquisar equipas por nome:", error.stack);
+    res
+      .status(500)
+      .json({ message: "Erro ao pesquisar equipas", error: error.message });
+  }
+};
+
 module.exports = exports;

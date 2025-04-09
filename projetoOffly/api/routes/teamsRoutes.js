@@ -23,6 +23,40 @@ router.get("/", teamsController.getTeams);
 
 /**
  * @swagger
+ * /teams/search:
+ *   get:
+ *     summary: Pesquisa equipas pelo nome
+ *     tags: [Teams]
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         required: true
+ *         description: Nome da equipa para pesquisa
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista de equipas encontradas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   country:
+ *                     type: string
+ *       400:
+ *         description: Parâmetro inválido
+ */
+router.get("/search", teamsController.searchTeamsByName);
+
+/**
+ * @swagger
  * /teams/{id}:
  *   get:
  *     summary: Listar participantes de uma equipa
@@ -122,38 +156,6 @@ router.get("/:id/weekly-challenges", teamsController.getTeamParticipantsStreaks)
  */
 router.get("/competition/:id", teamsController.getTeamsByCompetition);
 
-/**
- * @swagger
- * /search:
- *   get:
- *     summary: Pesquisa equipas pelo nome
- *     tags: [Teams]
- *     parameters:
- *       - in: query
- *         name: name
- *         required: true
- *         description: Nome da equipa para pesquisa
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Lista de equipas encontradas
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   name:
- *                     type: string
- *                   country:
- *                     type: string
- *       400:
- *         description: Parâmetro inválido
- */
-router.get("/search", teamsController.searchTeamsByName);
+
 
 module.exports = router;

@@ -62,17 +62,10 @@ function Caixas_de_Texto_Criar_Equipa(props) {
   } = props;
 
   return (
-<<<<<<< HEAD
     <View>
       <Titulos_Criar_Equipa
       accessibilityRole = {Header}
       >{props.titulo}</Titulos_Criar_Equipa>
-=======
-    <View style={styles.inputContainer}>
-      <Titulos_Criar_Equipa accessibilityElementsHidden={true}>
-        {titulo} <Text style={{ color: "#B30000" }}>*</Text>
-      </Titulos_Criar_Equipa>
->>>>>>> ce8fe3af82be170dd88929644a3fffc6f1bc142d
       <Caixa_de_texto
         value={value}
         placeholder={placeholder}

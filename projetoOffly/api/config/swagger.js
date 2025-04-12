@@ -1,4 +1,3 @@
-// api/config/swagger.js
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
@@ -8,7 +7,7 @@ const options = {
     info: {
       title: "API Offly",
       version: "1.0.0",
-      description: "Documentação da API do projeto Offly",
+      description: "Offly API Documentation",
     },
     servers: [
       {
@@ -16,21 +15,21 @@ const options = {
       },
     ],
     components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT'
-          }
-        }
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
       },
-      security: [
-        {
-          bearerAuth: []
-        }
-      ],
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: ["./routes/*.js"], // Ajuste este caminho conforme necessário
+  apis: ["./routes/*.js"],
 };
 
 const specs = swaggerJsdoc(options);

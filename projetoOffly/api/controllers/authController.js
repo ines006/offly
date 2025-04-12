@@ -9,7 +9,7 @@ exports.login = async (req, res) => {
 
     if (!email || !password) {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "Email e palavra-passe são obrigatórios" });
     }
 

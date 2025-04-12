@@ -27,7 +27,7 @@ const authController = require("../controllers/authController");
  *                 example: user@example.com
  *               password:
  *                 type: string
- *                 example: senha123
+ *                 example: palavra-passe123
  *     responses:
  *       200:
  *         description: Login bem-sucedido

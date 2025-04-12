@@ -81,7 +81,8 @@ router.post("/", participantsController.createParticipant);
  * @swagger
  * /participants/{id}:
  *   put:
- *     summary: Atualizar participante
+ *     summary: Atualizar os dados de um participante
+ *     description: Atualiza os campos fornecidos (nome, username, email e/ou palavra-passe) de um participante. Pelo menos um campo deve ser fornecido, e nenhum campo pode ser vazio.
  *     tags: [Participants]
  *     parameters:
  *       - in: path
@@ -89,6 +90,7 @@ router.post("/", participantsController.createParticipant);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID do participante a ser atualizado
  *     requestBody:
  *       required: true
  *       content:
@@ -98,11 +100,102 @@ router.post("/", participantsController.createParticipant);
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Nome do participante (não pode ser vazio)
+ *                 example: João Novo
+ *               username:
+ *                 type: string
+ *                 description: Username único do participante (não pode ser vazio ou duplicado)
+ *                 example: joaonovo
  *               email:
  *                 type: string
+ *                 description: Email do participante (deve ser um email válido e não duplicado)
+ *                 example: joao.novo@example.com
+ *               password:
+ *                 type: string
+ *                 description: palavra-passe do participante (mínimo 6 caracteres, com pelo menos uma maiúscula, uma minúscula, um número e um caractere especial)
+ *                 example: Teste123!
+ *             minProperties: 1
+ *           examples:
+ *             updatePassword:
+ *               summary: Atualizar apenas a palavra-passe
+ *               value:
+ *                 password: Teste123!
+ *             updateMultiple:
+ *               summary: Atualizar múltiplos campos
+ *               value:
+ *                 name: João Novo
+ *                 username: joaonovo
+ *                 email: joao.novo@example.com
  *     responses:
  *       200:
- *         description: Participante atualizado
+ *         description: Participante atualizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Participante atualizado
+ *                 participant:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: João Novo
+ *                     username:
+ *                       type: string
+ *                       example: joaonovo
+ *                     email:
+ *                       type: string
+ *                       example: joao.novo@example.com
+ *       400:
+ *         description: Erro de validação (campos inválidos, vazios, duplicados, etc.)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *               examples:
+ *                 missingFields:
+ *                   value:
+ *                     message: Pelo menos um campo deve ser fornecido para atualização
+ *                 invalidEmail:
+ *                   value:
+ *                     message: Formato de email inválido
+ *                 duplicateUsername:
+ *                   value:
+ *                     message: Username já está em uso
+ *                 invalidPassword:
+ *                   value:
+ *                     message: A palavra-passe deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.
+ *       404:
+ *         description: Participante não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Participante não encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Erro ao atualizar participante
+ *                 error:
+ *                   type: string
  */
 router.put("/:id", participantsController.updateParticipant);
 

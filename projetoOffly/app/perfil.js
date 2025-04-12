@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Alert, TouchableOpacity } from 'react-native';
-import { auth, db } from './firebase/firebaseApi';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import React, { useState, useEffect } from "react";
+import styled from "styled-components/native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { Alert, TouchableOpacity } from "react-native";
+import { auth, db } from "./firebase/firebaseApi";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from "firebase/auth";
 import { useRouter } from "expo-router";
 
 const ProfileScreen = () => {
   const [userId, setUserId] = useState(null);
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
-  
+
   const router = useRouter();
 
   // Caso ainda não tenham imagem de perfil (vai uma aleatória)
@@ -41,53 +45,50 @@ const ProfileScreen = () => {
     "https://celina05.sirv.com/avatares/avatar19.png",
   ];
 
-
-// Função para obter uma URL aleatória 
-const getRandomImage = () => {
-  const randomIndex = Math.floor(Math.random() * tipo.length);
-  return tipo[randomIndex];
-};
+  // Função para obter uma URL aleatória
+  const getRandomImage = () => {
+    const randomIndex = Math.floor(Math.random() * tipo.length);
+    return tipo[randomIndex];
+  };
 
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
       setUserId(currentUser.uid);
     } else {
-      Alert.alert('Erro', 'Usuário não autenticado.');
+      Alert.alert("Erro", "Usuário não autenticado.");
     }
   }, []);
 
-  
   useEffect(() => {
     const loadUserData = async () => {
       if (userId) {
         try {
-          const userDocRef = doc(db, 'users', userId);
+          const userDocRef = doc(db, "users", userId);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
             const { fullName, username, image } = userDoc.data();
-            setName(fullName || '');
-            setUsername(username || '');
+            setName(fullName || "");
+            setUsername(username || "");
 
-          if (image) {
-            // Atribuir a imagem existente ao estado
-            setProfileImage({ uri: image });
-          } else {
-            // Gerar e atribuir uma nova imagem aleatória
-            const newProfileImage = getRandomImage(imageUserUrls);
-            setProfileImage({ uri: newProfileImage });
-                        
-            // Atualizar o documento do utilizador com a nova imagem
-            await updateDoc(userDocRef, { image: newProfileImage });
-          }
+            if (image) {
+              // Atribuir a imagem existente ao estado
+              setProfileImage({ uri: image });
+            } else {
+              // Gerar e atribuir uma nova imagem aleatória
+              const newProfileImage = getRandomImage(imageUserUrls);
+              setProfileImage({ uri: newProfileImage });
 
+              // Atualizar o documento do utilizador com a nova imagem
+              await updateDoc(userDocRef, { image: newProfileImage });
+            }
           } else {
-            Alert.alert('Erro', 'Usuário não encontrado no Firestore.');
+            Alert.alert("Erro", "Usuário não encontrado no Firestore.");
           }
         } catch (error) {
-          console.error('Erro ao carregar os dados do usuário:', error);
-          Alert.alert('Erro', 'Falha ao carregar dados do Firestore.');
+          console.error("Erro ao carregar os dados do usuário:", error);
+          Alert.alert("Erro", "Falha ao carregar dados do Firestore.");
         }
       }
     };
@@ -95,109 +96,122 @@ const getRandomImage = () => {
     loadUserData();
   }, [userId]);
 
-  
   const reauthenticateUser = async (currentPassword) => {
     try {
       const user = auth.currentUser;
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
 
-      
       await reauthenticateWithCredential(user, credential);
-      console.log('Reautenticação bem-sucedida!');
+      console.log("Reautenticação bem-sucedida!");
     } catch (error) {
-      console.error('Erro ao reautenticar o usuário:', error);
-      Alert.alert('Erro', 'Senha atual incorreta.');
+      console.error("Erro ao reautenticar o usuário:", error);
+      Alert.alert("Erro", "palavra-passe atual incorreta.");
       throw error;
     }
   };
 
-  
   const handleSave = async (field) => {
     if (!userId) return;
 
     try {
-      const userDocRef = doc(db, 'users', userId);
+      const userDocRef = doc(db, "users", userId);
 
-      if (field === 'password') {
-        
+      if (field === "password") {
         Alert.prompt(
-          'Alteração de Senha',
-          'Digita a tua senha atual:',
+          "Alteração de palavra-passe",
+          "Digita a tua palavra-passe atual:",
           [
             {
-              text: 'Cancelar',
-              style: 'cancel',
+              text: "Cancelar",
+              style: "cancel",
             },
             {
-              text: 'OK',
+              text: "OK",
               onPress: async (currentPassword) => {
                 Alert.prompt(
-                  'Nova Senha',
-                  'Digite a nova senha:',
+                  "Nova palavra-passe",
+                  "Digite a nova palavra-passe:",
                   [
                     {
-                      text: 'Cancelar',
-                      style: 'cancel',
+                      text: "Cancelar",
+                      style: "cancel",
                     },
                     {
-                      text: 'OK',
+                      text: "OK",
                       onPress: async (newPassword) => {
                         try {
                           // Reautenticar o usuário
                           await reauthenticateUser(currentPassword);
 
-                          // Atualizar a senha no Firebase Authentication
+                          // Atualizar a palavra-passe no Firebase Authentication
                           await updatePassword(auth.currentUser, newPassword);
-                          Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+                          Alert.alert(
+                            "Sucesso",
+                            "palavra-passe alterada com sucesso!"
+                          );
                         } catch (error) {
-                          console.error('Erro ao alterar a senha:', error);
+                          console.error(
+                            "Erro ao alterar a palavra-passe:",
+                            error
+                          );
 
-                          if (error.code === 'auth/weak-password') {
-                            Alert.alert('Erro', 'A senha precisa ter pelo menos 6 caracteres.');
-                          } else if (error.code === 'auth/wrong-password') {
-                            Alert.alert('Erro', 'A senha atual está incorreta.');
+                          if (error.code === "auth/weak-password") {
+                            Alert.alert(
+                              "Erro",
+                              "A palavra-passe precisa ter pelo menos 6 caracteres."
+                            );
+                          } else if (error.code === "auth/wrong-password") {
+                            Alert.alert(
+                              "Erro",
+                              "A palavra-passe atual está incorreta."
+                            );
                           } else {
-                            Alert.alert('Erro', 'Não foi possível alterar a senha. Tente novamente.');
+                            Alert.alert(
+                              "Erro",
+                              "Não foi possível alterar a palavra-passe. Tente novamente."
+                            );
                           }
                         }
                       },
                     },
                   ],
-                  'secure-text'
+                  "secure-text"
                 );
               },
             },
           ],
-          'secure-text'
+          "secure-text"
         );
       } else {
-       
         const updatedData = {};
 
-        if (field === 'name') {
-          updatedData.fullName = name || '';
+        if (field === "name") {
+          updatedData.fullName = name || "";
           setIsEditingName(false);
-        } else if (field === 'username') {
-          updatedData.username = username || '';
+        } else if (field === "username") {
+          updatedData.username = username || "";
           setIsEditingUsername(false);
         }
 
         await updateDoc(userDocRef, updatedData);
-        Alert.alert('Sucesso', 'Alterações salvas com sucesso!');
+        Alert.alert("Sucesso", "Alterações salvas com sucesso!");
       }
     } catch (error) {
-      console.error('Erro ao salvar os dados:', error);
-      Alert.alert('Erro', 'Não foi possível salvar as alterações.');
+      console.error("Erro ao salvar os dados:", error);
+      Alert.alert("Erro", "Não foi possível salvar as alterações.");
     }
   };
 
   const handleLogout = async () => {
     try {
-      await auth.signOut(); 
-      router.replace('./components/entrar/login'); 
+      await auth.signOut();
+      router.replace("./components/entrar/login");
     } catch (error) {
-      console.error('Erro ao terminar sessão:', error);
-      Alert.alert('Erro', 'Não foi possível terminar a sessão.');
+      console.error("Erro ao terminar sessão:", error);
+      Alert.alert("Erro", "Não foi possível terminar a sessão.");
     }
   };
 
@@ -205,19 +219,42 @@ const getRandomImage = () => {
     <Container>
       <Header>
         <BackButton onPress={() => router.back()}>
-            <Icon name="arrow-back" size={24} color="#263A83" />
+          <Icon name="arrow-back" size={24} color="#263A83" />
         </BackButton>
         <HeaderTitle>Perfil</HeaderTitle>
       </Header>
 
       <AvatarContainer>
-        <Avatar accessibilityLabel="Imagem de perfil do utilizador" source={profileImage} />
+        <Avatar
+          accessibilityLabel="Imagem de perfil do utilizador"
+          source={profileImage}
+        />
         <LevelText>Nível 1</LevelText>
         <Stars>
-          <Icon accessibilityLabel="estrela nível 1" name="star" size={20} color="#263A83" />
-          <Icon accessibilityLabel="estrela nível 2" name="star" size={20} color="#ccc" />
-          <Icon accessibilityLabel="estrela nível 3" name="star" size={20} color="#ccc" />
-          <Icon accessibilityLabel="estrela nível 4" name="star" size={20} color="#ccc" />
+          <Icon
+            accessibilityLabel="estrela nível 1"
+            name="star"
+            size={20}
+            color="#263A83"
+          />
+          <Icon
+            accessibilityLabel="estrela nível 2"
+            name="star"
+            size={20}
+            color="#ccc"
+          />
+          <Icon
+            accessibilityLabel="estrela nível 3"
+            name="star"
+            size={20}
+            color="#ccc"
+          />
+          <Icon
+            accessibilityLabel="estrela nível 4"
+            name="star"
+            size={20}
+            color="#ccc"
+          />
         </Stars>
       </AvatarContainer>
 
@@ -229,10 +266,22 @@ const getRandomImage = () => {
               value={name}
               editable={isEditingName}
               onChangeText={setName}
-              style={isEditingName ? { borderBottomWidth: 1, borderBottomColor: '#263A83' } : {}}
+              style={
+                isEditingName
+                  ? { borderBottomWidth: 1, borderBottomColor: "#263A83" }
+                  : {}
+              }
             />
-            <EditButton onPress={() => (isEditingName ? handleSave('name') : setIsEditingName(true))}>
-              <Icon name={isEditingName ? 'check' : 'edit'} size={20} color="#263A83" />
+            <EditButton
+              onPress={() =>
+                isEditingName ? handleSave("name") : setIsEditingName(true)
+              }
+            >
+              <Icon
+                name={isEditingName ? "check" : "edit"}
+                size={20}
+                color="#263A83"
+              />
             </EditButton>
           </InputRow>
         </Row>
@@ -244,10 +293,24 @@ const getRandomImage = () => {
               value={username}
               editable={isEditingUsername}
               onChangeText={setUsername}
-              style={isEditingUsername ? { borderBottomWidth: 1, borderBottomColor: '#263A83' } : {}}
+              style={
+                isEditingUsername
+                  ? { borderBottomWidth: 1, borderBottomColor: "#263A83" }
+                  : {}
+              }
             />
-            <EditButton onPress={() => (isEditingUsername ? handleSave('username') : setIsEditingUsername(true))}>
-              <Icon name={isEditingUsername ? 'check' : 'edit'} size={20} color="#263A83" />
+            <EditButton
+              onPress={() =>
+                isEditingUsername
+                  ? handleSave("username")
+                  : setIsEditingUsername(true)
+              }
+            >
+              <Icon
+                name={isEditingUsername ? "check" : "edit"}
+                size={20}
+                color="#263A83"
+              />
             </EditButton>
           </InputRow>
         </Row>
@@ -255,8 +318,8 @@ const getRandomImage = () => {
         <Row>
           <Label>Alterar Password</Label>
           <InputRow>
-            <EditButton onPress={() => handleSave('password')}>
-              <Icon name="edit" size={20} color="#263A83" /> 
+            <EditButton onPress={() => handleSave("password")}>
+              <Icon name="edit" size={20} color="#263A83" />
             </EditButton>
           </InputRow>
         </Row>
@@ -282,22 +345,22 @@ const Header = styled.View`
 `;
 
 const BackButton = styled(TouchableOpacity)`
-position: absolute;
-top: 40px;
-left: 20px;
-width: 40px;
-height: 40px;
-border-radius: 20px;
-background-color: transparent;
-border: 2px solid #263A83;
-justify-content: center;
-align-items: center;
+  position: absolute;
+  top: 40px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: transparent;
+  border: 2px solid #263a83;
+  justify-content: center;
+  align-items: center;
 `;
 
 const HeaderTitle = styled.Text`
   font-size: 18px;
   font-weight: bold;
-  color: #263A83;
+  color: #263a83;
 `;
 
 const AvatarContainer = styled.View.attrs({
@@ -306,7 +369,6 @@ const AvatarContainer = styled.View.attrs({
   align-items: center;
   margin-bottom: 20px;
 `;
-
 
 const Avatar = styled.Image`
   width: 100px;
@@ -317,7 +379,7 @@ const Avatar = styled.Image`
 const LevelText = styled.Text`
   margin-top: 8px;
   font-size: 16px;
-  color: #263A83;
+  color: #263a83;
 `;
 
 const Stars = styled.View.attrs({
@@ -337,7 +399,7 @@ const Row = styled.View`
 
 const Label = styled.Text`
   font-size: 14px;
-  color: #263A83;
+  color: #263a83;
   margin-bottom: 4px;
 `;
 
@@ -345,7 +407,7 @@ const InputRow = styled.View`
   flex-direction: row;
   align-items: center;
   border-bottom-width: 1px;
-  border-bottom-color: #263A83;
+  border-bottom-color: #263a83;
   padding-bottom: 4px;
 `;
 
@@ -359,7 +421,7 @@ const EditButton = styled.TouchableOpacity``;
 
 const LogoutButton = styled.TouchableOpacity`
   margin-top: 40px;
-  background-color: #263A83;
+  background-color: #263a83;
   padding: 12px;
   border-radius: 8px;
   align-items: center;

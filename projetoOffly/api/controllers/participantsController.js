@@ -91,7 +91,7 @@ exports.createParticipant = async (req, res) => {
       return res.status(400).json({ message: "Email já está em uso" });
     }
 
-    // Hashear a senha com bcrypt
+    // Hashear a palavra-passe com bcrypt
     const password_hash = await bcrypt.hash(password, 10);
 
     const participant = await Participants.create({
@@ -115,38 +115,144 @@ exports.createParticipant = async (req, res) => {
 // Atualizar os dados de um participante
 exports.updateParticipant = async (req, res) => {
   try {
-    const { name, username, email, password_hash } = req.body;
+    const { name, username, email, password } = req.body;
+    const { id } = req.params;
 
-    const [updated] = await Participants.update(
-      {
-        name,
-        username,
-        email,
-        password_hash,
-      },
-      { where: { id: req.params.id } }
-    );
+    // Verificar se o participante existe
+    const participant = await Participants.findByPk(id);
+    if (!participant) {
+      return res.status(404).json({ message: "Participante não encontrado" });
+    }
 
-    updated
-      ? res.json({ message: "Participante atualizado" })
-      : res.status(404).json({ message: "Participante não encontrado" });
+    // Verificar se pelo menos um campo foi fornecido
+    if (!name && !username && !email && !password) {
+      return res.status(400).json({
+        message: "Pelo menos um campo deve ser fornecido para atualização",
+      });
+    }
+
+    // Validar que campos fornecidos não sejam vazios
+    if (name === "") {
+      return res.status(400).json({ message: "O nome não pode ser vazio" });
+    }
+    if (username === "") {
+      return res.status(400).json({ message: "O username não pode ser vazio" });
+    }
+    if (email === "") {
+      return res.status(400).json({ message: "O email não pode ser vazio" });
+    }
+    if (password === "") {
+      return res
+        .status(400)
+        .json({ message: "A palavra-passe não pode ser vazia" });
+    }
+
+    // Validar formato do email, se fornecido
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Formato de email inválido" });
+      }
+
+      // Verificar se o email já está em uso por outro participante
+      const existingEmail = await Participants.findOne({
+        where: { email, id: { [Sequelize.Op.ne]: id } },
+      });
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email já está em uso" });
+      }
+    }
+
+    // Verificar unicidade do username, se fornecido
+    if (username) {
+      const existingUsername = await Participants.findOne({
+        where: { username, id: { [Sequelize.Op.ne]: id } },
+      });
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username já está em uso" });
+      }
+    }
+
+    // Validar a palavra-passe, se fornecida
+    if (password) {
+      // Verificar comprimento mínimo
+      if (password.length < 6) {
+        return res.status(400).json({
+          message: "A palavra-passe deve ter pelo menos 6 caracteres",
+        });
+      }
+
+      // Verificar maiúsculas, minúsculas, números e caracteres especiais
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+          message:
+            "A palavra-passe deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.",
+        });
+      }
+    }
+
+    // Criar objeto com os campos a serem atualizados
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (password) {
+      updateData.password_hash = await bcrypt.hash(password, 10);
+    }
+
+    // Atualizar participante
+    const [updated] = await Participants.update(updateData, {
+      where: { id },
+    });
+
+    if (updated) {
+      // Buscar participante atualizado para retornar
+      const updatedParticipant = await Participants.findByPk(id);
+      return res.json({
+        message: "Participante atualizado",
+        participant: {
+          id: updatedParticipant.id,
+          name: updatedParticipant.name,
+          username: updatedParticipant.username,
+          email: updatedParticipant.email,
+        },
+      });
+    }
+
+    return res.status(404).json({ message: "Participante não encontrado" });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao atualizar participante", error });
+    console.error("Erro ao atualizar participante:", error.stack);
+    return res.status(500).json({
+      message: "Erro ao atualizar participante",
+      error: error.message,
+    });
   }
 };
 
 // Eliminar um participante
 exports.deleteParticipant = async (req, res) => {
   try {
-    const deleted = await Participants.destroy({
-      where: { id: req.params.id },
+    const { id } = req.params;
+
+    // Verificar se o participante existe
+    const participant = await Participants.findByPk(id);
+    if (!participant) {
+      return res.status(404).json({ message: "Participante não encontrado" });
+    }
+
+    // Deletar participante
+    await Participants.destroy({
+      where: { id },
     });
 
-    deleted
-      ? res.json({ message: "Participante eliminado" })
-      : res.status(404).json({ message: "Participante não encontrado" });
+    return res.json({ message: "Participante eliminado" });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao eliminar participante", error });
+    console.error("Erro ao eliminar participante:", error.stack);
+    return res
+      .status(500)
+      .json({ message: "Erro ao eliminar participante", error: error.message });
   }
 };
 

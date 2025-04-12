@@ -43,20 +43,20 @@ exports.createParticipant = async (req, res) => {
 
     if (!name || !username || !email || !password || gender === undefined) {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "Todos os campos são obrigatórios" });
     }
 
     // Validar formato do email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Formato de email inválido" });
+      return res.status(422).json({ message: "Formato de email inválido" });
     }
 
     // Validar comprimento mínimo da palavra-passe
     if (password.length < 6) {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "A palavra-passe deve ter pelo menos 6 caracteres" });
     }
 
@@ -72,7 +72,7 @@ exports.createParticipant = async (req, res) => {
 
     // Validar valores permitidos para gender
     if (gender !== 0 && gender !== 1) {
-      return res.status(400).json({
+      return res.status(422).json({
         message: "O campo gender deve ser 0 (masculino) ou 1 (feminino)",
       });
     }
@@ -82,13 +82,13 @@ exports.createParticipant = async (req, res) => {
       where: { username },
     });
     if (existingUsername) {
-      return res.status(400).json({ message: "Username já está em uso" });
+      return res.status(409).json({ message: "Username já está em uso" });
     }
 
     // Verificar se o email já existe
     const existingEmail = await Participants.findOne({ where: { email } });
     if (existingEmail) {
-      return res.status(400).json({ message: "Email já está em uso" });
+      return res.status(409).json({ message: "Email já está em uso" });
     }
 
     // Hashear a palavra-passe com bcrypt
@@ -126,24 +126,24 @@ exports.updateParticipant = async (req, res) => {
 
     // Verificar se pelo menos um campo foi fornecido
     if (!name && !username && !email && !password) {
-      return res.status(400).json({
+      return res.status(422).json({
         message: "Pelo menos um campo deve ser fornecido para atualização",
       });
     }
 
     // Validar que campos fornecidos não sejam vazios
     if (name === "") {
-      return res.status(400).json({ message: "O nome não pode ser vazio" });
+      return res.status(422).json({ message: "O nome não pode ser vazio" });
     }
     if (username === "") {
-      return res.status(400).json({ message: "O username não pode ser vazio" });
+      return res.status(422).json({ message: "O username não pode ser vazio" });
     }
     if (email === "") {
-      return res.status(400).json({ message: "O email não pode ser vazio" });
+      return res.status(422).json({ message: "O email não pode ser vazio" });
     }
     if (password === "") {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "A palavra-passe não pode ser vazia" });
     }
 
@@ -151,7 +151,7 @@ exports.updateParticipant = async (req, res) => {
     if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Formato de email inválido" });
+        return res.status(422).json({ message: "Formato de email inválido" });
       }
 
       // Verificar se o email já está em uso por outro participante
@@ -159,7 +159,7 @@ exports.updateParticipant = async (req, res) => {
         where: { email, id: { [Sequelize.Op.ne]: id } },
       });
       if (existingEmail) {
-        return res.status(400).json({ message: "Email já está em uso" });
+        return res.status(409).json({ message: "Email já está em uso" });
       }
     }
 
@@ -169,7 +169,7 @@ exports.updateParticipant = async (req, res) => {
         where: { username, id: { [Sequelize.Op.ne]: id } },
       });
       if (existingUsername) {
-        return res.status(400).json({ message: "Username já está em uso" });
+        return res.status(409).json({ message: "Username já está em uso" });
       }
     }
 
@@ -177,7 +177,7 @@ exports.updateParticipant = async (req, res) => {
     if (password) {
       // Verificar comprimento mínimo
       if (password.length < 6) {
-        return res.status(400).json({
+        return res.status(422).json({
           message: "A palavra-passe deve ter pelo menos 6 caracteres",
         });
       }
@@ -186,7 +186,7 @@ exports.updateParticipant = async (req, res) => {
       const passwordRegex =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/;
       if (!passwordRegex.test(password)) {
-        return res.status(400).json({
+        return res.status(422).json({
           message:
             "A palavra-passe deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.",
         });
@@ -297,7 +297,7 @@ exports.addParticipantAnswers = async (req, res) => {
 
     const { answers } = req.body; // Espera um array no corpo da requisição
     if (!answers) {
-      return res.status(400).json({ message: "As respostas são obrigatórias" });
+      return res.status(422).json({ message: "As respostas são obrigatórias" });
     }
 
     // Verifica se answers é um array, não contém strings vazias e tem exatamente 4 respostas
@@ -306,7 +306,7 @@ exports.addParticipantAnswers = async (req, res) => {
       answers.some((answer) => answer === "") ||
       answers.length !== 4
     ) {
-      return res.status(400).json({
+      return res.status(422).json({
         message: "Cada uma das 4 questões deverá ter uma resposta associada",
       });
     }
@@ -390,14 +390,14 @@ exports.createDailyChallenge = async (req, res) => {
     const { title, description, level } = req.body;
 
     if (!title || !description || !level) {
-      return res.status(400).json({
+      return res.status(422).json({
         error: "O desafio deverá ter um título, descrição e nível associados.",
       });
     }
 
     // Validar o nível
     if (!Number.isInteger(level) || level < 1 || level > 3) {
-      return res.status(400).json({
+      return res.status(422).json({
         error: "O nível do desafio deve ser um número inteiro entre 1 e 3.",
       });
     }
@@ -407,7 +407,7 @@ exports.createDailyChallenge = async (req, res) => {
       where: { title: title.toLowerCase() },
     });
     if (existingChallenge) {
-      return res.status(400).json({
+      return res.status(409).json({
         error: "Já existe um desafio com esse título",
       });
     }

@@ -31,7 +31,7 @@ exports.getTeamParticipants = async (req, res) => {
     });
 
     if (!team) {
-      return res.status(404).json({ message: "Equipe não encontrada" });
+      return res.status(404).json({ message: "Equipa não encontrada" });
     }
 
     res.json({
@@ -46,7 +46,7 @@ exports.getTeamParticipants = async (req, res) => {
     });
   } catch (error) {
     console.error(
-      "Erro detalhado ao listar participantes da equipe:",
+      "Erro detalhado ao listar participantes da equipa:",
       error.stack
     );
     res
@@ -81,14 +81,14 @@ exports.createTeam = async (req, res) => {
     // Validar limite de caracteres para name
     if (normalizedName.length < 3 || normalizedName.length > 40) {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "O nome deve ter entre 3 e 40 caracteres" });
     }
 
     // Validar limite de caracteres para description
     if (description.length < 3 || description.length > 60) {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "A descrição não pode exceder 60 caracteres" });
     }
 
@@ -99,7 +99,7 @@ exports.createTeam = async (req, res) => {
       capacity < 3 ||
       capacity > 5
     ) {
-      return res.status(400).json({
+      return res.status(422).json({
         message:
           "O número de elementos de uma equipa só pode variar entre 3 e 5",
       });
@@ -107,7 +107,7 @@ exports.createTeam = async (req, res) => {
 
     // Validar visibility
     if (visibility !== 0 && visibility !== 1) {
-      return res.status(400).json({
+      return res.status(422).json({
         message: "A visibilidade deve ser 0 (pública) ou 1 (privada)",
       });
     }
@@ -118,7 +118,7 @@ exports.createTeam = async (req, res) => {
     });
     if (existingTeam) {
       return res
-        .status(400)
+        .status(409)
         .json({ message: "Já existe uma equipa com esse nome!" });
     }
 
@@ -217,7 +217,7 @@ exports.getTeamChallenges = async (req, res) => {
     // Validação: data é obrigatória
     if (!date) {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "A data é obrigatória (use ?date=YYYY-MM-DD)" });
     }
 
@@ -300,7 +300,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
 
     // Validação: semana é obrigatória
     if (!week || !/^\d{4}-\d{2}-\d{2}$/.test(week)) {
-      return res.status(400).json({
+      return res.status(422).json({
         message:
           "A semana é obrigatória e deve estar no formato YYYY-MM-DD (ex.: 2025-03-31)",
       });
@@ -311,7 +311,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
     if (startDate.getDay() !== 1) {
       // 1 = segunda-feira
       return res
-        .status(400)
+        .status(422)
         .json({ message: "A data deve ser uma segunda-feira" });
     }
 
@@ -431,23 +431,61 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
   }
 };
 
-// Listar equipas com filtro opcional de lotação < 5 participantes
+// Listar equipas com filtro opcional de lotação < 5 participantes e paginação
 exports.getTeams = async (req, res) => {
   try {
-    const { capacity } = req.query; // Pega o query param 'capacity'
+    const { capacity, page = 1 } = req.query; // page padrão é 1
+    const limit = 4; // Máximo 4 equipes por página
+    const offset = (parseInt(page) - 1) * limit; // Calcular offset
 
-    // Condição base
+    // Validar page
+    if (isNaN(page) || parseInt(page) < 1) {
+      return res.status(422).json({
+        message: "O parâmetro page deve ser um número inteiro maior que 0",
+      });
+    }
+
+    // Condição base para filtro de capacity
     let havingCondition = null;
-    if (capacity === "under_5") {
+    if (capacity === "under-5") {
       havingCondition = Sequelize.literal("COUNT(`participants`.`id`) < 5");
     }
 
+    // Contar total de equipes (para metadados da paginação)
+    const totalTeamsResult = await Teams.findAll({
+      attributes: [
+        [
+          Sequelize.fn(
+            "COUNT",
+            Sequelize.fn("DISTINCT", Sequelize.col("Teams.id"))
+          ),
+          "total",
+        ],
+      ],
+      include: [
+        {
+          model: Participants,
+          as: "participants",
+          attributes: [],
+          required: false, // LEFT JOIN
+        },
+      ],
+      group: ["Teams.id"],
+      having: havingCondition,
+      raw: true,
+      subQuery: false, // Evitar subquery
+    });
+
+    const totalTeams = totalTeamsResult.length;
+    const totalPages = Math.ceil(totalTeams / limit);
+
+    // Buscar equipes com paginação
     const teams = await Teams.findAll({
       attributes: [
         "name",
         "capacity",
         [
-          Sequelize.fn("COUNT", Sequelize.col("participants.id")),
+          Sequelize.fn("COUNT", Sequelize.col("participants.id")), // Usar alias participants
           "participant_count",
         ],
       ],
@@ -456,20 +494,40 @@ exports.getTeams = async (req, res) => {
           model: Participants,
           as: "participants",
           attributes: [],
+          required: false, // LEFT JOIN
         },
       ],
       group: ["Teams.id", "Teams.name", "Teams.capacity"],
-      having: havingCondition, // Aplica o filtro apenas se capacity=under_5
+      having: havingCondition,
+      order: [[Sequelize.literal("participant_count"), "DESC"]],
+      limit: limit,
+      offset: offset,
       raw: true,
+      subQuery: false, // Evitar subquery
+      logging: console.log, // Depurar query
     });
 
-    if (!teams.length && capacity === "under_5") {
+    if (!teams.length && capacity === "under-5") {
       return res.status(404).json({
         message: "Nenhuma equipa encontrada com menos de 5 participantes",
       });
     }
 
-    res.json(teams);
+    if (!teams.length && page > 1) {
+      return res.status(404).json({
+        message: "Nenhuma equipa encontrada para esta página",
+      });
+    }
+
+    res.json({
+      teams,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: totalPages,
+        totalTeams: totalTeams,
+        limit: limit,
+      },
+    });
   } catch (error) {
     console.error("Erro ao listar equipas:", error);
     res
@@ -485,7 +543,7 @@ exports.searchTeamsByName = async (req, res) => {
 
     if (!name) {
       return res
-        .status(400)
+        .status(422)
         .json({ message: "O parâmetro 'name' é obrigatório" });
     }
 

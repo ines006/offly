@@ -13,11 +13,98 @@ const teamsController = require("../controllers/teamsController");
  * @swagger
  * /teams:
  *   get:
- *     summary: Listar equipas (com filtro opcional de lotação < 5)
+ *     summary: Listar equipes com filtro opcional e paginação
+ *     description: Retorna uma lista de equipes com o número de participantes, ordenadas por número de participantes em ordem decrescente. Suporta filtro para equipes com menos de 5 participantes e paginação com no máximo 4 equipes por página.
  *     tags: [Teams]
+ *     parameters:
+ *       - in: query
+ *         name: capacity
+ *         schema:
+ *           type: string
+ *           enum: [under-5]
+ *         description: Filtrar equipes com menos de 5 participantes (opcional)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número da página para paginação (máximo 4 equipes por página)
  *     responses:
  *       200:
- *         description: Lista de equipas retornada com sucesso
+ *         description: Lista de equipes retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 teams:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                         example: Fortes
+ *                       capacity:
+ *                         type: integer
+ *                         example: 5
+ *                       participant_count:
+ *                         type: integer
+ *                         example: 4
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *                     totalTeams:
+ *                       type: integer
+ *                       example: 10
+ *                     limit:
+ *                       type: integer
+ *                       example: 4
+ *       400:
+ *         description: Parâmetro de paginação inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: O parâmetro page deve ser um número inteiro maior que 0
+ *       404:
+ *         description: Nenhuma equipe encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *               examples:
+ *                 noTeams:
+ *                   value:
+ *                     message: Nenhuma equipa encontrada com menos de 5 participantes
+ *                 invalidPage:
+ *                   value:
+ *                     message: Nenhuma equipa encontrada para esta página
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Erro ao listar equipas
+ *                 error:
+ *                   type: string
  */
 router.get("/", teamsController.getTeams);
 

@@ -41,10 +41,54 @@ exports.createParticipant = async (req, res) => {
   try {
     const { name, username, email, password, gender, level = 1 } = req.body;
 
-    if (!name || !username || !email || !password || !gender) {
+    if (!name || !username || !email || !password || gender === undefined) {
       return res
         .status(400)
         .json({ message: "Todos os campos são obrigatórios" });
+    }
+
+    // Validar formato do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Formato de email inválido" });
+    }
+
+    // Validar comprimento mínimo da palavra-passe
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "A palavra-passe deve ter pelo menos 6 caracteres" });
+    }
+
+    // Validar que a palavra-passe contém maiúsculas, minúsculas e caracteres especiais
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "A palavra-passe deve conter pelo menos uma letra maiúscula, uma minúscula e um caractere especial",
+      });
+    }
+
+    // Validar valores permitidos para gender
+    if (gender !== 0 && gender !== 1) {
+      return res.status(400).json({
+        message: "O campo gender deve ser 0 (masculino) ou 1 (feminino)",
+      });
+    }
+
+    // Verificar se o username já existe
+    const existingUsername = await Participants.findOne({
+      where: { username },
+    });
+    if (existingUsername) {
+      return res.status(400).json({ message: "Username já está em uso" });
+    }
+
+    // Verificar se o email já existe
+    const existingEmail = await Participants.findOne({ where: { email } });
+    if (existingEmail) {
+      return res.status(400).json({ message: "Email já está em uso" });
     }
 
     // Hashear a senha com bcrypt
@@ -145,9 +189,20 @@ exports.addParticipantAnswers = async (req, res) => {
       return res.status(404).json({ message: "Participante não encontrado" });
     }
 
-    const { answers } = req.body; // Espera um array ou string JSON no corpo da requisição
+    const { answers } = req.body; // Espera um array no corpo da requisição
     if (!answers) {
       return res.status(400).json({ message: "As respostas são obrigatórias" });
+    }
+
+    // Verifica se answers é um array, não contém strings vazias e tem exatamente 4 respostas
+    if (
+      !Array.isArray(answers) ||
+      answers.some((answer) => answer === "") ||
+      answers.length !== 4
+    ) {
+      return res.status(400).json({
+        message: "Cada uma das 4 questões deverá ter uma resposta associada",
+      });
     }
 
     // Converte o array em string JSON, se necessário
@@ -230,13 +285,30 @@ exports.createDailyChallenge = async (req, res) => {
 
     if (!title || !description || !level) {
       return res.status(400).json({
-        error: "Os campos 'title', 'description' e 'level' são obrigatórios.",
+        error: "O desafio deverá ter um título, descrição e nível associados.",
+      });
+    }
+
+    // Validar o nível
+    if (!Number.isInteger(level) || level < 1 || level > 3) {
+      return res.status(400).json({
+        error: "O nível do desafio deve ser um número inteiro entre 1 e 3.",
+      });
+    }
+
+    // Verificar se o título do desafio já existe
+    const existingChallenge = await Challenges.findOne({
+      where: { title: title.toLowerCase() },
+    });
+    if (existingChallenge) {
+      return res.status(400).json({
+        error: "Já existe um desafio com esse título",
       });
     }
 
     // Criar novo desafio e garantir que retorna um ID
     const newChallenge = await Challenges.create({
-      title,
+      title: title.toLowerCase(),
       description,
       challenge_types_id_challenge_types: 1,
     });
@@ -248,9 +320,9 @@ exports.createDailyChallenge = async (req, res) => {
     // Associar ao participante garantindo valores padrão
     await ParticipantsHasChallenges.create({
       participants_id: id,
-      challenges_id: newChallenge.id, // Agora garantindo que estamos pegando o ID corretamente
+      challenges_id: newChallenge.id,
       starting_date: new Date(),
-      end_date: new Date(new Date().setHours(23, 59, 59)), // Termina às 23h59 do mesmo dia
+      end_date: new Date(new Date().setHours(24, 59, 59)), // Termina às 23h59 do mesmo dia
       validated: 0,
       streak: 0,
       challenge_levels_id_challenge_levels: level,

@@ -59,8 +59,18 @@ router.get("/:id", participantsController.getParticipantById);
  *             properties:
  *               name:
  *                 type: string
+ *                 example: name / surname
+ *               username:
+ *                 type: string
+ *                 example: username
  *               email:
  *                 type: string
+ *                 example: example@email.com
+ *               password:
+ *                 type: string
+ *               gender:
+ *                 type: integer
+ *                 example: 0 (male) or 1 (female)
  *     responses:
  *       201:
  *         description: Participante criado
@@ -158,14 +168,15 @@ router.get(
  *       content:
  *         application/json:
  *           schema:
- *             type: array
- *             items:
- *               type: object
- *               properties:
- *                 questionId:
- *                   type: integer
- *                 answer:
+ *             type: object
+ *             required:
+ *               - answers
+ *             properties:
+ *               answers:
+ *                 type: array
+ *                 items:
  *                   type: string
+ *                 example: ["answer1", "answer2", "answer3", "answer4"]
  *     responses:
  *       200:
  *         description: Respostas salvas
@@ -207,9 +218,35 @@ router.get("/:id/daily-challenge", participantsController.getDailyChallenge);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID do participante
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - description
+ *               - level
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Título do desafio diário
+ *               description:
+ *                 type: string
+ *                 description: Descrição do desafio diário
+ *               level:
+ *                 type: integer
+ *                 description: Nível do desafio diário
+ *             example:
+ *               title: "Challenge example"
+ *               description: "Challenge description"
+ *               level: "Between 1 and 3"
  *     responses:
  *       201:
  *         description: Desafio diário criado
+ *
  */
 router.post(
   "/:id/daily-challenge",

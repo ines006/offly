@@ -72,7 +72,54 @@ exports.createTeam = async (req, res) => {
     if (!name) {
       return res
         .status(400)
-        .json({ message: "O nome da equipe é obrigatório" });
+        .json({ message: "O nome da equipa é obrigatório" });
+    }
+
+    // Normalizar o nome para minúsculas
+    const normalizedName = name.toLowerCase();
+
+    // Validar limite de caracteres para name
+    if (normalizedName.length < 3 || normalizedName.length > 40) {
+      return res
+        .status(400)
+        .json({ message: "O nome deve ter entre 3 e 40 caracteres" });
+    }
+
+    // Validar limite de caracteres para description
+    if (description.length < 3 || description.length > 60) {
+      return res
+        .status(400)
+        .json({ message: "A descrição não pode exceder 60 caracteres" });
+    }
+
+    // Validar capacity
+    if (
+      capacity === undefined ||
+      !Number.isInteger(capacity) ||
+      capacity < 3 ||
+      capacity > 5
+    ) {
+      return res.status(400).json({
+        message:
+          "O número de elementos de uma equipa só pode variar entre 3 e 5",
+      });
+    }
+
+    // Validar visibility
+    if (visibility !== 0 && visibility !== 1) {
+      return res.status(400).json({
+        message: "A visibilidade deve ser 0 (pública) ou 1 (privada)",
+      });
+    }
+
+    // Verificar se o nome da equipa já existe (case-insensitive)
+    const existingTeam = await Teams.findOne({
+      where: { name: normalizedName },
+    });
+    if (existingTeam) {
+      return res
+        .status(400)
+        .json({ message: "Já existe uma equipa com esse nome!" });
     }
 
     if (competitions_id) {
@@ -83,7 +130,7 @@ exports.createTeam = async (req, res) => {
     }
 
     const newTeam = await Teams.create({
-      name,
+      name: normalizedName, // Salvar como minúsculas
       description,
       points: 100,
       capacity,
@@ -105,10 +152,10 @@ exports.createTeam = async (req, res) => {
       team_admin: newTeam.team_admin,
     });
   } catch (error) {
-    console.error("Erro detalhado ao criar equipe:", error.stack);
+    console.error("Erro detalhado ao criar equipa:", error.stack);
     res
       .status(500)
-      .json({ message: "Erro ao criar equipe", error: error.message });
+      .json({ message: "Erro ao criar equipa", error: error.message });
   }
 };
 

@@ -89,10 +89,25 @@ router.get("/:id", teamsController.getTeamParticipants);
  *             properties:
  *               name:
  *                 type: string
- *                 example: Equipa Azul
- *               maxSize:
+ *                 example: Blue Team
+ *               description:
+ *                 type: string
+ *                 example: Something to describe the team
+ *               capacity:
  *                 type: integer
- *                 example: 5
+ *                 example: Between 3 and 5 (participants)
+ *               visibility:
+ *                 type: integer
+ *                 example: 0 (Public Team) or 1 (Private Team)
+ *               competitions_id:
+ *                 type: integer
+ *                 example: 1 (Competition ID)
+ *               team_passbooks_id:
+ *                 type: integer
+ *                 example: 1 (Passbook ID)
+ *               team_admin:
+ *                 type: integer
+ *                 example: 1 (Admin ID)
  *     responses:
  *       201:
  *         description: Equipa criada com sucesso
@@ -135,7 +150,10 @@ router.get("/:id/daily-challenges", teamsController.getTeamChallenges);
  *       200:
  *         description: Lista de streaks
  */
-router.get("/:id/weekly-challenges", teamsController.getTeamParticipantsStreaks);
+router.get(
+  "/:id/weekly-challenges",
+  teamsController.getTeamParticipantsStreaks
+);
 
 /**
  * @swagger
@@ -155,7 +173,5 @@ router.get("/:id/weekly-challenges", teamsController.getTeamParticipantsStreaks)
  *         description: Lista de equipas da competição
  */
 router.get("/competition/:id", teamsController.getTeamsByCompetition);
-
-
 
 module.exports = router;

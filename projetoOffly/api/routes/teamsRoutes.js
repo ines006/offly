@@ -6,15 +6,15 @@ const teamsController = require("../controllers/teamsController");
  * @swagger
  * tags:
  *   name: Teams
- *   description: Endpoints relacionados às equipas e os seus desafios
+ *   description: Endpoints related to teams and their challenges
  */
 
 /**
  * @swagger
  * /teams:
  *   get:
- *     summary: Listar equipes com filtro opcional e paginação
- *     description: Retorna uma lista de equipes com o número de participantes, ordenadas por número de participantes em ordem decrescente. Suporta filtro para equipes com menos de 5 participantes e paginação com no máximo 4 equipes por página.
+ *     summary: List teams with optional filtering and pagination
+ *     description: Returns a list of teams with their participant count, sorted by the number of participants in descending order. Supports filtering for teams with fewer than 5 participants and pagination (max 4 teams per page).
  *     tags: [Teams]
  *     parameters:
  *       - in: query
@@ -22,17 +22,17 @@ const teamsController = require("../controllers/teamsController");
  *         schema:
  *           type: string
  *           enum: [under-5]
- *         description: Filtrar equipes com menos de 5 participantes (opcional)
+ *         description: Filter teams with fewer than 5 participants (optional)
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           minimum: 1
  *           default: 1
- *         description: Número da página para paginação (máximo 4 equipes por página)
+ *         description: Page number for pagination (4 teams per page)
  *     responses:
  *       200:
- *         description: Lista de equipes retornada com sucesso
+ *         description: List of teams retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -68,43 +68,29 @@ const teamsController = require("../controllers/teamsController");
  *                       type: integer
  *                       example: 4
  *       400:
- *         description: Parâmetro de paginação inválido
+ *         description: Invalid pagination parameter
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: O parâmetro page deve ser um número inteiro maior que 0
+ *             example:
+ *               message: O parâmetro de página deve ser um número inteiro maior que 0
  *       404:
- *         description: Nenhuma equipe encontrada
+ *         description: No teams found
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *               examples:
- *                 noTeams:
- *                   value:
- *                     message: Nenhuma equipa encontrada com menos de 5 participantes
- *                 invalidPage:
- *                   value:
- *                     message: Nenhuma equipa encontrada para esta página
+ *             examples:
+ *               noTeams:
+ *                 value:
+ *                   message: Não foram encontradas equipas com menos de 5 participantes
+ *               invalidPage:
+ *                 value:
+ *                   message: Não foram encontradas equipas para esta página
  *       500:
- *         description: Erro interno do servidor
+ *         description: Internal server error
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Erro ao listar equipas
- *                 error:
- *                   type: string
+ *             example:
+ *               message: Falha ao listar as equipas
+ *               error: Detalhes do erro
  */
 router.get("/", teamsController.getTeams);
 
@@ -112,18 +98,18 @@ router.get("/", teamsController.getTeams);
  * @swagger
  * /teams/search:
  *   get:
- *     summary: Pesquisa equipas pelo nome
+ *     summary: Search teams by name
  *     tags: [Teams]
  *     parameters:
  *       - in: query
  *         name: name
  *         required: true
- *         description: Nome da equipa para pesquisa
+ *         description: Team name to search for
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Lista de equipas encontradas
+ *         description: List of matching teams
  *         content:
  *           application/json:
  *             schema:
@@ -138,7 +124,23 @@ router.get("/", teamsController.getTeams);
  *                   country:
  *                     type: string
  *       400:
- *         description: Parâmetro inválido
+ *         description: Invalid parameter
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: O parâmetro nome é obrigatório
+ *      404:
+ *         description: No teams found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Não foram encontradas equipas com esse nome
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao procurar equipas
  */
 router.get("/search", teamsController.searchTeamsByName);
 
@@ -146,7 +148,7 @@ router.get("/search", teamsController.searchTeamsByName);
  * @swagger
  * /teams/{id}:
  *   get:
- *     summary: Listar participantes de uma equipa
+ *     summary: Get participants from a team
  *     tags: [Teams]
  *     parameters:
  *       - in: path
@@ -154,10 +156,31 @@ router.get("/search", teamsController.searchTeamsByName);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da equipa
+ *         description: Team ID
  *     responses:
  *       200:
- *         description: Lista de participantes da equipa
+ *         description: List of team participants
+ *         content:
+ *           application/json:
+ *             example:
+ *               teamId: 1
+ *               participants:
+ *                 - id: 1
+ *                   name: Alice
+ *                   email: alice@example.com
+ *       404:
+ *         description: Team not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Equipa não encontrada
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao obter participantes da equipa
+
  */
 router.get("/:id", teamsController.getTeamParticipants);
 
@@ -165,7 +188,7 @@ router.get("/:id", teamsController.getTeamParticipants);
  * @swagger
  * /teams:
  *   post:
- *     summary: Criar nova equipa
+ *     summary: Create a new team
  *     tags: [Teams]
  *     requestBody:
  *       required: true
@@ -173,31 +196,71 @@ router.get("/:id", teamsController.getTeamParticipants);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - description
+ *               - capacity
+ *               - visibility
+ *               - competitions_id
+ *               - team_passbooks_id
+ *               - team_admin
  *             properties:
  *               name:
  *                 type: string
  *                 example: Blue Team
  *               description:
  *                 type: string
- *                 example: Something to describe the team
+ *                 example: A team for experienced players
  *               capacity:
  *                 type: integer
- *                 example: Between 3 and 5 (participants)
+ *                 example: 5
  *               visibility:
  *                 type: integer
- *                 example: 0 (Public Team) or 1 (Private Team)
+ *                 example: 0
+ *                 description: 0 = Public, 1 = Private
  *               competitions_id:
  *                 type: integer
- *                 example: 1 (Competition ID)
+ *                 example: 1
  *               team_passbooks_id:
  *                 type: integer
- *                 example: 1 (Passbook ID)
+ *                 example: 2
  *               team_admin:
  *                 type: integer
- *                 example: 1 (Admin ID)
+ *                 example: 3
  *     responses:
  *       201:
- *         description: Equipa criada com sucesso
+ *         description: Team successfully created
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Equipa criada com sucesso
+ *               teamId: 1
+ *       400:
+ *         description: Invalid request body
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Os dados enviados estão incorretos ou incompletos
+ *      
+ *       409:
+ *         description: Conflict - Duplicate team name or other data conflict
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Já existe uma equipa com esse nome
+ *       422:
+ *         description: Unprocessable Entity - Invalid or incomplete data
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Os dados fornecidos não são válidos
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao criar a equipa
+
  */
 router.post("/", teamsController.createTeam);
 
@@ -205,7 +268,7 @@ router.post("/", teamsController.createTeam);
  * @swagger
  * /teams/{id}/daily-challenges:
  *   get:
- *     summary: Listar desafios diários da equipa
+ *     summary: Get daily challenges of a team
  *     tags: [Teams]
  *     parameters:
  *       - in: path
@@ -213,10 +276,29 @@ router.post("/", teamsController.createTeam);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da equipa
+ *         description: Team ID
  *     responses:
  *       200:
- *         description: Lista de desafios diários
+ *         description: List of daily challenges
+ *         content:
+ *           application/json:
+ *             example:
+ *               challenges:
+ *                 - id: 1
+ *                   title: Push-up Challenge
+ *                   completedBy: [1, 3]
+ *       404:
+ *         description: Team or challenges not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Equipa ou desafios não encontrados
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao listar desafios diários
  */
 router.get("/:id/daily-challenges", teamsController.getTeamChallenges);
 
@@ -224,7 +306,7 @@ router.get("/:id/daily-challenges", teamsController.getTeamChallenges);
  * @swagger
  * /teams/{id}/weekly-challenges:
  *   get:
- *     summary: Listar streaks dos participantes em desafios semanais
+ *     summary: Get weekly challenge streaks of team participants
  *     tags: [Teams]
  *     parameters:
  *       - in: path
@@ -232,21 +314,37 @@ router.get("/:id/daily-challenges", teamsController.getTeamChallenges);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da equipa
+ *         description: Team ID
  *     responses:
  *       200:
- *         description: Lista de streaks
+ *         description: List of streaks
+ *         content:
+ *           application/json:
+ *             example:
+ *               streaks:
+ *                 - participantId: 1
+ *                   name: Alice
+ *                   streak: 4
+ *       404:
+ *         description: No streaks found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Nenhum streak encontrado
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao listar streaks semanais
  */
-router.get(
-  "/:id/weekly-challenges",
-  teamsController.getTeamParticipantsStreaks
-);
+router.get("/:id/weekly-challenges", teamsController.getTeamParticipantsStreaks);
 
 /**
  * @swagger
  * /teams/competition/{id}:
  *   get:
- *     summary: Listar equipas de uma competição (ordenadas por ranking, se aplicável)
+ *     summary: Get all teams from a competition (sorted by ranking if applicable)
  *     tags: [Teams]
  *     parameters:
  *       - in: path
@@ -254,10 +352,30 @@ router.get(
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da competição
+ *         description: Competition ID
  *     responses:
  *       200:
- *         description: Lista de equipas da competição
+ *         description: List of competition teams
+ *         content:
+ *           application/json:
+ *             example:
+ *               competitionId: 1
+ *               teams:
+ *                 - id: 1
+ *                   name: Blue Team
+ *                   ranking: 2
+ *       404:
+ *         description: No teams found for competition
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Não foram encontradas equipas para esta competição
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao listar equipas da competição
  */
 router.get("/competition/:id", teamsController.getTeamsByCompetition);
 

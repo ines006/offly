@@ -7,7 +7,10 @@ const authController = require("../controllers/authController");
  * tags:
  *   - name: Auth
  *     description: Authentication Endpoints
+ */
 
+/**
+ * @swagger
  * /auth/login:
  *   post:
  *     summary: Authenticate user and obtain a JWT token
@@ -55,9 +58,8 @@ const authController = require("../controllers/authController");
  *                     email:
  *                       type: string
  *                       example: user@example.com
-
  *       422:
- *         description: Missing data
+ *         description: Missing required fields
  *         content:
  *           application/json:
  *             schema:
@@ -65,7 +67,7 @@ const authController = require("../controllers/authController");
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "Email e palavra-passe são obrigatórios"
+ *                   example: Email and password are required
  *       401:
  *         description: Invalid credentials
  *         content:
@@ -75,9 +77,9 @@ const authController = require("../controllers/authController");
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "Credenciais inválidas"
+ *                   example: Invalid credentials
  *       500:
- *         description: Internal Server Error
+ *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
@@ -85,7 +87,7 @@ const authController = require("../controllers/authController");
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "Erro ao fazer login"
+ *                   example: Failed to login due to a server error
  */
 
 router.post("/login", authController.login);

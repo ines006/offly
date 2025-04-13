@@ -2,7 +2,7 @@
  * @swagger
  * tags:
  *   name: Participants
- *   description: Endpoints para gerir participantes e interações com desafios e respostas
+ *   description: Endpoints to manage participants and their interactions with challenges and answers
  */
 
 const express = require("express");
@@ -15,11 +15,25 @@ const authorizeSelf = require("../middlewares/authorize");
  * @swagger
  * /participants:
  *   get:
- *     summary: Listar todos os participantes
+ *     summary: Get all participants
  *     tags: [Participants]
  *     responses:
  *       200:
- *         description: Lista de participantes
+ *         description: List of participants
+ *         content:
+ *           application/json:
+ *             example:
+ *               - id: 1
+ *                 name: João Silva
+ *                 email: joao@example.com
+ *                 username: joaosilva
+ *       500:
+ *         description: Failed to retrieve participants
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Falha ao obter participantes
+ *               error: Erro interno no servidor
  */
 router.get("/", participantsController.getAllParticipants);
 
@@ -27,7 +41,7 @@ router.get("/", participantsController.getAllParticipants);
  * @swagger
  * /participants/{id}:
  *   get:
- *     summary: Buscar participante por ID
+ *     summary: Get participant by ID
  *     tags: [Participants]
  *     parameters:
  *       - in: path
@@ -35,12 +49,29 @@ router.get("/", participantsController.getAllParticipants);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID do participante
  *     responses:
  *       200:
- *         description: Participante encontrado
+ *         description: Participant found
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: 1
+ *               name: João Silva
+ *               email: joao@example.com
+ *               username: joaosilva
  *       404:
- *         description: Participante não encontrado
+ *         description: Participant not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante não encontrado
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Falha ao obter participante
+ *               error: Erro interno no servidor
  */
 router.get("/:id", participantsController.getParticipantById);
 
@@ -48,7 +79,7 @@ router.get("/:id", participantsController.getParticipantById);
  * @swagger
  * /participants:
  *   post:
- *     summary: Criar novo participante
+ *     summary: Create a new participant
  *     tags: [Participants]
  *     requestBody:
  *       required: true
@@ -56,24 +87,64 @@ router.get("/:id", participantsController.getParticipantById);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - username
+ *               - email
+ *               - password
+ *               - gender
  *             properties:
  *               name:
  *                 type: string
- *                 example: name / surname
+ *                 example: João Silva
  *               username:
  *                 type: string
- *                 example: username
+ *                 example: joaosilva
  *               email:
  *                 type: string
- *                 example: example@email.com
+ *                 example: joao@example.com
  *               password:
  *                 type: string
+ *                 example: Teste123!
  *               gender:
  *                 type: integer
- *                 example: 0 (male) or 1 (female)
+ *                 example: 0
  *     responses:
  *       201:
- *         description: Participante criado
+ *         description: Participant created
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante criado com sucesso
+ *               participant:
+ *                 id: 2
+ *                 name: João Silva
+ *                 username: joaosilva
+ *                 email: joao@example.com
+ *       400:
+ *         description: Invalid or missing fields
+ *         content:
+ *           application/json:
+ *             examples:
+ *               missingFields:
+ *                 value:
+ *                   message: Campos obrigatórios em falta
+ *               invalidEmail:
+ *                 value:
+ *                   message: Formato de email inválido
+ *               duplicateUsername:
+ *                 value:
+ *                   message: Nome de utilizador já está em uso
+ *               weakPassword:
+ *                 value:
+ *                   message: A palavra-passe deve conter letras maiúsculas, minúsculas, número e caractere especial
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Falha ao criar participante
+ *               error: Erro interno no servidor
  */
 router.post("/", participantsController.createParticipant);
 
@@ -81,8 +152,7 @@ router.post("/", participantsController.createParticipant);
  * @swagger
  * /participants/{id}:
  *   put:
- *     summary: Atualizar os dados de um participante
- *     description: Atualiza os campos fornecidos (nome, username, email e/ou palavra-passe) de um participante. Pelo menos um campo deve ser fornecido, e nenhum campo pode ser vazio.
+ *     summary: Update participant details
  *     tags: [Participants]
  *     parameters:
  *       - in: path
@@ -90,112 +160,63 @@ router.post("/", participantsController.createParticipant);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID do participante a ser atualizado
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 description: Nome do participante (não pode ser vazio)
- *                 example: João Novo
- *               username:
- *                 type: string
- *                 description: Username único do participante (não pode ser vazio ou duplicado)
- *                 example: joaonovo
- *               email:
- *                 type: string
- *                 description: Email do participante (deve ser um email válido e não duplicado)
- *                 example: joao.novo@example.com
- *               password:
- *                 type: string
- *                 description: palavra-passe do participante (mínimo 6 caracteres, com pelo menos uma maiúscula, uma minúscula, um número e um caractere especial)
- *                 example: Teste123!
- *             minProperties: 1
  *           examples:
  *             updatePassword:
- *               summary: Atualizar apenas a palavra-passe
+ *               summary: Atualizar apenas palavra-passe
  *               value:
- *                 password: Teste123!
+ *                 password: NovaPass123!
  *             updateMultiple:
  *               summary: Atualizar múltiplos campos
  *               value:
- *                 name: João Novo
- *                 username: joaonovo
- *                 email: joao.novo@example.com
+ *                 name: João Atualizado
+ *                 username: joaoatualizado
+ *                 email: joao.atualizado@example.com
  *     responses:
  *       200:
- *         description: Participante atualizado com sucesso
+ *         description: Participant updated
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Participante atualizado
- *                 participant:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     name:
- *                       type: string
- *                       example: João Novo
- *                     username:
- *                       type: string
- *                       example: joaonovo
- *                     email:
- *                       type: string
- *                       example: joao.novo@example.com
+ *             example:
+ *               message: Participante atualizado com sucesso
+ *               participant:
+ *                 id: 1
+ *                 name: João Atualizado
+ *                 username: joaoatualizado
+ *                 email: joao.atualizado@example.com
  *       400:
- *         description: Erro de validação (campos inválidos, vazios, duplicados, etc.)
+ *         description: Invalid or missing fields
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *               examples:
- *                 missingFields:
- *                   value:
- *                     message: Pelo menos um campo deve ser fornecido para atualização
- *                 invalidEmail:
- *                   value:
- *                     message: Formato de email inválido
- *                 duplicateUsername:
- *                   value:
- *                     message: Username já está em uso
- *                 invalidPassword:
- *                   value:
- *                     message: A palavra-passe deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.
+ *             examples:
+ *               missingFields:
+ *                 value:
+ *                   message: Pelo menos um campo deve ser fornecido para atualização
+ *               invalidEmail:
+ *                 value:
+ *                   message: Formato de email inválido
+ *               duplicateUsername:
+ *                 value:
+ *                   message: Nome de utilizador já está em uso
+ *               invalidPassword:
+ *                 value:
+ *                   message: A palavra-passe deve conter letras maiúsculas, minúsculas, número e caractere especial
  *       404:
- *         description: Participante não encontrado
+ *         description: Participant not found
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Participante não encontrado
+ *             example:
+ *               message: Participante não encontrado
  *       500:
- *         description: Erro interno do servidor
+ *         description: Server error
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Erro ao atualizar participante
- *                 error:
- *                   type: string
+ *             example:
+ *               message: Falha ao atualizar participante
+ *               error: Erro interno no servidor
  */
 router.put("/:id", participantsController.updateParticipant);
 
@@ -203,7 +224,7 @@ router.put("/:id", participantsController.updateParticipant);
  * @swagger
  * /participants/{id}:
  *   delete:
- *     summary: Remover participante
+ *     summary: Delete a participant
  *     tags: [Participants]
  *     parameters:
  *       - in: path
@@ -213,7 +234,24 @@ router.put("/:id", participantsController.updateParticipant);
  *           type: integer
  *     responses:
  *       200:
- *         description: Participante removido
+ *         description: Participant deleted
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante eliminado com sucesso
+ *       404:
+ *         description: Participant not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante não encontrado
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Falha ao eliminar participante
+ *               error: Erro interno no servidor
  */
 router.delete("/:id", participantsController.deleteParticipant);
 
@@ -221,19 +259,28 @@ router.delete("/:id", participantsController.deleteParticipant);
  * @swagger
  * /participants/{id}/answers:
  *   get:
- *     summary: Listar respostas do questionário inicial de um participante
+ *     summary: Get participant's answers
  *     tags: [Participants]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
  *     responses:
  *       200:
- *         description: Respostas listadas
+ *         description: Answers retrieved
+ *         content:
+ *           application/json:
+ *             example:
+ *               answers: ["resposta1", "resposta2"]
+ *       404:
+ *         description: Participant not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante não encontrado
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Falha ao obter respostas
+ *               error: Erro interno no servidor
  */
 router.get(
   "/:id/answers",
@@ -246,33 +293,40 @@ router.get(
  * @swagger
  * /participants/{id}/answers:
  *   post:
- *     summary: Adicionar ou atualizar respostas do questionário inicial
+ *     summary: Submit/update participant's answers
  *     tags: [Participants]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - answers
- *             properties:
- *               answers:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["answer1", "answer2", "answer3", "answer4"]
+ *           example:
+ *             answers: ["resposta1", "resposta2"]
  *     responses:
  *       200:
- *         description: Respostas salvas
+ *         description: Answers saved
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Respostas guardadas com sucesso
+ *       400:
+ *         description: Missing or invalid answers
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: O campo 'answers' é obrigatório
+ *       404:
+ *         description: Participant not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante não encontrado
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Falha ao guardar respostas
+ *               error: Erro interno no servidor
  */
 router.post(
   "/:id/answers",
@@ -285,7 +339,7 @@ router.post(
  * @swagger
  * /participants/{id}/daily-challenge:
  *   get:
- *     summary: Verificar desafio diário ativo
+ *     summary: Check current daily challenge for participant
  *     tags: [Participants]
  *     parameters:
  *       - in: path
@@ -293,9 +347,31 @@ router.post(
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Participant ID
  *     responses:
  *       200:
- *         description: Desafio diário retornado
+ *         description: Daily challenge retrieved
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: 1
+ *               title: Desafio de hoje
+ *               description: Caminhar 10 minutos
+ *               level: 1
+ *               completed: false
+ *       404:
+ *         description: Challenge or participant not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Desafio diário ou participante não encontrado
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Falha ao obter desafio diário
+ *               error: Erro interno no servidor
  */
 router.get("/:id/daily-challenge", participantsController.getDailyChallenge);
 
@@ -303,7 +379,7 @@ router.get("/:id/daily-challenge", participantsController.getDailyChallenge);
  * @swagger
  * /participants/{id}/daily-challenge:
  *   post:
- *     summary: Criar novo desafio diário
+ *     summary: Create a new daily challenge for a participant
  *     tags: [Participants]
  *     parameters:
  *       - in: path
@@ -311,7 +387,7 @@ router.get("/:id/daily-challenge", participantsController.getDailyChallenge);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID do participante
+ *         description: Participant ID
  *     requestBody:
  *       required: true
  *       content:
@@ -325,32 +401,53 @@ router.get("/:id/daily-challenge", participantsController.getDailyChallenge);
  *             properties:
  *               title:
  *                 type: string
- *                 description: Título do desafio diário
+ *                 example: Novo desafio
  *               description:
  *                 type: string
- *                 description: Descrição do desafio diário
+ *                 example: Meditar 5 minutos
  *               level:
  *                 type: integer
- *                 description: Nível do desafio diário
- *             example:
- *               title: "Challenge example"
- *               description: "Challenge description"
- *               level: "Between 1 and 3"
+ *                 example: 2
+ *                 description: Nível de dificuldade (1 a 3)
  *     responses:
  *       201:
- *         description: Desafio diário criado
- *
+ *         description: Daily challenge created
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Desafio diário criado com sucesso
+ *               challenge:
+ *                 id: 3
+ *                 title: Novo desafio
+ *                 description: Meditar 5 minutos
+ *                 level: 2
+ *       400:
+ *         description: Missing or invalid fields
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Todos os campos (title, description e level) são obrigatórios
+ *       404:
+ *         description: Participant not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante não encontrado
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao criar desafio diário
+ *               error: Erro interno no servidor
  */
-router.post(
-  "/:id/daily-challenge",
-  participantsController.createDailyChallenge
-);
+router.post("/:id/daily-challenge", participantsController.createDailyChallenge);
 
 /**
  * @swagger
  * /participants/{id}/daily-challenge/complete:
  *   put:
- *     summary: Concluir desafio diário
+ *     summary: Mark the participant's daily challenge as completed
  *     tags: [Participants]
  *     parameters:
  *       - in: path
@@ -358,13 +455,32 @@ router.post(
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Participant ID
  *     responses:
  *       200:
- *         description: Desafio concluído
+ *         description: Challenge marked as completed
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Desafio diário marcado como concluído
+ *       404:
+ *         description: Participant or challenge not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Participante ou desafio não encontrado
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Erro ao marcar desafio como concluído
+ *               error: Erro interno no servidor
  */
 router.put(
   "/:id/daily-challenge/complete",
   participantsController.completeDailyChallenge
 );
+
 
 module.exports = router;

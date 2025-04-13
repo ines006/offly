@@ -57,7 +57,7 @@ const Participants = sequelize.define(
       },
     },
     teams_team_admin: {
-      type: DataTypes.BOOLEAN,
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
   },

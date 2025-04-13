@@ -8,7 +8,7 @@ const {
 } = require("../models");
 const { Op, literal } = require("sequelize");
 
-// Listar informações de uma equipa
+// Listar informações de uma equipa "x"
 
 exports.getTeamParticipants = async (req, res) => {
   try {
@@ -31,7 +31,7 @@ exports.getTeamParticipants = async (req, res) => {
     });
 
     if (!team) {
-      return res.status(404).json({ message: "Equipa não encontrada" });
+      return res.status(404).json({ message: "Team not found" });
     }
 
     res.json({
@@ -45,34 +45,42 @@ exports.getTeamParticipants = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error(
-      "Erro detalhado ao listar participantes da equipa:",
-      error.stack
-    );
+    console.error("Error listing participants:", error.stack);
     res
       .status(500)
-      .json({ message: "Erro ao listar participantes", error: error.message });
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
-// Criar uma nova equipa
+//Criação de equipa
 exports.createTeam = async (req, res) => {
   try {
+    // Verificar autenticação
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    // Verificar se o usuário já pertence a uma equipe
+    const participant = await Participants.findByPk(req.user.id);
+    if (participant && participant.teams_id) {
+      return res.status(403).json({
+        message: "You are already a member of a team",
+      });
+    }
+
     const {
       name,
       description,
-      points,
       capacity,
       visibility,
       competitions_id,
       team_passbooks_id,
-      team_admin,
     } = req.body;
 
     if (!name) {
-      return res
-        .status(400)
-        .json({ message: "O nome da equipa é obrigatório" });
+      return res.status(400).json({ message: "Team name is required" });
     }
 
     // Normalizar o nome para minúsculas
@@ -82,14 +90,14 @@ exports.createTeam = async (req, res) => {
     if (normalizedName.length < 3 || normalizedName.length > 40) {
       return res
         .status(422)
-        .json({ message: "O nome deve ter entre 3 e 40 caracteres" });
+        .json({ message: "Team name must be between 3 and 40 characters" });
     }
 
     // Validar limite de caracteres para description
-    if (description.length < 3 || description.length > 60) {
+    if (description && (description.length < 3 || description.length > 60)) {
       return res
         .status(422)
-        .json({ message: "A descrição não pode exceder 60 caracteres" });
+        .json({ message: "Description must be between 3 and 60 characters" });
     }
 
     // Validar capacity
@@ -99,46 +107,63 @@ exports.createTeam = async (req, res) => {
       capacity < 3 ||
       capacity > 5
     ) {
-      return res.status(422).json({
-        message:
-          "O número de elementos de uma equipa só pode variar entre 3 e 5",
-      });
+      return res
+        .status(422)
+        .json({ message: "Team capacity must be an integer between 3 and 5" });
     }
 
     // Validar visibility
     if (visibility !== 0 && visibility !== 1) {
-      return res.status(422).json({
-        message: "A visibilidade deve ser 0 (pública) ou 1 (privada)",
-      });
+      return res
+        .status(422)
+        .json({ message: "Visibility must be 0 (public) or 1 (private)" });
     }
 
-    // Verificar se o nome da equipa já existe (case-insensitive)
+    // Verificar se o nome da equipe já existe (case-insensitive)
     const existingTeam = await Teams.findOne({
       where: { name: normalizedName },
     });
     if (existingTeam) {
       return res
         .status(409)
-        .json({ message: "Já existe uma equipa com esse nome!" });
+        .json({ message: "A team with this name already exists" });
     }
 
     if (competitions_id) {
       const competition = await Competitions.findByPk(competitions_id);
       if (!competition) {
-        return res.status(404).json({ message: "Competição não encontrada" });
+        return res.status(404).json({ message: "Competition not found" });
       }
     }
 
+    // Criar a nova equipa com o utilizador como admin
     const newTeam = await Teams.create({
-      name: normalizedName, // Salvar como minúsculas
+      name: normalizedName,
       description,
       points: 100,
       capacity,
       visibility,
       competitions_id,
       team_passbooks_id,
-      team_admin,
+      team_admin: req.user.id, // Definir o utilizador como admin
     });
+
+    // Associar o participante à equipa como membro e administrador
+    const [updatedRows] = await Participants.update(
+      {
+        teams_id: newTeam.id,
+        teams_team_admin: newTeam.id, // Definir o utilizador como admin da equipa
+      },
+      { where: { id: req.user.id } }
+    );
+
+    if (updatedRows === 0) {
+      // Reverter a criação da equipa se a associação falhar
+      await Teams.destroy({ where: { id: newTeam.id } });
+      return res.status(500).json({
+        message: "Failed to associate user with the team",
+      });
+    }
 
     res.status(201).json({
       id: newTeam.id,
@@ -152,10 +177,10 @@ exports.createTeam = async (req, res) => {
       team_admin: newTeam.team_admin,
     });
   } catch (error) {
-    console.error("Erro detalhado ao criar equipa:", error.stack);
+    console.error("Error creating team:", error.stack);
     res
       .status(500)
-      .json({ message: "Erro ao criar equipa", error: error.message });
+      .json({ message: "Error creating team", error: error.message });
   }
 };
 
@@ -170,7 +195,7 @@ exports.getTeamsByCompetition = async (req, res) => {
       attributes: ["name"],
     });
     if (!competition) {
-      return res.status(404).json({ message: "Competição não encontrada" });
+      return res.status(404).json({ message: "Competition not found" });
     }
 
     // Configurar opções de ordenação com base no query param
@@ -188,7 +213,7 @@ exports.getTeamsByCompetition = async (req, res) => {
     if (!teams.length) {
       return res
         .status(404)
-        .json({ message: "Nenhuma equipa encontrada para esta competição" });
+        .json({ message: "No teams found for this competition" });
     }
 
     res.json({
@@ -199,16 +224,14 @@ exports.getTeamsByCompetition = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error(
-      "Erro detalhado ao listar equipas da competição:",
-      error.stack
-    );
+    console.error("Error listing teams:", error.stack);
     res
       .status(500)
-      .json({ message: "Erro ao listar equipas", error: error.message });
+      .json({ message: "Error listing teams", error: error.message });
   }
 };
 
+//Desafios diários validados dos participantes de uma equipa
 exports.getTeamChallenges = async (req, res) => {
   try {
     const teamId = req.params.id;
@@ -218,13 +241,13 @@ exports.getTeamChallenges = async (req, res) => {
     if (!date) {
       return res
         .status(422)
-        .json({ message: "A data é obrigatória (use ?date=YYYY-MM-DD)" });
+        .json({ message: "The date is required (use ?date=YYYY-MM-DD)" });
     }
 
     // Verificar se a equipa existe
     const team = await Teams.findByPk(teamId);
     if (!team) {
-      return res.status(404).json({ message: "Equipa não encontrada" });
+      return res.status(404).json({ message: "Team not found" });
     }
 
     const challenges = await ParticipantsHasChallenges.findAll({
@@ -267,8 +290,7 @@ exports.getTeamChallenges = async (req, res) => {
 
     if (!challenges.length) {
       return res.status(404).json({
-        message:
-          "Nenhum desafio encontrado para esta equipa na data especificada",
+        message: "No challenges found for this team on the specified dat",
       });
     }
 
@@ -285,10 +307,10 @@ exports.getTeamChallenges = async (req, res) => {
       }))
     );
   } catch (error) {
-    console.error("Erro detalhado ao listar desafios da equipa:", error.stack);
+    console.error("Error listing challenges:", error.stack);
     res
       .status(500)
-      .json({ message: "Erro ao listar desafios", error: error.message });
+      .json({ message: "Error listing challenges", error: error.message });
   }
 };
 
@@ -302,7 +324,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
     if (!week || !/^\d{4}-\d{2}-\d{2}$/.test(week)) {
       return res.status(422).json({
         message:
-          "A semana é obrigatória e deve estar no formato YYYY-MM-DD (ex.: 2025-03-31)",
+          "The week is required and must be in YYYY-MM-DD format (e.g., 2025-03-31)",
       });
     }
 
@@ -310,9 +332,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
     const startDate = new Date(week);
     if (startDate.getDay() !== 1) {
       // 1 = segunda-feira
-      return res
-        .status(422)
-        .json({ message: "A data deve ser uma segunda-feira" });
+      return res.status(422).json({ message: "The date must be a Monday" });
     }
 
     // Verificar se a equipa existe
@@ -327,7 +347,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
       ],
     });
     if (!team) {
-      return res.status(404).json({ message: "Equipa não encontrada" });
+      return res.status(404).json({ message: "Team not found" });
     }
 
     // Determinar o intervalo da semana (segunda a domingo)
@@ -383,7 +403,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
 
       return res.status(404).json({
         message:
-          "Nenhum desafio semanal encontrado para esta equipa na semana especificada",
+          "No weekly challenges found for this team in the specified week",
       });
     }
 
@@ -421,13 +441,10 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
 
     res.json(streaks);
   } catch (error) {
-    console.error(
-      "Erro detalhado ao listar streaks dos participantes:",
-      error.stack
-    );
+    console.error("Error listing streaks:", error.stack);
     res
       .status(500)
-      .json({ message: "Erro ao listar streaks", error: error.message });
+      .json({ message: "Error listing streaks", error: error.message });
   }
 };
 
@@ -441,7 +458,7 @@ exports.getTeams = async (req, res) => {
     // Validar page
     if (isNaN(page) || parseInt(page) < 1) {
       return res.status(422).json({
-        message: "O parâmetro page deve ser um número inteiro maior que 0",
+        message: "Parameter must be greater than or equal to 1.",
       });
     }
 
@@ -503,19 +520,19 @@ exports.getTeams = async (req, res) => {
       limit: limit,
       offset: offset,
       raw: true,
-      subQuery: false, // Evitar subquery
-      logging: console.log, // Depurar query
+      subQuery: false,
+      logging: console.log,
     });
 
     if (!teams.length && capacity === "under-5") {
       return res.status(404).json({
-        message: "Nenhuma equipa encontrada com menos de 5 participantes",
+        message: "No teams found with fewer than 5 participants",
       });
     }
 
     if (!teams.length && page > 1) {
       return res.status(404).json({
-        message: "Nenhuma equipa encontrada para esta página",
+        message: "No teams found for this page",
       });
     }
 
@@ -529,14 +546,14 @@ exports.getTeams = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Erro ao listar equipas:", error);
+    console.error("Error listing teams:", error);
     res
       .status(500)
-      .json({ message: "Erro ao listar equipas", error: error.message });
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
-// Novo endpoint: Pesquisar equipas por nome
+// Pesquisar equipas por nome na barra de pesquisa
 exports.searchTeamsByName = async (req, res) => {
   try {
     const { name } = req.query;
@@ -544,7 +561,7 @@ exports.searchTeamsByName = async (req, res) => {
     if (!name) {
       return res
         .status(422)
-        .json({ message: "O parâmetro 'name' é obrigatório" });
+        .json({ message: "The 'name' parameter is required" });
     }
 
     const teams = await Teams.findAll({
@@ -581,9 +598,7 @@ exports.searchTeamsByName = async (req, res) => {
     });
 
     if (!teams.length) {
-      return res
-        .status(404)
-        .json({ message: "Nenhuma equipa encontrada com esse nome" });
+      return res.status(404).json({ message: "No teams found with this name" });
     }
 
     res.json(
@@ -605,10 +620,10 @@ exports.searchTeamsByName = async (req, res) => {
       }))
     );
   } catch (error) {
-    console.error("Erro ao pesquisar equipas por nome:", error.stack);
+    console.error("Error searching teams", error.stack);
     res
       .status(500)
-      .json({ message: "Erro ao pesquisar equipas", error: error.message });
+      .json({ message: "Error searching teams", error: error.message });
   }
 };
 

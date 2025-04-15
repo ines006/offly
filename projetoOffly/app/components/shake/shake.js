@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { BackHandler } from "react-native";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { Accelerometer } from "expo-sensors";
@@ -65,7 +66,6 @@ export default function Shake() {
   }, []);
 
   useEffect(() => {
-<<<<<<< HEAD
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => true
@@ -74,12 +74,6 @@ export default function Shake() {
       const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
       if (totalForce > 4) {
-=======
-    const subscription = Accelerometer.addListener(({ x, y, z }) => {
-      const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
-
-      if (totalForce > 2) {
->>>>>>> 41146e4815a86e6d533b591fae45d279f406d038
         shakeCount.current += 1;
 
         if (shakeCount.current >= 5 && !isNavigating) {

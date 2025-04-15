@@ -401,8 +401,8 @@ const screens = [
       "Desafia-te a passar menos tempo no ecrã e a provar que és o melhor.",
     renderContent: () => (
       <Svg
-      accessible={true}  
-      accessibilityLabel="Ilustração Torneio"
+        accessible={true}
+        accessibilityLabel="Ilustração Torneio"
         width="193"
         height="195"
         viewBox="0 0 193 195"
@@ -688,8 +688,8 @@ const screens = [
       "Agita o telemóvel, revela três cartas e escolhe o teu próximo desafio!",
     renderContent: () => (
       <Svg
-      accessible={true}  
-      accessibilityLabel="Ilustração Desafio"
+        accessible={true}
+        accessibilityLabel="Ilustração Desafio"
         width="190"
         height="191"
         viewBox="0 0 190 191"
@@ -891,8 +891,8 @@ const screens = [
       "Desafios diários e semanais para testar os teus limites, acumular pontos e desbloquear conquistas incríveis.",
     renderContent: () => (
       <Svg
-      accessible={true}  
-      accessibilityLabel="Ilustração Conquistas"
+        accessible={true}
+        accessibilityLabel="Ilustração Conquistas"
         width="190"
         height="190"
         viewBox="0 0 190 190"
@@ -1091,8 +1091,8 @@ const screens = [
       "Cada vitória conta! Acumula pontos,  sobe de posiçõe e ganha reconhecimento como uma das melhores equipas do torneio.",
     renderContent: () => (
       <Svg
-      accessible={true}  
-      accessibilityLabel="Ilustração Troféu"
+        accessible={true}
+        accessibilityLabel="Ilustração Troféu"
         width="190"
         height="190"
         viewBox="0 0 190 190"
@@ -1228,8 +1228,8 @@ const screens = [
       "Guarda e partilha momentos especiais ao completar a tua caderneta de fotos. Cada conquista merece ser lembrada!",
     renderContent: () => (
       <Svg
-      accessible={true}  
-      accessibilityLabel="Ilustração Caderneta"
+        accessible={true}
+        accessibilityLabel="Ilustração Caderneta"
         width="190"
         height="192"
         viewBox="0 0 190 192"
@@ -2079,12 +2079,53 @@ const App = () => {
 
         <ButtonsContainer>
           {currentScreen > 0 ? (
-            <TextButton onPress={prevScreen}>
-              <TextButtonLabel>Anterior</TextButtonLabel>
-            </TextButton>
+            <Button onPress={prevScreen}>
+              <Svg
+                accessible={true}
+                accessibilityLabel="Botão anterior"
+                width="58"
+                height="58"
+                viewBox="0 0 58 58"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <Circle
+                  cx="29.5"
+                  cy="28.5"
+                  r="27.1772"
+                  transform="rotate(-90 29.5 28.5)"
+                  fill="#E3FC87"
+                  stroke="#E3FC87"
+                  strokeWidth="2.64563"
+                />
+                <Path
+                  d="M18 27.5C17.1716 27.5 16.5 28.1716 16.5 29C16.5 29.8284 17.1716 30.5 18 30.5V27.5ZM42.0607 30.0607C42.6464 29.4749 42.6464 28.5251 42.0607 27.9393L32.5147 18.3934C31.9289 17.8076 30.9792 17.8076 30.3934 18.3934C29.8076 18.9792 29.8076 19.9289 30.3934 20.5147L38.8787 29L30.3934 37.4853C29.8076 38.0711 29.8076 39.0208 30.3934 39.6066C30.9792 40.1924 31.9289 40.1924 32.5147 39.6066L42.0607 30.0607ZM18 30.5H41V27.5H18V30.5Z"
+                  fill="#263A83"
+                  transform="scale(-1, 1) translate(-58, 0)"
+                />
+              </Svg>
+            </Button>
           ) : (
-            <TextButtonLabel style={{ opacity: 0 }}>Anterior</TextButtonLabel>
+            <Svg
+              width="58"
+              height="58"
+              viewBox="0 0 58 58"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ opacity: 0 }}
+            >
+              <Circle
+                cx="29.5"
+                cy="28.5"
+                r="27.1772"
+                transform="rotate(-90 29.5 28.5)"
+                fill="#E3FC87"
+                stroke="#E3FC87"
+                strokeWidth="2.64563"
+              />
+            </Svg>
           )}
+
           <Button
             onPress={
               currentScreen < screens.length - 1
@@ -2108,7 +2149,7 @@ const App = () => {
                 transform="matrix(0.999959 -0.00910741 -0.00910741 -0.999959 0.519165 57.5166)"
                 fill="#E3FC87"
                 stroke="#E3FC87"
-                stroke-width="2.64563"
+                strokeWidth="2.64563"
               />
               <Path
                 d="M18 27.5C17.1716 27.5 16.5 28.1716 16.5 29C16.5 29.8284 17.1716 30.5 18 30.5V27.5ZM42.0607 30.0607C42.6464 29.4749 42.6464 28.5251 42.0607 27.9393L32.5147 18.3934C31.9289 17.8076 30.9792 17.8076 30.3934 18.3934C29.8076 18.9792 29.8076 19.9289 30.3934 20.5147L38.8787 29L30.3934 37.4853C29.8076 38.0711 29.8076 39.0208 30.3934 39.6066C30.9792 40.1924 31.9289 40.1924 32.5147 39.6066L42.0607 30.0607ZM18 30.5H41V27.5H18V30.5Z"

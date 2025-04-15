@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components/native";
-import { Alert, TouchableOpacity, View, ScrollView} from "react-native";
+import { Alert, TouchableOpacity, View, ScrollView } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -49,8 +49,8 @@ export default function Home() {
 
   // Array de URLs das imagens p/ users
   // Caso ainda não tenham imagem de perfil (vai uma aleatória)
-const imageUserUrls = [
-  "https://celina05.sirv.com/avatares/avatar4.png",
+  const imageUserUrls = [
+    "https://celina05.sirv.com/avatares/avatar4.png",
     "https://celina05.sirv.com/avatares/avatar5.png",
     "https://celina05.sirv.com/avatares/avatar6.png",
     "https://celina05.sirv.com/avatares/avatar9.png",
@@ -70,22 +70,22 @@ const imageUserUrls = [
     "https://celina05.sirv.com/avatares/avatar15.png",
     "https://celina05.sirv.com/avatares/avatar17.png",
     "https://celina05.sirv.com/avatares/avatar19.png",
-];
+  ];
 
-// Função para obter uma URL aleatória 
-const getRandomImage = (tipo) => {
-  const randomIndex = Math.floor(Math.random() * tipo.length);
-  return tipo[randomIndex];
-};
+  // Função para obter uma URL aleatória
+  const getRandomImage = (tipo) => {
+    const randomIndex = Math.floor(Math.random() * tipo.length);
+    return tipo[randomIndex];
+  };
 
   // Verificação de utilizador logado
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
       setUserId(currentUser.uid);
-      console.log('utilizador logado na pag principal', currentUser)
+      console.log("utilizador logado na pag principal", currentUser);
     } else {
-      Alert.alert('Erro', 'Nenhum utilizador logado!');
+      Alert.alert("Erro", "Nenhum utilizador logado!");
     }
   }, []);
 
@@ -93,28 +93,28 @@ const getRandomImage = (tipo) => {
   useEffect(() => {
     const Data = async () => {
       try {
-        if (!userId) return; 
-        const userDocRef = doc(db, "users", userId); 
-        const docSnap = await getDoc(userDocRef); 
-  
+        if (!userId) return;
+        const userDocRef = doc(db, "users", userId);
+        const docSnap = await getDoc(userDocRef);
+
         if (docSnap.exists()) {
           const { fullName, team, image } = docSnap.data();
           setUserName(fullName);
-          setTeamId(team); 
-          
+          setTeamId(team);
+
           if (team) {
             const teamDocRef = doc(db, "equipas", team);
             const teamSnap = await getDoc(teamDocRef);
-  
+
             if (teamSnap.exists()) {
               const teamData = teamSnap.data();
-              setTeamPoints(teamData.pontos); 
+              setTeamPoints(teamData.pontos);
               setTeamMembers(teamData.numparticipantes);
             } else {
               console.log("Equipa não encontrada.");
             }
           }
-          
+
           if (image) {
             // Atribuir a imagem existente ao estado
             setProfileImage({ uri: image });
@@ -122,89 +122,91 @@ const getRandomImage = (tipo) => {
             // Gerar e atribuir uma nova imagem aleatória
             const newProfileImage = getRandomImage(imageUserUrls);
             setProfileImage({ uri: newProfileImage });
-                        
+
             // Atualizar o documento do utilizador com a nova imagem
             await updateDoc(userDocRef, { image: newProfileImage });
           }
-
         } else {
           console.log("Documento do utilizador não encontrado.");
         }
-
       } catch (error) {
         console.error("Erro ao verificar o nome", error);
       }
     };
-  
-    Data(); 
-  
+
+    Data();
   }, [userId]);
-  
-// Função para redefinir o status de upload 
-const resetUploadStatus = async () => {
-  try {
-    if (!userId) return; 
-    const userDocRef = doc(db, "users", userId); 
-    await updateDoc(userDocRef, { upload: false }); // Atualiza o campo "upload" para false
-    setIsUploadedToday(false); // Atualiza o estado local
-    console.log("Status de upload redefinido.");
-  } catch (error) {
-    console.error("Erro ao redefinir o status de upload:", error); 
-  }
-};
 
-// Função para calcular o tempo restante até a próxima meia-noite
-const calculateNextReset = () => {
-  const now = new Date(); 
-  const resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0); 
-  return resetTime.getTime() - now.getTime();
-};
-
-useEffect(() => {
-  const timeUntilReset = calculateNextReset(); // Calcula o tempo até o próximo reset
-  setTimeRemaining(timeUntilReset); // Define o estado inicial do tempo restante
-
-  // Configura um temporizador para redefinir o status na próxima meia-noite
-  const timer = setTimeout(() => {
-    resetUploadStatus(); // Redefine o status de upload
-    setTimeRemaining(calculateNextReset()); // Atualiza o tempo restante
-  }, timeUntilReset);
-
-  // Atualiza o tempo restante a cada segundo
-  const interval = setInterval(() => {
-    setTimeRemaining((prev) => Math.max(prev - 1000, 0)); // Evita valores negativos
-  }, 1000);
-
-  // Limpa os temporizadores ao desmontar o componente
-  return () => {
-    clearTimeout(timer);
-    clearInterval(interval);
-  };
-}, [userId]); // Executa novamente se userId mudar
-
-
-useEffect(() => {
-  // Função para verificar o status de upload na firebase
-  const checkUploadStatus = async () => {
+  // Função para redefinir o status de upload
+  const resetUploadStatus = async () => {
     try {
-      if (!userId) return; 
-      const userDocRef = doc(db, "users", userId); 
-      const docSnap = await getDoc(userDocRef); 
-
-      if (docSnap.exists()) {
-        const { upload } = docSnap.data(); // Obtém o campo "upload" do documento
-        setIsUploadedToday(upload || false); // Atualiza o estado com o valor do campo
-      } else {
-        console.log("Documento do utilizador não encontrado.");
-      }
+      if (!userId) return;
+      const userDocRef = doc(db, "users", userId);
+      await updateDoc(userDocRef, { upload: false }); // Atualiza o campo "upload" para false
+      setIsUploadedToday(false); // Atualiza o estado local
+      console.log("Status de upload redefinido.");
     } catch (error) {
-      console.error("Erro ao verificar o status de upload:", error);
+      console.error("Erro ao redefinir o status de upload:", error);
     }
   };
 
-  checkUploadStatus(); // Chama a função ao montar o componente
-}, [userId]); // Executa novamente se userId mudar
+  // Função para calcular o tempo restante até a próxima meia-noite
+  const calculateNextReset = () => {
+    const now = new Date();
+    const resetTime = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0,
+      0,
+      0
+    );
+    return resetTime.getTime() - now.getTime();
+  };
 
+  useEffect(() => {
+    const timeUntilReset = calculateNextReset(); // Calcula o tempo até o próximo reset
+    setTimeRemaining(timeUntilReset); // Define o estado inicial do tempo restante
+
+    // Configura um temporizador para redefinir o status na próxima meia-noite
+    const timer = setTimeout(() => {
+      resetUploadStatus(); // Redefine o status de upload
+      setTimeRemaining(calculateNextReset()); // Atualiza o tempo restante
+    }, timeUntilReset);
+
+    // Atualiza o tempo restante a cada segundo
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => Math.max(prev - 1000, 0)); // Evita valores negativos
+    }, 1000);
+
+    // Limpa os temporizadores ao desmontar o componente
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [userId]); // Executa novamente se userId mudar
+
+  useEffect(() => {
+    // Função para verificar o status de upload na firebase
+    const checkUploadStatus = async () => {
+      try {
+        if (!userId) return;
+        const userDocRef = doc(db, "users", userId);
+        const docSnap = await getDoc(userDocRef);
+
+        if (docSnap.exists()) {
+          const { upload } = docSnap.data(); // Obtém o campo "upload" do documento
+          setIsUploadedToday(upload || false); // Atualiza o estado com o valor do campo
+        } else {
+          console.log("Documento do utilizador não encontrado.");
+        }
+      } catch (error) {
+        console.error("Erro ao verificar o status de upload:", error);
+      }
+    };
+
+    checkUploadStatus(); // Chama a função ao montar o componente
+  }, [userId]); // Executa novamente se userId mudar
 
   // Formato do temporizador
   const formatTime = (ms) => {
@@ -217,13 +219,12 @@ useEffect(() => {
       .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
-
   const handleCirclePress = () => {
-    router.push('../components/uploadScreenTime/UploadScreen');
+    router.push("../components/uploadScreenTime/UploadScreen");
   };
 
   const handleCadernetaPress = () => {
-    router.push('../../components/caderneta/caderneta'); 
+    router.push("../../components/caderneta/caderneta");
   };
 
   const handleDesafioPress = () => {
@@ -231,20 +232,26 @@ useEffect(() => {
   };
 
   const handlePerfilPress = () => {
-    router.push('../../perfil'); 
+    router.push("../../perfil");
   };
 
   return (
     <>
-    <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page">
-      <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page"></TittlePagina>
-    </View>
-      <ProfileContainer style={{paddingTop:'50'}}> 
-      <TouchableOpacity onPress={handlePerfilPress}>
-        <Avatar 
-            source={profileImage}
-        />
-      </TouchableOpacity>
+      <View
+        accessible={true}
+        accessibilityRole="header"
+        accessibilityLabel="Título: Home Page"
+      >
+        <TittlePagina
+          accessible={true}
+          accessibilityRole="header"
+          accessibilityLabel="Título: Home Page"
+        ></TittlePagina>
+      </View>
+      <ProfileContainer>
+        <TouchableOpacity onPress={handlePerfilPress}>
+          <Avatar source={profileImage} />
+        </TouchableOpacity>
         <ProfileTextContainer>
           <UserName>{userName}</UserName> <UserLevel> Nível 1 </UserLevel>
           <StarsContainer>
@@ -306,92 +313,115 @@ useEffect(() => {
       <TittleTorneio>Torneio XPTO</TittleTorneio>
 
       <CardContainer accessible={true}>
-      <View
-        accessible={false} 
-        accessibilityRole="button"
-      >
-        <CardContainer accessible={false} accessibilityLabel={`Cartão da equipe ${teamId}`}>
-          <Header>
-            <IconContainer accessibilityLabel="Ícone de equipe">
-              <FontAwesome name="plane" size={20} color="#34459E" accessible={false} />
-            </IconContainer>
+        <View accessible={false} accessibilityRole="button">
+          <CardContainer
+            accessible={false}
+            accessibilityLabel={`Cartão da equipe ${teamId}`}
+          >
+            <Header>
+              <IconContainer accessibilityLabel="Ícone de equipe">
+                <FontAwesome
+                  name="plane"
+                  size={20}
+                  color="#34459E"
+                  accessible={false}
+                />
+              </IconContainer>
 
-            <TeamName accessibilityLabel={`Nome da equipe: ${teamId}`}>
-              {teamId}
-            </TeamName>
+              <TeamName accessibilityLabel={`Nome da equipe: ${teamId}`}>
+                {teamId}
+              </TeamName>
 
-            <Points accessibilityLabel={`Pontos da equipe: ${teamPoints}`}>
-              <FontAwesome name="star" size={12} color="#D4F34A" accessible={false} />
-              {teamPoints}
-            </Points>
-          </Header>
+              <Points accessibilityLabel={`Pontos da equipe: ${teamPoints}`}>
+                <FontAwesome
+                  name="star"
+                  size={12}
+                  color="#D4F34A"
+                  accessible={false}
+                />
+                {teamPoints}
+              </Points>
+            </Header>
 
             <View>
               <Stats accessibilityRole="summary">
-              <StatItem 
-                  accessible={true} 
-                  accessibilityLabel={`7 de 30`}
-                >
-                  <StatText 
-                  accessibilityLabel="Dias em competição"
-                  accessibilityRole="button">
+                <StatItem accessible={true} accessibilityLabel={`7 de 30`}>
+                  <StatText
+                    accessibilityLabel="Dias em competição"
+                    accessibilityRole="button"
+                  >
                     Dias em competição
                   </StatText>
-                  <StatValue 
-                  accessibilityLabel="quantidade de dias">
-                    7/30 <FontAwesome name="calendar" size={14} color="#ffffff" accessible={false} />
+                  <StatValue accessibilityLabel="quantidade de dias">
+                    7/30{" "}
+                    <FontAwesome
+                      name="calendar"
+                      size={14}
+                      color="#ffffff"
+                      accessible={false}
+                    />
                   </StatValue>
                 </StatItem>
 
-                <StatItem 
-                  accessible={true} 
-                  accessibilityLabel={`7 de 30`}
-                >
-                  <StatText 
-                  accessibilityLabel="Dias em competição"
-                  accessibilityRole="button">
+                <StatItem accessible={true} accessibilityLabel={`7 de 30`}>
+                  <StatText
+                    accessibilityLabel="Dias em competição"
+                    accessibilityRole="button"
+                  >
                     Dias em competição
                   </StatText>
-                  <StatValue 
-                  accessibilityLabel="quantidade de dias">
-                    7/30 <FontAwesome name="calendar" size={14} color="#ffffff" accessible={false} />
+                  <StatValue accessibilityLabel="quantidade de dias">
+                    7/30{" "}
+                    <FontAwesome
+                      name="calendar"
+                      size={14}
+                      color="#ffffff"
+                      accessible={false}
+                    />
                   </StatValue>
                 </StatItem>
-            </Stats>  
-          </View>
+              </Stats>
+            </View>
 
             <View accessible={true}>
-              <Footer 
-                accessible={true} 
-                accessibilityRole="summary" 
+              <Footer
+                accessible={true}
+                accessibilityRole="summary"
                 accessibilityLabel={`Membros da equipe: ${teamMembers} de ${teamMembers}`}
               >
-                <FooterText 
-                  accessible={true} 
+                <FooterText
+                  accessible={true}
                   accessibilityLabel={`Membros da equipe: ${teamMembers}/${teamMembers}`}
                 >
                   {teamMembers}/{teamMembers}
                 </FooterText>
 
-                <FontAwesome 
-                  name="group" 
-                  size={16} 
-                  color="#ffffff" 
-                  accessible={true} 
+                <FontAwesome
+                  name="group"
+                  size={16}
+                  color="#ffffff"
+                  accessible={true}
                   accessibilityLabel="Ícone de grupo"
                 />
               </Footer>
             </View>
-        </CardContainer>
-      </View>
+          </CardContainer>
+        </View>
 
-        {isUploadedToday  ? (
-          <CountdownButton accessible={true} accessibilityLabel="Botão upload do tempo de ecrã desativado">
+        {isUploadedToday ? (
+          <CountdownButton
+            accessible={true}
+            accessibilityLabel="Botão upload do tempo de ecrã desativado"
+          >
             <FontAwesome name="clock-o" size={20} color="#ffffff" />
             <CountdownText>{formatTime(timeRemaining)}</CountdownText>
           </CountdownButton>
         ) : (
-          <BottomCircle onPress={handleCirclePress} accessible={true} accessibilityLabel="Botão upload do tempo de ecrã ativo">
+          <BottomCircle
+            onPress={handleCirclePress}
+            accessible={true}
+            accessibilityLabel="Botão upload do tempo de ecrã ativo"
+          >
             <FontAwesome name="image" size={20} color="#ffffff" />
           </BottomCircle>
         )}
@@ -401,7 +431,13 @@ useEffect(() => {
       <DesafioContainer>
         <DesafioCard onPress={() => handleCadernetaPress(1)}>
           <DesafioIcon>
-            <Svg accessibilityLabel="Ilustração caderneta" width="55" height="55" viewBox="0 0 55 55" fill="none">
+            <Svg
+              accessibilityLabel="Ilustração caderneta"
+              width="55"
+              height="55"
+              viewBox="0 0 55 55"
+              fill="none"
+            >
               {" "}
               <Path
                 d="M25.2654 20.8129L25.2683 55.0055L9.66159 55.0074C4.50969 55.0074 0.299525 50.9754 0.0152943 45.8946L0 45.3463V20.8129H25.2654ZM29.7245 38.6494H54.9958L54.9982 45.3463C54.9976 50.6818 50.6722 55.0074 45.3365 55.0074L29.7275 55.0055L29.7245 38.6494ZM45.3384 0.000732422C50.4903 0.000732422 54.7005 4.03281 54.9847 9.11368L55 9.66193L54.9958 34.1903H29.7245L29.7275 0.000732422H45.3384ZM25.2683 0.000732422L25.2654 16.3538H0L0.00178536 9.66198C0.00240643 4.32641 4.32778 0.000732422 9.66335 0.000732422H25.2683Z"
@@ -414,7 +450,13 @@ useEffect(() => {
 
         <DesafioCard onPress={() => handleDesafioPress(1)}>
           <DesafioIcon>
-            <Svg accessibilityLabel="Ilustração desafio semanal" width="63" height="63" viewBox="0 0 63 63" fill="none">
+            <Svg
+              accessibilityLabel="Ilustração desafio semanal"
+              width="63"
+              height="63"
+              viewBox="0 0 63 63"
+              fill="none"
+            >
               {" "}
               <Path
                 d="M55.1147 15.7471V29.1951C52.7034 28.1416 50.0406 27.5574 47.2411 27.5574C36.3702 27.5574 27.5573 36.3702 27.5573 47.2412C27.5573 50.0406 28.1416 52.7034 29.195 55.1147H9.84191C4.40638 55.1147 0 50.7083 0 45.2728V15.7471H55.1147Z"
@@ -429,7 +471,6 @@ useEffect(() => {
                 fill="white"
               />{" "}
             </Svg>
-            
           </DesafioIcon>
           <DesafioText>Desafio Semanal</DesafioText>
         </DesafioCard>
@@ -462,7 +503,7 @@ const CountdownText = styled.Text`
 `;
 
 const TittleHomePage = styled.View`
-  color: rgba(38, 58, 131, 1.00);
+  color: rgba(38, 58, 131, 1);
   font-size: 24px;
   text-align: center;
   margin-top: 20px;

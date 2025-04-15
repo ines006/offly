@@ -417,6 +417,7 @@ export const ProfileContainer = styled.TouchableOpacity`
   padding: 20px;
   width: 100%;
   align-self: center;
+  margin-top:7%;
 `;
 
 export const Avatar = styled.Image.attrs({

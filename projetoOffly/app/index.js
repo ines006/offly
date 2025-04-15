@@ -2,8 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+<<<<<<< HEAD
 import Login from "./components/entrar/login";
 import OfflyScreen from "./OfflyScreen";
+=======
+import Login from './components/entrar/login'
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'Text strings must be rendered within a <Text> component'
+]);
+>>>>>>> 41146e4815a86e6d533b591fae45d279f406d038
 
 export default function Index() {
   const [showSplash, setShowSplash] = useState(true);

@@ -108,7 +108,7 @@ export default function Questionario() {
           fill="none"
           style={{
             position: "absolute",
-            top: -50,
+            top: 0,
             right: 20,
             zIndex: 0,
           }}
@@ -160,7 +160,7 @@ export default function Questionario() {
             source={require("../assets/images/Group 677.png")}
             style={{
               position: "absolute",
-              top: "0%",
+              top: "7%",
               left: "13%",
               width: 250,
               height: 250,

@@ -44,7 +44,8 @@ export const CaixaQuestionario = styled.View`
   border-radius: 20px;
   background-color: #fff;
   padding: 20px;
-  margin-top: 29.61px;
+  
+  margin-top: 100px;
   justify-content: space-between;
   shadow-color: #000;
   shadow-offset: 0px 2px;
@@ -110,7 +111,8 @@ export const PerguntaContador = styled.Text`
   font-size: 15px;
   font-weight: 400;
   line-height: 25px;
-  margin-bottom: 36px;
+  margin-bottom: 20px;
+  margin-top: 20px;
 `;
 
 // Botão de opção (com círculo e mudança de cor ao ser selecionado)
@@ -191,7 +193,7 @@ export const CaixaQuestionario2 = styled.View`
   shadow-radius: 3.84px;
 
   elevation: 5;
-  margin-top: 190px;
+  margin-top: 240px;
   height: 430px;
   align-items: center;
 `;
@@ -587,7 +589,7 @@ export const DropdownItemText = styled.Text`
 
 export const Definir_visibilidade_btn = styled.TouchableOpacity`
   min-width: 114px;
-  height: 33px;
+  min-height: 35px;
   display: flex;
   padding: 7px;
   margin-top: -10;
@@ -642,22 +644,24 @@ export const Container_Pagina_Equipa_Criada = styled.View`
 // Titulos Criar Equipa
 export const Titulos_Equipa_Criada = styled.Text`
   color: #263a83;
-  font-family: Poppins-regular;
-  font-size: 15px;
+  font-family: Poppins-bold;
+  font-size: 30px;
   font-weight: 800;
-  margin-top: 20px;
+  margin-top: 10px;
   align-self: center;
-  font-family: poppins-regular;
+
+
 `;
 
 // Sub Titulos Criar Equipa
 export const Sub_Titulos_Criar_Equipa = styled.Text`
   color: #414141;
-  font-family: Poppins-regular;
+  font-family: Poppins-semibold;
   font-size: 15px;
   font-weight: 400;
   align-self: center;
-  margin-top: 12;
+  margin-top: 10;
+  margin-bottom:20;
 `;
 
 // Container participantes

@@ -503,7 +503,7 @@ export default function PaginaPrincipal() {
 
   return (
     <>
-      <ProfileContainer style={{ backgroundColor: "#fff" }} accessibilityRole="section">
+      <ProfileContainer style={{ backgroundColor: "#fff", paddingTop:'68'}} accessibilityRole="section">
         <TouchableOpacity onPress={handlePerfil}>
           <Avatar source={profileImage} accessibilityRole="imagebutton" />
         </TouchableOpacity>
@@ -924,7 +924,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   optionButtonSelected: {
-    backgroundColor: "#263A83",
+    backgroundColor: '#E3FC87',
+    // É AQUI
     borderColor: "#263A83",
   },
   optionText: {
@@ -932,7 +933,7 @@ const styles = StyleSheet.create({
     color: "#263A83",
   },
   optionTextSelected: {
-    color: "#fff",
+    color: "#263A83",
     fontWeight: "bold",
   },
 });

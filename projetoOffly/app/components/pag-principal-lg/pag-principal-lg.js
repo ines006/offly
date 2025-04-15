@@ -239,7 +239,7 @@ useEffect(() => {
     <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page">
       <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Home Page"></TittlePagina>
     </View>
-      <ProfileContainer> 
+      <ProfileContainer style={{paddingTop:'50'}}> 
       <TouchableOpacity onPress={handlePerfilPress}>
         <Avatar 
             source={profileImage}

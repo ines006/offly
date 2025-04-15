@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../firebase/firebaseApi";
 import {
@@ -176,6 +183,15 @@ const Register = () => {
   };
 
   return (
+    <KeyboardAvoidingView
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={{ flex: 1 }}
+  >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
     <View accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
@@ -440,7 +456,7 @@ const Register = () => {
               onPress={() => handleButtonClick("Masculino")}
             >
               <Texto_Botoes_Definir_Visibilidade>
-                Masculino
+              👦 Masculino
               </Texto_Botoes_Definir_Visibilidade>
             </Definir_visibilidade_btn>
             <Definir_visibilidade_btn
@@ -452,7 +468,7 @@ const Register = () => {
               onPress={() => handleButtonClick("Feminino")}
             >
               <Texto_Botoes_Definir_Visibilidade>
-                Feminino
+              👩 Feminino
               </Texto_Botoes_Definir_Visibilidade>
             </Definir_visibilidade_btn>
           </BotaoNavegacaoContainer>
@@ -490,6 +506,9 @@ const Register = () => {
         </View>
       </View>
     </View>
+    </ScrollView>
+    </TouchableWithoutFeedback>
+  </KeyboardAvoidingView>
   );
 };
 

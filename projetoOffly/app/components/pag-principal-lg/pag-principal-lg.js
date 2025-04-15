@@ -34,8 +34,15 @@ import {
 // Firebase Imports
 import { auth, db } from "../../firebase/firebaseApi";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { Animated, Easing } from "react-native";
 
 export default function Home() {
+
+
+
+const scaleAnim = useState(new Animated.Value(1))[0];
+
+
   const router = useRouter();
 
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
@@ -77,6 +84,28 @@ export default function Home() {
     const randomIndex = Math.floor(Math.random() * tipo.length);
     return tipo[randomIndex];
   };
+
+  
+useEffect(() => {
+  if (isUploadedToday) {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.1,
+          duration: 500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }
+}, [isUploadedToday]);
 
   // Verificação de utilizador logado
   useEffect(() => {
@@ -410,12 +439,13 @@ export default function Home() {
 
         {isUploadedToday ? (
           <CountdownButton
-            accessible={true}
-            accessibilityLabel="Botão upload do tempo de ecrã desativado"
-          >
-            <FontAwesome name="clock-o" size={20} color="#ffffff" />
-            <CountdownText>{formatTime(timeRemaining)}</CountdownText>
-          </CountdownButton>
+  style={{ transform: [{ scale: scaleAnim }] }}
+  accessible={true}
+  accessibilityLabel="Botão upload do tempo de ecrã desativado"
+>
+  <FontAwesome name="clock-o" size={20} color="#ffffff" />
+  <CountdownText>{formatTime(timeRemaining)}</CountdownText>
+</CountdownButton>
         ) : (
           <BottomCircle
             onPress={handleCirclePress}
@@ -480,7 +510,7 @@ export default function Home() {
 }
 
 // Styled Component para o botão
-const CountdownButton = styled.View`
+const CountdownButton = styled(Animated.View)`
   width: 64px;
   height: 64px;
   border-radius: 32px;

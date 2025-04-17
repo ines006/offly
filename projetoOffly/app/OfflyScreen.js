@@ -1,38 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
+
+const { width, height } = Dimensions.get("window");
 
 export default function OfflyScreen() {
-  const [logoScaleAnim] = useState(new Animated.Value(0)); // Animação do logo
-  const [textScaleAnim] = useState(new Animated.Value(0)); // Animação do texto
+  const [logoScaleAnim] = useState(new Animated.Value(0));
+  const [textScaleAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    // Animação do logo
     Animated.timing(logoScaleAnim, {
-      toValue: 1, // O logo vai crescer até o tamanho normal
-      duration: 1500, // Duração de 1.5 segundos
+      toValue: 1,
+      duration: 1500,
       useNativeDriver: true,
     }).start();
 
-    // Animação do texto (aparece um pouco depois do logo)
     Animated.timing(textScaleAnim, {
-      toValue: 1, // O texto vai crescer até o tamanho normal
-      duration: 1500, // Duração de 1.5 segundos
-      delay: 300, // Atraso de 0.3 segundos para o texto aparecer depois do logo
+      toValue: 1,
+      duration: 1500,
+      delay: 300,
       useNativeDriver: true,
     }).start();
   }, [logoScaleAnim, textScaleAnim]);
 
   return (
-    <View style={styles.card}>
+    <View style={styles.container}>
       <Animated.Image
         source={require("../assets/images/logoo.png")}
-        style={[styles.logo, { transform: [{ scale: logoScaleAnim }] }]} // Animação do logo
+        style={[styles.logo, { transform: [{ scale: logoScaleAnim }] }]}
       />
       <Animated.Text
-        style={[
-          styles.title,
-          { transform: [{ scale: textScaleAnim }] }, // Animação do texto
-        ]}
+        style={[styles.title, { transform: [{ scale: textScaleAnim }] }]}
       >
         OFFLY
       </Animated.Text>
@@ -41,22 +38,17 @@ export default function OfflyScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: 300,
-    height: 600,
+  container: {
+    width: width,
+    height: height,
     backgroundColor: "#283B8B",
-    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 10,
   },
   logo: {
     width: 100,
     height: 100,
-    resizeMode: "contain", // mantém proporções
+    resizeMode: "contain",
   },
   title: {
     color: "#A7C8FF",

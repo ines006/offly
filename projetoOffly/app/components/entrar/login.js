@@ -48,29 +48,26 @@ const Login = () => {
     }
   };
 
-  // após login
-  // se o utilizador tiver equipa deve ir para a pagina onde ja existe equipa. caso contrario vai para a página de procurar equipa
   const handleSubmit = async () => {
     try {
-      // Realizar o login
-
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user; 
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
 
       console.log("Login realizado com sucesso!", user);
 
-      // Após o login, acessar o Firestore para obter o campo 'team'
-      const userDocRef = doc(db, "users", user.uid); 
+      const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
-        const userData = userDoc.data(); // Dados do documento
+        const userData = userDoc.data();
 
         if (userData.team) {
-          // Se o campo 'team' existir e não estiver vazio, redirecionar para a página principal
           router.push("../../components/navbar");
         } else {
-          // Caso contrário, redirecionar para a página inicial
           router.push("../../PaginaPrincipal");
         }
       } else {
@@ -86,7 +83,7 @@ const Login = () => {
   };
 
   return (
-    <View accessibilityRole="main" astyle={styles.container}>
+    <View style={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
           Bem-vindo!
@@ -223,9 +220,11 @@ export default Login;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#D2E9FF",
+    backgroundColor: "#C7E0F8", // Cor de fundo que ocupa a tela toda
     justifyContent: "center",
     alignItems: "center",
+    width: "100%",
+    height: "100%",
   },
   wrapLogin: {
     width: 350,

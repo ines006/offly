@@ -102,6 +102,12 @@ const DesafioSemanal = () => {
                   data && num in data ? data[num] : null
                 ),
               };
+
+              //A linha de código abaixo quase que acabou com a minha vontade de viver 
+              //isto serve para acender a bola caso o player tenha feito o desafio diário
+              //falta ligar ao backend
+              participantInfo.status[0] = true; //dar fake que o men cumpriu o desafio
+              console.log("Status atualizado:", participantInfo.status); //console.log para dar debug APAGAR 
               participantesList.push(participantInfo);
             });
           }

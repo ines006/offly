@@ -11,17 +11,16 @@ import {
 } from "firebase/auth";
 import { useRouter } from "expo-router";
 
-const ProfileScreen = () => {
+const Perfil = () => {
   const [userId, setUserId] = useState(null);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
-
+  const [profileImage, setProfileImage] = useState(null); // Variável de estado que guarda a imagem do utilizador
   const router = useRouter();
 
-  // Caso ainda não tenham imagem de perfil (vai uma aleatória)
+  // URLs de imagens aleatórias para perfil
   const imageUserUrls = [
     "https://celina05.sirv.com/avatares/avatar4.png",
     "https://celina05.sirv.com/avatares/avatar5.png",
@@ -66,12 +65,10 @@ const ProfileScreen = () => {
         try {
           const userDocRef = doc(db, "users", userId);
           const userDoc = await getDoc(userDocRef);
-
           if (userDoc.exists()) {
             const { fullName, username, image } = userDoc.data();
             setName(fullName || "");
             setUsername(username || "");
-
             if (image) {
               // Atribuir a imagem existente ao estado
               setProfileImage({ uri: image });
@@ -79,7 +76,6 @@ const ProfileScreen = () => {
               // Gerar e atribuir uma nova imagem aleatória
               const newProfileImage = getRandomImage();
               setProfileImage({ uri: newProfileImage });
-
               // Atualizar o documento do utilizador com a nova imagem
               await updateDoc(userDocRef, { image: newProfileImage });
             }
@@ -92,7 +88,6 @@ const ProfileScreen = () => {
         }
       }
     };
-
     loadUserData();
   }, [userId]);
 
@@ -103,7 +98,6 @@ const ProfileScreen = () => {
         user.email,
         currentPassword
       );
-
       await reauthenticateWithCredential(user, credential);
       console.log("Reautenticação bem-sucedida!");
     } catch (error) {
@@ -115,14 +109,12 @@ const ProfileScreen = () => {
 
   const handleSave = async (field) => {
     if (!userId) return;
-
     try {
       const userDocRef = doc(db, "users", userId);
-
       if (field === "password") {
         Alert.prompt(
           "Alteração de Senha",
-          "Digite a tua senha atual:",
+          "Digite a sua senha atual:",
           [
             {
               text: "Cancelar",
@@ -145,13 +137,11 @@ const ProfileScreen = () => {
                         try {
                           // Reautenticar o usuário
                           await reauthenticateUser(currentPassword);
-
                           // Atualizar a senha no Firebase Authentication
                           await updatePassword(auth.currentUser, newPassword);
                           Alert.alert("Sucesso", "Senha alterada com sucesso!");
                         } catch (error) {
                           console.error("Erro ao alterar a senha:", error);
-
                           if (error.code === "auth/weak-password") {
                             Alert.alert(
                               "Erro",
@@ -181,7 +171,6 @@ const ProfileScreen = () => {
         );
       } else {
         const updatedData = {};
-
         if (field === "name") {
           updatedData.fullName = name || "";
           setIsEditingName(false);
@@ -189,7 +178,6 @@ const ProfileScreen = () => {
           updatedData.username = username || "";
           setIsEditingUsername(false);
         }
-
         await updateDoc(userDocRef, updatedData);
         Alert.alert("Sucesso", "Alterações salvas com sucesso!");
       }
@@ -212,12 +200,12 @@ const ProfileScreen = () => {
   return (
     <Container>
       <Header>
-        <BackButton onPress={() => router.back()}>
+        {/* Botão Voltar atualizado */}
+        <BackButton onPress={() => router.replace("PaginaPrincipal")}>
           <Icon name="arrow-back" size={24} color="#263A83" />
         </BackButton>
         <HeaderTitle>Perfil</HeaderTitle>
       </Header>
-
       <AvatarContainer>
         <Avatar
           accessibilityLabel="Imagem de perfil do utilizador"
@@ -251,7 +239,6 @@ const ProfileScreen = () => {
           />
         </Stars>
       </AvatarContainer>
-
       <Form>
         <Row>
           <Label>Nome</Label>
@@ -279,7 +266,6 @@ const ProfileScreen = () => {
             </EditButton>
           </InputRow>
         </Row>
-
         <Row>
           <Label>Nome de Utilizador</Label>
           <InputRow>
@@ -308,7 +294,6 @@ const ProfileScreen = () => {
             </EditButton>
           </InputRow>
         </Row>
-
         <Row>
           <Label>Alterar Password</Label>
           <InputRow>
@@ -317,7 +302,6 @@ const ProfileScreen = () => {
             </EditButton>
           </InputRow>
         </Row>
-
         <LogoutButton onPress={handleLogout}>
           <LogoutText>Terminar Sessão</LogoutText>
         </LogoutButton>
@@ -326,6 +310,7 @@ const ProfileScreen = () => {
   );
 };
 
+// Estilização
 const Container = styled.View`
   flex: 1;
   background-color: #f9f9f9;
@@ -426,4 +411,4 @@ const LogoutText = styled.Text`
   color: #fff;
 `;
 
-export default ProfileScreen;
+export default Perfil;

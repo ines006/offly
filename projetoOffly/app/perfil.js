@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components/native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { Alert, TouchableOpacity } from "react-native";
+import { Alert, TouchableOpacity, StyleSheet} from "react-native";
+import Svg, { Circle, Path } from "react-native-svg";
+
 import { auth, db } from "./firebase/firebaseApi";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import {
@@ -201,9 +203,26 @@ const Perfil = () => {
     <Container>
       <Header>
         {/* Botão Voltar atualizado */}
-        <BackButton onPress={() => router.replace("PaginaPrincipal")}>
-          <Icon name="arrow-back" size={24} color="#263A83" />
-        </BackButton>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push("../../components/navbar")}
+      >
+        <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+          <Circle
+            cx="18.1351"
+            cy="17.1713"
+            r="16.0177"
+            stroke="#263A83"
+            strokeWidth={2}
+          />
+          <Path
+            d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+            stroke="#263A83"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </TouchableOpacity>
         <HeaderTitle>Perfil</HeaderTitle>
       </Header>
       <AvatarContainer>
@@ -311,6 +330,22 @@ const Perfil = () => {
 };
 
 // Estilização
+const styles = StyleSheet.create({
+  backButton: {
+    position: "absolute",
+    top: 65,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    borderColor: "#263A83",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+})
+
 const Container = styled.View`
   flex: 1;
   background-color: #f9f9f9;
@@ -321,6 +356,8 @@ const Header = styled.View`
   flex-direction: row;
   align-items: center;
   margin-bottom: 20px;
+  margin-top: 50px;
+
 `;
 
 const BackButton = styled(TouchableOpacity)`

@@ -194,13 +194,13 @@ const styles = StyleSheet.create({
     color: "#263A83",
     textAlign: "center",
     marginVertical: 20,
-    marginTop: 100,
+    marginTop: 63, //valor antigo 100
   },
   podiumContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "flex-end",
-    marginBottom: -120,
+    marginBottom: -120, 
   },
   podiumBackground: {
     height: 400,
@@ -220,10 +220,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   secondPlaceSection: {
-    marginBottom: -40,
+    marginBottom: -40, 
   },
   thirdPlaceSection: {
-    marginBottom: -80,
+    marginBottom: -80, 
   },
   podiumTeam: {
     fontSize: 16,
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     width: 370,
     alignSelf: "center",
-    marginTop: -100,
+    marginTop: -110,
   },
 
   card: {

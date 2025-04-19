@@ -456,7 +456,7 @@ const Register = () => {
               onPress={() => handleButtonClick("Masculino")}
             >
               <Texto_Botoes_Definir_Visibilidade>
-              👦 Masculino
+              Masculino
               </Texto_Botoes_Definir_Visibilidade>
             </Definir_visibilidade_btn>
             <Definir_visibilidade_btn
@@ -468,7 +468,7 @@ const Register = () => {
               onPress={() => handleButtonClick("Feminino")}
             >
               <Texto_Botoes_Definir_Visibilidade>
-              👩 Feminino
+              Feminino
               </Texto_Botoes_Definir_Visibilidade>
             </Definir_visibilidade_btn>
           </BotaoNavegacaoContainer>

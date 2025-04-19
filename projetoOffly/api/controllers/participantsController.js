@@ -52,10 +52,10 @@ exports.createParticipant = async (req, res) => {
     }
 
     // Validar comprimento mínimo da palavra-passe
-    if (password.length < 6) {
+    if (password.length < 8) {
       return res
         .status(422)
-        .json({ message: "The password must be at least 6 characters long" });
+        .json({ message: "The password must be at least 8 characters long" });
     }
 
     // Validar que a palavra-passe contém maiúsculas, minúsculas e caracteres especiais

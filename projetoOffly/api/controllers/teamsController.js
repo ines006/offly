@@ -521,7 +521,6 @@ exports.getTeams = async (req, res) => {
       offset: offset,
       raw: true,
       subQuery: false,
-      logging: console.log,
     });
 
     if (!teams.length && capacity === "under-5") {
@@ -627,4 +626,179 @@ exports.searchTeamsByName = async (req, res) => {
   }
 };
 
+// Eliminar equipa
+exports.deleteTeam = async (req, res) => {
+  const transaction = await Teams.sequelize.transaction();
+  try {
+    const teamId = parseInt(req.params.id);
+
+    // Validar se o ID é um número inteiro positivo
+    if (isNaN(teamId) || teamId < 1) {
+      await transaction.rollback();
+      return res.status(422).json({
+        message: "The team ID must be a positive integer",
+      });
+    }
+
+    // Verificar se a equipa existe
+    const team = await Teams.findByPk(teamId, { transaction });
+    if (!team) {
+      await transaction.rollback();
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    // Verificar se o utilizador autenticado é o admin da equipa
+    const userId = req.user.id; // ID do utilizador autenticado, vindo do middleware
+    if (team.team_admin !== userId) {
+      await transaction.rollback();
+      return res
+        .status(403)
+        .json({ message: "Only the team admin can delete the team" });
+    }
+
+    // Atualizar registros onde teams_id é igual a teamId
+    const [updatedTeamsIdCount] = await Participants.update(
+      { teams_id: null, teams_team_admin: null },
+      {
+        where: { teams_id: teamId },
+        transaction,
+      }
+    );
+    console.log(
+      `Updated ${updatedTeamsIdCount} participants where teams_id = ${teamId}`
+    );
+
+    // Atualizar registros onde teams_team_admin é igual a teamId
+    const [updatedTeamAdminCount] = await Participants.update(
+      { teams_team_admin: null },
+      {
+        where: { teams_team_admin: teamId },
+        transaction,
+      }
+    );
+    console.log(
+      `Updated ${updatedTeamAdminCount} participants where teams_team_admin = ${teamId}`
+    );
+
+    // Eliminar a equipa
+    await team.destroy({ transaction });
+
+    // Commit da transação
+    await transaction.commit();
+
+    // Exclusão bem-sucedida
+    return res.status(204).send();
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Error deleting team:", error.stack);
+    return res
+      .status(500)
+      .json({ message: "Error deleting team", error: error.message });
+  }
+};
+
+// Remover utilizador de uma equipa
+
+exports.removeParticipantFromTeam = async (req, res) => {
+  try {
+    const { teamId, participantId } = req.params;
+    const userId = req.user.id; //  ID do utilizador logado vem do middleware de autenticação
+
+    // Procurar a equipa
+    const team = await Teams.findByPk(teamId);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    // Verifica se o utilizador é o admin da equipa
+    if (team.team_admin !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Only the team admin can remove participants" });
+    }
+
+    // Procura um participante
+    const participant = await Participants.findByPk(participantId);
+    if (!participant) {
+      return res.status(404).json({ error: "Participant not found" });
+    }
+
+    // Verifica se o participante pertence à equipa
+    if (participant.teams_id !== parseInt(teamId)) {
+      return res
+        .status(400)
+        .json({ error: "Participant is not a member of this team" });
+    }
+
+    // Impede a remoção do próprio admin
+    if (participant.id === team.team_admin) {
+      return res.status(400).json({ error: "Cannot remove the team admin" });
+    }
+
+    // Remover o participante da equipa (desassocia)
+    participant.teams_id = null;
+    await participant.save();
+
+    return res
+      .status(200)
+      .json({ message: "Participant removed from team successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//Participante entrar numa equipa
+
+exports.joinTeam = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const userId = req.user.id;
+
+    // Procura a equipa
+    const team = await Teams.findByPk(teamId);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    // Verifica se a equipa é pública
+    if (team.visibility === 1) {
+      return res
+        .status(403)
+        .json({ error: "Cannot join a private team without an invite" });
+    }
+
+    // Procurar o utilizador
+    const participant = await Participants.findByPk(userId);
+    if (!participant) {
+      return res.status(404).json({ error: "Participant not found" });
+    }
+
+    // Verifica se o utilizador já está numa equipa
+    if (participant.teams_id) {
+      return res
+        .status(400)
+        .json({ error: "Participant is already a member of a team" });
+    }
+
+    // Contar o número atual de participantes na equipa
+    const currentMembersCount = await Participants.count({
+      where: { teams_id: teamId },
+    });
+
+    // Verifica se a equipa tem lotação disponível
+    if (currentMembersCount >= team.capacity) {
+      return res.status(400).json({ error: "Team has no available slots" });
+    }
+
+    // Associa o utilizador à equipa
+    participant.teams_id = teamId;
+    await participant.save();
+
+    return res.status(201).json({ message: "Successfully joined the team" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 module.exports = exports;

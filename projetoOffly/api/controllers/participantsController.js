@@ -39,6 +39,7 @@ exports.getParticipantById = async (req, res) => {
 // Criar um novo participante
 exports.createParticipant = async (req, res) => {
   try {
+
     const { name, username, email, password, gender, level = 1 } = req.body;
 
     if (!name || !username || !email || !password || gender === undefined) {

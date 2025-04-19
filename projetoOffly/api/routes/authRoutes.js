@@ -92,4 +92,45 @@ const authController = require("../controllers/authController");
 
 router.post("/login", authController.login);
 
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh JWT token using a refresh token
+ *     operationId: refreshToken
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       description: Refresh token
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 expiresIn:
+ *                   type: integer
+ *                   example: 3600
+ *       401:
+ *         description: Missing refresh token
+ *       403:
+ *         description: Invalid refresh token
+ */
+router.post("/refresh", authController.refreshToken);
+
 module.exports = router;

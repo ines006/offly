@@ -1,6 +1,8 @@
 import { View, Text, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import Login from './components/entrar/login'
+import EcraParticipantes from './participantes'
+
 
 export default function Index() {
   const router = useRouter();
@@ -9,6 +11,7 @@ export default function Index() {
     <>
       <View style={styles.container}>
        <Login />
+       {/* <EcraParticipantes /> */}
       </View>
     </>
   );

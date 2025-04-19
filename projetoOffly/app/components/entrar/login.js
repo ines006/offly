@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db, auth } from "../../firebase/firebaseApi";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { baseurl } from "../../api-config/apiConfig"; 
+
 import {
   StyleSheet,
   View,
@@ -52,39 +53,36 @@ const Login = () => {
   // se o utilizador tiver equipa deve ir para a pagina onde ja existe equipa. caso contrario vai para a página de procurar equipa
   const handleSubmit = async () => {
     try {
-      // Realizar o login
-
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user; 
-
-      console.log("Login realizado com sucesso!", user);
-
-      // Após o login, acessar o Firestore para obter o campo 'team'
-      const userDocRef = doc(db, "users", user.uid); 
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data(); // Dados do documento
-
-        if (userData.team) {
-          // Se o campo 'team' existir e não estiver vazio, redirecionar para a página principal
-          router.push("../../components/navbar");
-        } else {
-          // Caso contrário, redirecionar para a página inicial
-          router.push("../../PaginaPrincipal");
-        }
+      const response = await axios.post(`${baseurl}/auth/login`, {
+        email,
+        password,
+      });
+  
+      const { token, refreshToken, expiresIn, user } = response.data;
+  
+      // Guardar token (para futuras requests autenticadas)
+      await AsyncStorage.setItem("accessToken", token);
+      await AsyncStorage.setItem("refreshToken", refreshToken);
+      await AsyncStorage.setItem("user", JSON.stringify(user));
+  
+      // Logs para debug
+      console.log("✅ Login efetuado com sucesso!");
+      console.log("📦 Resposta completa do endpoint:", response.data);
+  
+      // Exemplo: simular se o user tem equipa
+      const hasTeam = true; // aqui mais tarde fazes um fetch real, ex: /users/:id/team
+  
+      if (hasTeam) {
+        router.push("../../components/navbar");
       } else {
-        console.error("Documento do usuário não encontrado no Firestore.");
-        setError("Dados do usuário não encontrados. Contate o suporte.");
+        router.push("../../PaginaPrincipal");
       }
     } catch (err) {
-      console.error("Erro ao fazer login:", err);
-      setError(
-        "O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!"
-      );
+      console.error("❌ Erro ao fazer login:", err.response?.data || err.message);
+      setError("O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!");
     }
   };
-
+  
   return (
     <View accessibilityRole="main" astyle={styles.container}>
       <View style={styles.wrapLogin}>

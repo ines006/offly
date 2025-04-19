@@ -18,11 +18,15 @@ import {
 import { useRouter } from "expo-router";
 import { doc, setDoc } from "firebase/firestore";
 import { useFonts } from "expo-font";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { baseurl } from "../../api-config/apiConfig"; 
+
 
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender, setGender] = useState();
   const [activeButton, setActiveButton] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -145,35 +149,48 @@ const Register = () => {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-
-      // Salvar fullName e username no Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        fullName: fullName,
+      // 1. Criação do participante
+      const response = await axios.post(`${baseurl}/participants`, {
+        name: fullName,
         username: username,
         email: email,
-        createdAt: new Date(),
-        team: "",
+        password: password,
         gender: gender,
-        image: getRandomImage(gender),
+        level: 1,   // Define o nível do participante defaultt como 1
+      });
+      
+      // 2. Autenticação para obter o token
+      const authResponse = await axios.post(`${baseurl}/auth/login`, {
+        email: email,
+        password: password,
       });
 
-      console.log("Registo realizado com sucesso!");
-      router.push("onboarding");
+      const { token, userData } = authResponse.data;
+
+      // 3. Guardar o token e dados do usuário no AsyncStorage
+      await AsyncStorage.setItem("token", token);
+      await AsyncStorage.setItem("user", JSON.stringify(userData));
+
+      console.log("Registo e autenticação realizados com sucesso!");
+      router.push("onboarding"); // Redireciona para a página de onboarding após sucesso
     } catch (err) {
-      setError("Falha ao fazer registo: " + err.message);
+      if (axios.isAxiosError(err)) {
+        console.log("Erro:", err.response?.data);
+        setError("Erro: " + JSON.stringify(err.response?.data));
+      } else {
+        setError("Erro desconhecido: " + err.message);
+      }
+      
+      // setError("Falha ao fazer registo ou login: " + err.message);
     }
-  };
+  }    
 
   const handleButtonClick = (button) => {
     setActiveButton(button);
-    setGender(button);
+    // Definir 0 para Masculino e 1 para Feminino
+    setGender(button === "Masculino" ? 0 : 1);
   };
+  
 
   return (
     <View accessibilityRole="main" style={styles.container}>

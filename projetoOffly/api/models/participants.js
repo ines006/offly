@@ -32,6 +32,10 @@ const Participants = sequelize.define(
       allowNull: false,
       defaultValue: 1,
     },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     password_hash: {
       type: DataTypes.STRING,
       allowNull: false,

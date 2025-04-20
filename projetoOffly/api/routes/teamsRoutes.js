@@ -1181,14 +1181,14 @@ router.delete(
 
 /**
  * @swagger
- * /teams/{teamId}/join:
+ * /teams/{id}/join:
  *   post:
  *     summary: Join a public team
  *     description: Allows an authenticated user to join a public team with available slots. The user must not already be a member of any team.
  *     tags: [Teams]
  *     parameters:
  *       - in: path
- *         name: teamId
+ *         name: id
  *         required: true
  *         schema:
  *           type: integer
@@ -1274,6 +1274,152 @@ router.delete(
  *                   type: string
  *                   example: Internal server error
  */
-router.post("/:teamId/join", authenticateToken, teamsController.joinTeam);
+router.post("/:id/join", authenticateToken, teamsController.joinTeam);
+
+/**
+ * @swagger
+ * /teams/{id}/invites:
+ *   post:
+ *     summary: Create an invite link for a team
+ *     description: Allows the team admin to generate an invite link for a private team. The link includes a unique token and expires after 7 days.
+ *     tags: [Teams]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the team
+ *         example: 1
+ *     responses:
+ *       201:
+ *         description: Invite created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invite created successfully
+ *                 inviteLink:
+ *                   type: string
+ *                   example: http://offly.com/join?token=550e8400-e29b-41d4-a716-446655440000
+ *       403:
+ *         description: Forbidden (e.g., user is not the team admin)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Only the team admin can create invites
+ *       404:
+ *         description: Team not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Team not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post("/:id/invites", authenticateToken, teamsController.createInvite);
+
+/**
+ * @swagger
+ * /teams/join-by-invite:
+ *   post:
+ *     summary: Join a team using an invite token
+ *     description: Allows an authenticated user to join a private team using a valid invite token. The user must not already be a member of any team.
+ *     tags: [Teams]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: 550e8400-e29b-41d4-a716-446655440000
+ *             required:
+ *               - token
+ *     responses:
+ *       201:
+ *         description: Successfully joined the team
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Successfully joined the team via invite
+ *       400:
+ *         description: Bad request (e.g., invalid token, team is full, or user is already in a team)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   enum:
+ *                     - Invite token is required
+ *                     - Invite token has expired
+ *                     - Participant is already a member of a team
+ *                     - Team has no available slots
+ *                   example: Invite token is required
+ *       404:
+ *         description: Invite, team, or participant not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   enum:
+ *                     - Invalid or expired invite token
+ *                     - Team not found
+ *                     - Participant not found
+ *             examples:
+ *               inviteNotFound:
+ *                 summary: Invalid or expired invite token
+ *                 value:
+ *                   error: Invalid or expired invite token
+ *               teamNotFound:
+ *                 summary: Team not found
+ *                 value:
+ *                   error: Team not found
+ *               participantNotFound:
+ *                 summary: Participant not found
+ *                 value:
+ *                   error: Participant not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post("/join-by-invite", authenticateToken, teamsController.joinByInvite);
 
 module.exports = router;

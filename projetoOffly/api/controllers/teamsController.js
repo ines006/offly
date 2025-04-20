@@ -6,7 +6,9 @@ const {
   Challenges,
   ParticipantsHasChallenges,
 } = require("../models");
+const Invites = require("../models/invites");
 const { Op, literal } = require("sequelize");
+const { v4: uuidv4 } = require("uuid"); //gerar os tokens
 
 // Listar informações de uma equipa "x"
 
@@ -748,15 +750,15 @@ exports.removeParticipantFromTeam = async (req, res) => {
   }
 };
 
-//Participante entrar numa equipa
+//Participante entrar numa equipa pública
 
 exports.joinTeam = async (req, res) => {
   try {
-    const { teamId } = req.params;
+    const { id } = req.params;
     const userId = req.user.id;
 
     // Procura a equipa
-    const team = await Teams.findByPk(teamId);
+    const team = await Teams.findByPk(id);
     if (!team) {
       return res.status(404).json({ error: "Team not found" });
     }
@@ -783,7 +785,7 @@ exports.joinTeam = async (req, res) => {
 
     // Contar o número atual de participantes na equipa
     const currentMembersCount = await Participants.count({
-      where: { teams_id: teamId },
+      where: { teams_id: id },
     });
 
     // Verifica se a equipa tem lotação disponível
@@ -792,7 +794,7 @@ exports.joinTeam = async (req, res) => {
     }
 
     // Associa o utilizador à equipa
-    participant.teams_id = teamId;
+    participant.teams_id = id;
     await participant.save();
 
     return res.status(201).json({ message: "Successfully joined the team" });
@@ -801,4 +803,128 @@ exports.joinTeam = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Criar convite para convidar participante para equipa privada
+
+exports.createInvite = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Validate id
+    const parsedTeamId = parseInt(id, 10);
+    if (isNaN(parsedTeamId)) {
+      return res.status(400).json({ error: "Invalid team ID" });
+    }
+
+    // Fetch the team
+    const team = await Teams.findByPk(parsedTeamId);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    // Check if the user is the team admin
+    if (team.team_admin !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Only the team admin can create invites" });
+    }
+
+    // Generate a unique token
+    const token = uuidv4();
+
+    // Set expiration (7 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Create the invite
+    const invite = await Invites.create({
+      token,
+      teamId: parsedTeamId,
+      createdBy: userId,
+      expiresAt,
+    });
+
+    // Create the invite link
+    const inviteLink = `http://offly.com/join?token=${token}`;
+
+    return res.status(201).json({
+      message: "Invite created successfully",
+      inviteLink,
+    });
+  } catch (error) {
+    console.error("Error creating invite:", error.stack);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Participante entrar numa equipa privada
+
+exports.joinByInvite = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const userId = req.user.id;
+
+    if (!token) {
+      return res.status(400).json({ error: "Invite token is required" });
+    }
+
+    // Busca o convite
+    const invite = await Invites.findOne({
+      where: { token },
+    });
+    if (!invite) {
+      return res.status(404).json({ error: "Invalid or expired invite token" });
+    }
+
+    // Verifica se o convite expirou
+    if (new Date() > invite.expiresAt) {
+      return res.status(400).json({ error: "Invite token has expired" });
+    }
+
+    // Busca a equipa
+    const team = await Teams.findByPk(invite.teamId);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    // Procurar o utilizador
+    const participant = await Participants.findByPk(userId);
+    if (!participant) {
+      return res.status(404).json({ error: "Participant not found" });
+    }
+
+    // Verificar se o utilizador já está numa equipa
+    if (participant.teams_id) {
+      return res
+        .status(400)
+        .json({ error: "Participant is already a member of a team" });
+    }
+
+    // Contar o número atual de participantes na equipa
+    const currentMembersCount = await Participants.count({
+      where: { teams_id: invite.teamId },
+    });
+
+    // Verificar se a equipa tem lotação disponível
+    if (currentMembersCount >= team.capacity) {
+      return res.status(400).json({ error: "Team has no available slots" });
+    }
+
+    // Associar o utilizador à equipa
+    participant.teams_id = invite.teamId;
+    await participant.save();
+
+    // Remover o convite após uso (para uso único)
+    await invite.destroy();
+
+    return res
+      .status(201)
+      .json({ message: "Successfully joined the team via invite" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = exports;

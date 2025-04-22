@@ -123,7 +123,7 @@ router.get("/:id", participantsController.getParticipantById);
  *               password:
  *                 type: string
  *                 format: password
- *                 description: Password (min 6 chars, must include uppercase, lowercase, and special characters)
+ *                 description: Password (min 8 chars, must include uppercase, lowercase, and special characters)
  *                 example: Teste123!
  *               gender:
  *                 type: integer
@@ -203,7 +203,7 @@ router.get("/:id", participantsController.getParticipantById);
  *               shortPassword:
  *                 summary: Password too short
  *                 value:
- *                   message: The password must be at least 6 characters long
+ *                   message: The password must be at least 8 characters long
  *               invalidGender:
  *                 summary: Invalid gender value
  *                 value:
@@ -266,7 +266,7 @@ router.post("/", participantsController.createParticipant);
  *               password:
  *                 type: string
  *                 format: password
- *                 description: The participant's new password (min 6 characters, must include uppercase, lowercase, number, and special character)
+ *                 description: The participant's new password (min 8 characters, must include uppercase, lowercase, number, and special character)
  *                 example: NewPass123!
  *     responses:
  *       200:
@@ -389,7 +389,7 @@ router.post("/", participantsController.createParticipant);
  *               shortPassword:
  *                 summary: Password too short
  *                 value:
- *                   message: The password must be at least 6 characters long
+ *                   message: The password must be at least 8 characters long
  *               weakPassword:
  *                 summary: Password lacks required complexity
  *                 value:

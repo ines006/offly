@@ -10,7 +10,13 @@ import {
 import Svg, { Circle, Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { db } from "../../firebase/firebaseApi";
-import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { useRouter } from "expo-router";
 
@@ -25,7 +31,7 @@ const DesafioSemanal = () => {
     seconds: 0,
   });
   const [desafio, setDesafio] = useState("");
-  const [currentCarta, setCurrentCarta] = useState(null); // Carta sendo renderizada
+  const [currentCarta, setCurrentCarta] = useState(null);
   const intervaloRef = useRef(null);
   const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
 
@@ -37,12 +43,12 @@ const DesafioSemanal = () => {
           .map((doc) => ({ id: doc.id, ...doc.data() }))
           .sort((a, b) => a.id.localeCompare(b.id));
 
-          const cartaToRender = cartas.find((carta) => !carta.validada);
-          if (cartaToRender) {
-            setCurrentCarta(cartaToRender); // Inclui o campo imagem
-            setDesafio(cartaToRender.cartades || "Desafio não encontrado.");
-            fetchTeamAndParticipants(cartaToRender.id);
-            fetchTimerData(cartaToRender.id);
+        const cartaToRender = cartas.find((carta) => !carta.validada);
+        if (cartaToRender) {
+          setCurrentCarta(cartaToRender);
+          setDesafio(cartaToRender.cartades || "Desafio não encontrado.");
+          fetchTeamAndParticipants(cartaToRender.id);
+          fetchTimerData(cartaToRender.id);
         } else {
           console.log("Todas as cartas estão validadas.");
         }
@@ -109,7 +115,13 @@ const DesafioSemanal = () => {
 
     const fetchTimerData = async (cartaId) => {
       try {
-        const timerDocRef = doc(db, "desafioSemanal", cartaId, "timer", "timerCarta");
+        const timerDocRef = doc(
+          db,
+          "desafioSemanal",
+          cartaId,
+          "timer",
+          "timerCarta"
+        );
         const timerDoc = await getDoc(timerDocRef);
 
         if (!timerDoc.exists()) throw new Error("Timer não encontrado.");
@@ -127,7 +139,9 @@ const DesafioSemanal = () => {
         }
 
         if (endTime <= startTime) {
-          throw new Error("A data de término é anterior ou igual à data de início.");
+          throw new Error(
+            "A data de término é anterior ou igual à data de início."
+          );
         }
 
         const updateTimer = () => {
@@ -135,14 +149,14 @@ const DesafioSemanal = () => {
           const timeRemaining = endTime - now;
 
           if (timeRemaining <= 0) {
-            console.log("Timer terminou! Atualizando Firestore...");
             setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
-            // Atualiza o campo 'validada' no Firestore
             const cartaDocRef = doc(db, "desafioSemanal", cartaId);
             clearInterval(intervaloRef.current);
             updateDoc(cartaDocRef, { validada: true })
-              .then(() => console.log("Campo 'validada' atualizado com sucesso!"))
+              .then(() =>
+                console.log("Campo 'validada' atualizado com sucesso!")
+              )
               .catch((error) =>
                 console.error("Erro ao atualizar o campo 'validada':", error)
               );
@@ -180,40 +194,45 @@ const DesafioSemanal = () => {
   const valorPorBolinha = participantes.length
     ? 100 / (7 * participantes.length)
     : 0;
-
   const bolinhasAzuis = participantes.reduce((total, participante) => {
-    const statusTrue = participante.status.filter((status) => status === true).length;
+    const statusTrue = participante.status.filter(
+      (status) => status === true
+    ).length;
     return total + statusTrue;
   }, 0);
-
-  const progresso = Math.max(0, Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2)));
+  const progresso = Math.max(
+    0,
+    Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2))
+  );
 
   return (
-    <ScrollView  contentContainerStyle={styles.container}>
-      {/* Botão de Voltar atrás */}
-            <TouchableOpacity style={styles.backButton} onPress={() => router.push("../../components/navbar")} accessibilityLabel="Botão voltar atrás">
-                <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
-                  <Circle
-                    cx="18.1351"
-                    cy="17.1713"
-                    r="16.0177"
-                    stroke="#263A83"
-                    strokeWidth={2}
-                  />
-                  <Path
-                    d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
-                    stroke="#263A83"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                  />
-                </Svg>
+    <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push("../../components/navbar")}
+      >
+        <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+          <Circle
+            cx="18.1351"
+            cy="17.1713"
+            r="16.0177"
+            stroke="#263A83"
+            strokeWidth={2}
+          />
+          <Path
+            d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+            stroke="#263A83"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
       </TouchableOpacity>
 
       <Text style={styles.title}>Desafio da Semana</Text>
 
       {currentCarta ? (
         <>
-          <View  accessible={true} style={styles.timerContainer}>
+          <View style={styles.timerContainer}>
             <View style={styles.timer}>
               <Text style={styles.timerText}>
                 {timer.days}d {timer.hours}h {timer.minutes}m {timer.seconds}s
@@ -221,21 +240,21 @@ const DesafioSemanal = () => {
             </View>
           </View>
 
-          <View  accessible={true} style={styles.cardContainer}>
-          <View style={styles.mainCard}>
-            {currentCarta.imagem && (
-              <Image
-                accessibilityLabel="Carta do desafio semanal"
-                source={{ uri: currentCarta.imagem }} // Usar o campo 'imagem' como fonte
-                style={styles.cardImage} // Adicionar estilo para a imagem
-                resizeMode="cover" // Ajustar como a imagem será exibida
-              />
-            )}
-            <Text style={styles.mainDescription}>{desafio}</Text>
-          </View>
+          <View style={styles.cardContainer}>
+            <View style={styles.mainCard}>
+              {currentCarta.imagem && (
+                <Image
+                  accessibilityLabel="Carta do desafio semanal"
+                  source={{ uri: currentCarta.imagem }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                />
+              )}
+              <Text style={styles.mainDescription}>{desafio}</Text>
+            </View>
           </View>
 
-          <View  accessible={true} style={styles.progressContainer}>
+          <View style={styles.progressContainer}>
             <View style={styles.progressBarBackground}>
               <LinearGradient
                 colors={["rgba(38, 58, 131, 1)", "rgba(38, 58, 131, 0)"]}
@@ -248,7 +267,7 @@ const DesafioSemanal = () => {
             </View>
           </View>
 
-          <View  accessible={true} style={styles.participantsContainer}>
+          <View style={styles.participantsContainer}>
             <Text style={styles.participantsTitle}>Participantes</Text>
             {participantes.map((participante, index) => (
               <View key={index} style={styles.card}>
@@ -258,51 +277,25 @@ const DesafioSemanal = () => {
                   style={styles.peopleImage}
                 />
                 <Text style={styles.participantText}>{participante.name}</Text>
-                <View style={styles.circlesWrapper}>
-                  <View style={styles.rowTop}>
-                    {participante.status.slice(0, 4).map((status, idx) => (
-                      <View
-                        key={`top-${idx}`}
-                        style={[
-                          styles.circle,
-                          {
-                            backgroundColor:
-                              status === true
-                                ? "#263A83"
-                                : status === false
-                                ? "#A9A9A9"
-                                : "#D3D3D3",
-                          },
-                        ]}
-                      >
-                        <Text style={styles.circleText}>
-                          {diasDaSemana[idx]}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                  <View style={styles.rowBottom}>
-                    {participante.status.slice(4).map((status, idx) => (
-                      <View
-                        key={`bottom-${idx}`}
-                        style={[
-                          styles.circle,
-                          {
-                            backgroundColor:
-                              status === true
-                                ? "#263A83"
-                                : status === false
-                                ? "#A9A9A9"
-                                : "#D3D3D3",
-                          },
-                        ]}
-                      >
-                        <Text style={styles.circleText}>
-                          {diasDaSemana[idx + 4]}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
+                <View style={styles.circlesWrapperSingleRow}>
+                  {participante.status.map((status, idx) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.circle,
+                        {
+                          backgroundColor:
+                            status === true
+                              ? "#263A83"
+                              : status === false
+                              ? "#A9A9A9"
+                              : "#D3D3D3",
+                        },
+                      ]}
+                    >
+                      <Text style={styles.circleText}>{diasDaSemana[idx]}</Text>
+                    </View>
+                  ))}
                 </View>
               </View>
             ))}
@@ -357,8 +350,8 @@ const styles = StyleSheet.create({
     borderColor: "#263A83",
     borderWidth: 10,
     alignItems: "center",
-    justifyContent: "flex-start", 
-    overflow: "hidden", 
+    justifyContent: "flex-start",
+    overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -376,18 +369,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
   },
-  progressText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#263A83",
-    marginBottom: 5,
-  },
   progressBarBackground: {
     height: 30,
     backgroundColor: "#E0E0E0",
-    borderRadius: 5,
-    overflow: "hidden",
     borderRadius: 30,
+    overflow: "hidden",
   },
   progressBar: {
     height: "100%",
@@ -442,17 +428,12 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
   },
-  circlesWrapper: {
-    marginLeft: "auto",
-  },
-  rowTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  rowBottom: {
+  circlesWrapperSingleRow: {
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: "center",
+    marginLeft: "auto",
+    marginTop: 4,
   },
   circle: {
     width: 20,
@@ -467,12 +448,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white",
   },
   loadingText: {
     fontSize: 16,
@@ -491,20 +466,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 999,
   },
-  backButtonText: {
-    color: "#263A83",
-    fontSize: 30,
-    alignItems: "center",
-    marginTop: -4,
-  },
   cardImage: {
-    width: "100%", 
-    height: 150, 
-    borderTopLeftRadius: 10, 
-    borderTopRightRadius: 10, 
+    width: "100%",
+    height: 150,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
     marginTop: 50,
   },
-  
 });
 
 export default DesafioSemanal;

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { BackHandler } from "react-native";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { Accelerometer } from "expo-sensors";
@@ -15,7 +16,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { TittlePagina } from "../../styles/styles";
-import { AccessibilityInfo, BackHandler } from "react-native";
+import { AccessibilityInfo } from "react-native";
 
 export default function Shake() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function Shake() {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setImageURL(data.imagem); 
+          setImageURL(data.imagem);
         } else {
           console.error("Documento não encontrado!");
         }
@@ -65,11 +66,14 @@ export default function Shake() {
   }, []);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => true);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true
+    );
     const subscription = Accelerometer.addListener(({ x, y, z }) => {
       const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
-      if (totalForce > 1) {
+      if (totalForce > 4) {
         shakeCount.current += 1;
 
         if (shakeCount.current >= 5 && !isNavigating) {
@@ -80,10 +84,7 @@ export default function Shake() {
 
     Accelerometer.setUpdateInterval(100);
 
-    return () => {
-      subscription.remove();
-      backHandler.remove();
-    };
+    return () => subscription.remove();
   }, [isNavigating]);
 
   const triggerCardAnimation = (subscription) => {
@@ -92,19 +93,40 @@ export default function Shake() {
 
     AccessibilityInfo.announceForAccessibility("O Shake foi feito");
 
-    rotateAnimation.value = withTiming(360, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
-      rotateAnimation.value = 0;
-    });
+    rotateAnimation.value = withTiming(
+      360,
+      { duration: 1000, easing: Easing.out(Easing.ease) },
+      () => {
+        rotateAnimation.value = 0;
+      }
+    );
 
-    scaleAnimation.value = withTiming(1.5, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
-      distributeOffset1.value = withTiming(-150, { duration: 1500, easing: Easing.out(Easing.ease) });
-      distributeOffset2.value = withTiming(0, { duration: 1500, easing: Easing.out(Easing.ease) });
-      distributeOffset3.value = withTiming(150, { duration: 1500, easing: Easing.out(Easing.ease) });
+    scaleAnimation.value = withTiming(
+      1.5,
+      { duration: 1000, easing: Easing.out(Easing.ease) },
+      () => {
+        distributeOffset1.value = withTiming(-150, {
+          duration: 1500,
+          easing: Easing.out(Easing.ease),
+        });
+        distributeOffset2.value = withTiming(0, {
+          duration: 1500,
+          easing: Easing.out(Easing.ease),
+        });
+        distributeOffset3.value = withTiming(150, {
+          duration: 1500,
+          easing: Easing.out(Easing.ease),
+        });
 
-      scaleAnimation.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) }, () => {
-        runOnJS(navigateToCards)();
-      });
-    });
+        scaleAnimation.value = withTiming(
+          1,
+          { duration: 500, easing: Easing.out(Easing.ease) },
+          () => {
+            runOnJS(navigateToCards)();
+          }
+        );
+      }
+    );
   };
 
   const navigateToCards = () => {
@@ -152,9 +174,20 @@ export default function Shake() {
 
   return (
     <View style={styles.background}>
-      <View accessible={true} accessibilityRole="header" accessibilityLabel="Título: Shake">
-            <TittlePagina accessible={true} accessibilityRole="header" accessibilityLabel="Título: Shake"> Shake </TittlePagina>
-          </View>
+      <View
+        accessible={true}
+        accessibilityRole="header"
+        accessibilityLabel="Título: Shake"
+      >
+        <TittlePagina
+          accessible={true}
+          accessibilityRole="header"
+          accessibilityLabel="Título: Shake"
+        >
+          {" "}
+          Shake{" "}
+        </TittlePagina>
+      </View>
       <View style={styles.container}>
         {/* Carta principal */}
         <Animated.View style={[styles.card, combinedStyle]}>
@@ -182,14 +215,13 @@ export default function Shake() {
         </Animated.View>
 
         {/* Texto e botão */}
-        <Text style={styles.description}>
-          Abana o telemóvel
-        </Text>
-        <Text style={styles.description2}>
-          descobre o desafio do dia
-        </Text>
+        <Text style={styles.description}>Abana o telemóvel</Text>
+        <Text style={styles.description2}>descobre o desafio do dia</Text>
 
-        <TouchableOpacity style={styles.shakeButton} onPress={() => triggerCardAnimation()}>
+        <TouchableOpacity
+          style={styles.shakeButton}
+          onPress={() => triggerCardAnimation()}
+        >
           <Text style={styles.shakeButtonText}>Fazer Shake</Text>
         </TouchableOpacity>
       </View>

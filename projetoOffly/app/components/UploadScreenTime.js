@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-//   stats: {
-//     borderRadius: 8,
-//     paddingVertical: 10,
-//     paddingHorizontal: 16,
-//   },
+  //   stats: {
+  //     borderRadius: 8,
+  //     paddingVertical: 10,
+  //     paddingHorizontal: 16,
+  //   },
 
   statItem: {
     flexDirection: "row",
@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     padding: 10,
     margin: 10,
-
   },
   statText: {
     fontSize: 14,

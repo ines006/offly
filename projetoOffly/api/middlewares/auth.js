@@ -9,7 +9,8 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, "4DSFSDJIRTIOEHTOIDS_sDSDFSDFS");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Token validado com sucesso:", decoded); // <-- Adiciona isto
     req.user = decoded; // Adiciona os dados do participante ao request (id, email)
     next();
   } catch (error) {

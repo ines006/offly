@@ -149,39 +149,40 @@ const Register = () => {
     }
 
     try {
-      // 1. Criação do participante
+      console.log("A iniciar registo...");
       const response = await axios.post(`${baseurl}/participants`, {
         name: fullName,
         username: username,
         email: email,
         password: password,
         gender: gender,
-        level: 1,   // Define o nível do participante defaultt como 1
+        level: 1,
       });
-      
-      // 2. Autenticação para obter o token
+    
+      console.log("Registo concluído. A iniciar login...");
+    
       const authResponse = await axios.post(`${baseurl}/auth/login`, {
         email: email,
         password: password,
       });
-
-      const { token, userData } = authResponse.data;
-
-      // 3. Guardar o token e dados do usuário no AsyncStorage
+    
+      console.log("Login concluído. A guardar no AsyncStorage...");
+    
+      const { token, user } = authResponse.data;
+      console.log("authResponse.data:", authResponse.data);
+    
       await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("user", JSON.stringify(userData));
-
+      await AsyncStorage.setItem("user", JSON.stringify(user));
+    
       console.log("Registo e autenticação realizados com sucesso!");
-      router.push("onboarding"); // Redireciona para a página de onboarding após sucesso
+      router.push("onboarding");
     } catch (err) {
+      console.log("Erro no processo:", err); // <- Este vai mostrar mais detalhes
       if (axios.isAxiosError(err)) {
-        console.log("Erro:", err.response?.data);
         setError("Erro: " + JSON.stringify(err.response?.data));
       } else {
         setError("Erro desconhecido: " + err.message);
       }
-      
-      // setError("Falha ao fazer registo ou login: " + err.message);
     }
   }    
 

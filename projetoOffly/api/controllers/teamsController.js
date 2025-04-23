@@ -15,7 +15,7 @@ const { v4: uuidv4 } = require("uuid"); //gerar os tokens
 exports.getTeamParticipants = async (req, res) => {
   try {
     const team = await Teams.findByPk(req.params.id, {
-      attributes: ["name", "points", "capacity"],
+      attributes: ["name", "points", "capacity", "image"],
       include: [
         {
           model: Participants,
@@ -41,6 +41,7 @@ exports.getTeamParticipants = async (req, res) => {
       points: team.points,
       capacity: team.capacity,
       name: team.competition ? team.competition.name : null,
+      image: team.image,
       participants: team.participants.map((p) => ({
         id: p.id,
         name: p.name,
@@ -75,6 +76,7 @@ exports.createTeam = async (req, res) => {
     const {
       name,
       description,
+      image,
       capacity,
       visibility,
       competitions_id,
@@ -142,6 +144,7 @@ exports.createTeam = async (req, res) => {
     const newTeam = await Teams.create({
       name: normalizedName,
       description,
+      image,
       points: 100,
       capacity,
       visibility,
@@ -171,6 +174,7 @@ exports.createTeam = async (req, res) => {
       id: newTeam.id,
       name: newTeam.name,
       description: newTeam.description,
+      image: newTeam.image,
       points: newTeam.points,
       capacity: newTeam.capacity,
       visibility: newTeam.visibility,
@@ -208,7 +212,7 @@ exports.getTeamsByCompetition = async (req, res) => {
       where: {
         competitions_id: competitionId,
       },
-      attributes: ["name", "points"],
+      attributes: ["name", "points", "image"],
       order, // Aplica ordenação se sort=ranking, senão retorna sem ordenação específica
     });
 
@@ -223,6 +227,7 @@ exports.getTeamsByCompetition = async (req, res) => {
       teams: teams.map((team) => ({
         name: team.name,
         points: team.points,
+        image: team.image,
       })),
     });
   } catch (error) {
@@ -498,11 +503,12 @@ exports.getTeams = async (req, res) => {
     const totalTeams = totalTeamsResult.length;
     const totalPages = Math.ceil(totalTeams / limit);
 
-    // Buscar equipes com paginação
+    // Buscar equipas com paginação
     const teams = await Teams.findAll({
       attributes: [
         "name",
         "capacity",
+        "image",
         [
           Sequelize.fn("COUNT", Sequelize.col("participants.id")), // Usar alias participants
           "participant_count",
@@ -516,7 +522,7 @@ exports.getTeams = async (req, res) => {
           required: false, // LEFT JOIN
         },
       ],
-      group: ["Teams.id", "Teams.name", "Teams.capacity"],
+      group: ["Teams.id", "Teams.name", "Teams.capacity", "Teams.image"],
       having: havingCondition,
       order: [[Sequelize.literal("participant_count"), "DESC"]],
       limit: limit,
@@ -575,6 +581,7 @@ exports.searchTeamsByName = async (req, res) => {
         "id",
         "name",
         "description",
+        "image",
         "points",
         "capacity",
         "visibility",
@@ -607,6 +614,7 @@ exports.searchTeamsByName = async (req, res) => {
         id: team.id,
         name: team.name,
         description: team.description,
+        image: team.image,
         points: team.points,
         capacity: team.capacity,
         visibility: team.visibility,

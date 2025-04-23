@@ -40,10 +40,15 @@ exports.getParticipantById = async (req, res) => {
 exports.createParticipant = async (req, res) => {
   try {
 
-    const { name, username, email, password, gender, level = 1 } = req.body;
+    const { name, username, email, password, gender, level = 1, image } = req.body;
 
     if (!name || !username || !email || !password || gender === undefined) {
       return res.status(422).json({ message: "All fields are required" });
+    }
+
+    // Validar URL da imagem
+    if (image && typeof image !== "string") {
+      return res.status(422).json({ message: "Image must be a string" });
     }
 
     // Validar formato do email
@@ -100,6 +105,7 @@ exports.createParticipant = async (req, res) => {
       password_hash,
       gender,
       level,
+      image,
     });
 
     res.status(201).json({ id: participant.id, email: participant.email });

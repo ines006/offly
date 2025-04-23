@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 3010;
 
 const corsOptions = {
-  origin: "http://localhost:5173", // ou "*" apenas para testes
+  origin: "http://localhost:8081", // ou "*" apenas para testes
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true, // caso uses cookies ou headers de auth

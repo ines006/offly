@@ -24,6 +24,10 @@ const Teams = sequelize.define(
         len: [3, 60],
       },
     },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     points: {
       type: DataTypes.INTEGER,
       allowNull: false,

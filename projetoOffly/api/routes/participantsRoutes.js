@@ -28,6 +28,7 @@ const authorizeSelf = require("../middlewares/authorize");
  *                 username: joaosilva
  *                 email: joao@example.com
  *                 level: 1
+ *                 image: "https://meusite.com/imagens/random.png"
  *                 gender: 1
  *                 upload: 1
  *                 answers_id: 1
@@ -66,6 +67,7 @@ router.get("/", participantsController.getAllParticipants);
  *                 username: joaosilva
  *                 email: joao@example.com
  *                 level: 1
+ *                 image: "https://meusite.com/imagens/random.png"
  *                 gender: 1
  *                 upload: 1
  *                 answers_id: 1
@@ -135,6 +137,10 @@ router.get("/:id", participantsController.getParticipantById);
  *                 description: Participant level (optional, defaults to 1)
  *                 example: 1
  *                 default: 1
+ *               image:
+ *                 type: string
+ *                 description: Image URL or base64 string for the participant's image (optional)
+ *                 example: "https://example.com/images/joaosilva.jpg"
  *     responses:
  *       201:
  *         description: Participant created successfully

@@ -213,6 +213,10 @@ router.get("/", teamsController.getTeams);
  *                     type: string
  *                     description: The description of the team
  *                     example: A competitive team
+ *                   image:
+ *                     type: string
+ *                     description: Team image URL (optional — auto-generated if not submitted)
+ *                     example: "https://meusite.com/imagens/random.png"
  *                   points:
  *                     type: integer
  *                     description: The team's points
@@ -354,6 +358,10 @@ router.get("/search", teamsController.searchTeamsByName);
  *                   nullable: true
  *                   description: The name of the competition (overrides team name if competition exists)
  *                   example: "Spring Tournament"
+ *                 image:
+ *                   type: string
+ *                   description: Team image URL (optional — auto-generated if not submitted)
+ *                   example: "https://meusite.com/imagens/random.png"
  *                 points:
  *                   type: integer
  *                   description: The team's total points
@@ -502,6 +510,10 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                   type: string
  *                   description: The team description
  *                   example: "A competitive team for the Spring Tournament"
+*                  image:
+ *                   type: string
+ *                   description: Team image URL (optional — auto-generated if not submitted)
+ *                   example: "https://meusite.com/imagens/random.png"
  *                 points:
  *                   type: integer
  *                   description: The team's initial points

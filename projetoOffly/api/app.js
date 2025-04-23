@@ -12,7 +12,14 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3010;
 
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:5173", // ou "*" apenas para testes
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // caso uses cookies ou headers de auth
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // Swagger route

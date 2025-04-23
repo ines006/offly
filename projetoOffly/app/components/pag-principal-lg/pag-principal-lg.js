@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styled from "styled-components/native";
 import { Alert, TouchableOpacity, View, ScrollView } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
@@ -31,24 +31,24 @@ import {
   StarsContainer,
   Star,
 } from "../../styles/styles.js";
-// Firebase Imports
 import { auth, db } from "../../firebase/firebaseApi";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { AuthContext } from "../entrar/AuthContext"; // importa o contexto
 
 export default function Home() {
   const router = useRouter();
 
-  const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
-  const [isUploadedToday, setIsUploadedToday] = useState(false); // var de estado que define o estado do upload T ou F
-  const [timeRemaining, setTimeRemaining] = useState(0); // var de estado que guarda o tempo restante para novo upload
-  const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
-  const [teamId, setTeamId] = useState(""); // var de estado que guarda o id da equipa do utilizador
-  const [teamPoints, setTeamPoints] = useState(0); // var de estado que guarda os pontos da equipa
-  const [teamMembers, setTeamMembers] = useState(0); // var de estado que guarda o nº de participantes
-  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
+  const { user } = useContext(AuthContext); // acede ao utilizador logado
 
-  // Array de URLs das imagens p/ users
-  // Caso ainda não tenham imagem de perfil (vai uma aleatória)
+  const [userId, setUserId] = useState(null);
+  const [isUploadedToday, setIsUploadedToday] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [userName, setUserName] = useState("");
+  const [teamId, setTeamId] = useState("");
+  const [teamPoints, setTeamPoints] = useState(0);
+  const [teamMembers, setTeamMembers] = useState(0);
+  const [profileImage, setProfileImage] = useState(null);
+
   const imageUserUrls = [
     "https://celina05.sirv.com/avatares/avatar4.png",
     "https://celina05.sirv.com/avatares/avatar5.png",
@@ -72,24 +72,20 @@ export default function Home() {
     "https://celina05.sirv.com/avatares/avatar19.png",
   ];
 
-  // Função para obter uma URL aleatória
   const getRandomImage = (tipo) => {
     const randomIndex = Math.floor(Math.random() * tipo.length);
     return tipo[randomIndex];
   };
 
-  // Verificação de utilizador logado
   useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUserId(currentUser.uid);
-      console.log("utilizador logado na pag principal", currentUser);
+    if (user && user.id) {
+      setUserId(user.id); // assumindo que guardas o id como "id" no objeto user
+      console.log("Utilizador logado via contexto:", user);
     } else {
       Alert.alert("Erro", "Nenhum utilizador logado!");
     }
-  }, []);
+  }, [user]);
 
-  // Função para obter o dados do utilizador e  do torneio
   useEffect(() => {
     const Data = async () => {
       try {
@@ -116,14 +112,10 @@ export default function Home() {
           }
 
           if (image) {
-            // Atribuir a imagem existente ao estado
             setProfileImage({ uri: image });
           } else {
-            // Gerar e atribuir uma nova imagem aleatória
             const newProfileImage = getRandomImage(imageUserUrls);
             setProfileImage({ uri: newProfileImage });
-
-            // Atualizar o documento do utilizador com a nova imagem
             await updateDoc(userDocRef, { image: newProfileImage });
           }
         } else {
@@ -137,20 +129,18 @@ export default function Home() {
     Data();
   }, [userId]);
 
-  // Função para redefinir o status de upload
   const resetUploadStatus = async () => {
     try {
       if (!userId) return;
       const userDocRef = doc(db, "users", userId);
-      await updateDoc(userDocRef, { upload: false }); // Atualiza o campo "upload" para false
-      setIsUploadedToday(false); // Atualiza o estado local
+      await updateDoc(userDocRef, { upload: false });
+      setIsUploadedToday(false);
       console.log("Status de upload redefinido.");
     } catch (error) {
       console.error("Erro ao redefinir o status de upload:", error);
     }
   };
 
-  // Função para calcular o tempo restante até a próxima meia-noite
   const calculateNextReset = () => {
     const now = new Date();
     const resetTime = new Date(
@@ -165,29 +155,25 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const timeUntilReset = calculateNextReset(); // Calcula o tempo até o próximo reset
-    setTimeRemaining(timeUntilReset); // Define o estado inicial do tempo restante
+    const timeUntilReset = calculateNextReset();
+    setTimeRemaining(timeUntilReset);
 
-    // Configura um temporizador para redefinir o status na próxima meia-noite
     const timer = setTimeout(() => {
-      resetUploadStatus(); // Redefine o status de upload
-      setTimeRemaining(calculateNextReset()); // Atualiza o tempo restante
+      resetUploadStatus();
+      setTimeRemaining(calculateNextReset());
     }, timeUntilReset);
 
-    // Atualiza o tempo restante a cada segundo
     const interval = setInterval(() => {
-      setTimeRemaining((prev) => Math.max(prev - 1000, 0)); // Evita valores negativos
+      setTimeRemaining((prev) => Math.max(prev - 1000, 0));
     }, 1000);
 
-    // Limpa os temporizadores ao desmontar o componente
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
     };
-  }, [userId]); // Executa novamente se userId mudar
+  }, [userId]);
 
   useEffect(() => {
-    // Função para verificar o status de upload na firebase
     const checkUploadStatus = async () => {
       try {
         if (!userId) return;
@@ -195,8 +181,8 @@ export default function Home() {
         const docSnap = await getDoc(userDocRef);
 
         if (docSnap.exists()) {
-          const { upload } = docSnap.data(); // Obtém o campo "upload" do documento
-          setIsUploadedToday(upload || false); // Atualiza o estado com o valor do campo
+          const { upload } = docSnap.data();
+          setIsUploadedToday(upload || false);
         } else {
           console.log("Documento do utilizador não encontrado.");
         }
@@ -205,10 +191,9 @@ export default function Home() {
       }
     };
 
-    checkUploadStatus(); // Chama a função ao montar o componente
-  }, [userId]); // Executa novamente se userId mudar
+    checkUploadStatus();
+  }, [userId]);
 
-  // Formato do temporizador
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -235,7 +220,7 @@ export default function Home() {
     router.push("../../perfil");
   };
 
-  return (
+ return (
     <>
       <View
         accessible={true}
@@ -478,6 +463,7 @@ export default function Home() {
     </>
   );
 }
+
 
 // Styled Component para o botão
 const CountdownButton = styled.View`

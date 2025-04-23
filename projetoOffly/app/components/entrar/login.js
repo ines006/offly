@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { baseurl } from "../../api-config/apiConfig"; 
+import {AuthContext} from "./AuthContext"
 
 import {
   StyleSheet,
@@ -21,6 +22,7 @@ const Login = () => {
   const [focusField, setFocusField] = useState("");
   const [emailBarWidth] = useState(new Animated.Value(email ? 100 : 0));
   const [passwordBarWidth] = useState(new Animated.Value(password ? 100 : 0));
+  const { setUser, setAccessToken } = useContext(AuthContext);
 
   const router = useRouter();
 
@@ -72,11 +74,16 @@ const Login = () => {
       // Exemplo: simular se o user tem equipa
       const hasTeam = true; // aqui mais tarde fazes um fetch real, ex: /users/:id/team
   
+      setUser(user);
+      setAccessToken(token);
+      
       if (hasTeam) {
         router.push("../../components/navbar");
       } else {
         router.push("../../PaginaPrincipal");
       }
+    
+
     } catch (err) {
       console.error("❌ Erro ao fazer login:", err.response?.data || err.message);
       setError("O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!");

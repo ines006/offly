@@ -1,104 +1,59 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components/native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { Alert, TouchableOpacity } from "react-native";
-import { auth } from "./firebase/firebaseApi";
-import { useRouter } from "expo-router";
+import { AuthContext } from "./components/entrar/AuthContext";
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { baseurl } from "./api-config/apiConfig"; 
-import jwtDecode from "jwt-decode";
+import { Alert, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
+import { baseurl } from "./api-config/apiConfig";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const ProfileScreen = () => {
-  //const jwtDecode = require("jwt-decode");
-
-  const [userId, setUserId] = useState(null);
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [profileImage, setProfileImage] = useState(null);
+  const { user, accessToken, loading } = useContext(AuthContext);
+  const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
 
-  // Função para buscar o ID do participante a partir do token
   useEffect(() => {
-    const getUserIdFromToken = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-  
-        if (token) {
-          
-          const decodedToken = jwtDecode(token);
-          console.log("decodedToken:", decodedToken);
-  
-          // Verifique se o token contém o campo id
-          if (decodedToken && decodedToken.id) {
-            setUserId(decodedToken.id);
-          } else {
-            Alert.alert("Erro", "ID do usuário não encontrado no token.");
-          }
-        } else {
-          Alert.alert("Erro", "Token não encontrado.");
-        }
-      } catch (error) {
-        console.error("Erro ao obter ID do token:", error);
-        Alert.alert("Erro", "Falha ao decodificar o token.");
-      }
-    };
-  
-    getUserIdFromToken();
-  }, []);
-  
-  
-  // Carregar dados do usuário apenas quando o userId mudar
-  useEffect(() => {
-    const loadUserData = async () => {
+    const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
-  
-        const token = await AsyncStorage.getItem("token");
-  
-        const response = await axios.get(`${baseurl}participants/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-  
-        if (response.data) {
-          const { fullName, username, image } = response.data;
-          setName(fullName || "");
-          setUsername(username || "");
-          setProfileImage(image || null);
+
+        if (!accessToken || !user?.id) {
+          console.warn("❗ Token ou ID do utilizador não está disponível.");
+          return;
         }
+
+        const url = `${baseurl}/participants/${user.id}`;
+        const headers = { Authorization: `Bearer ${accessToken}` };
+
+        console.log("🔐 Token usado na API:", accessToken);
+        console.log("📡 URL da requisição:", url);
+        console.log("👤 Utilizador logado via contexto:", user);
+
+        const response = await axios.get(url, { headers });
+
+        console.log("📥 Dados recebidos:", response.data);
+        setProfileData(response.data);
       } catch (error) {
-        console.error("Erro ao carregar os dados do usuário:", error);
-        Alert.alert("Erro", "Falha ao carregar dados do usuário.");
+        console.error("❌ Erro ao carregar dados do perfil:", error.message);
+        if (error.response) {
+          console.log("📡 Status:", error.response.status);
+          console.log("📡 Data:", error.response.data);
+        }
+        Alert.alert("Erro", "Falha ao carregar dados do perfil.");
       } finally {
         setIsLoading(false);
       }
     };
-  
-    if (userId) {
-      loadUserData();
-    }
-  }, [userId]);
-  
 
-  // Logout do usuário
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem("token"); // Remover o token do armazenamento
-      auth.signOut();
-      router.replace("./components/entrar/login");
-    } catch (error) {
-      console.error("Erro ao terminar sessão:", error);
-      Alert.alert("Erro", "Não foi possível terminar a sessão.");
+    if (!loading && user && accessToken) {
+      fetchUserProfile();
     }
-  };
+  }, [user, accessToken, loading]);
 
-  // Renderizar o conteúdo do perfil
-  if (isLoading) {
-    return <LoadingText>Carregando...</LoadingText>;
+  if (loading || isLoading) {
+    return <LoadingText>A carregar...</LoadingText>;
   }
 
   return (
@@ -111,10 +66,6 @@ const ProfileScreen = () => {
       </Header>
 
       <AvatarContainer>
-        {/* <Avatar
-          accessibilityLabel="Imagem de perfil do utilizador"
-          source={profileImage ? { uri: profileImage } : require("./default-avatar.png")} // Imagem padrão se não houver imagem
-        /> */}
         <LevelText>Nível 1</LevelText>
         <Stars>
           <Icon name="star" size={20} color="#263A83" />
@@ -127,25 +78,22 @@ const ProfileScreen = () => {
         <Row>
           <Label>Nome</Label>
           <InputRow>
-            <Input value={name} editable={false} />
+            <Input value={profileData?.name || ""} editable={false} />
           </InputRow>
         </Row>
 
         <Row>
           <Label>Nome de Utilizador</Label>
           <InputRow>
-            <Input value={username} editable={false} />
+            <Input value={profileData?.username || ""} editable={false} />
           </InputRow>
         </Row>
-
-        <LogoutButton onPress={handleLogout}>
-          <LogoutText>Terminar Sessão</LogoutText>
-        </LogoutButton>
       </Form>
     </Container>
   );
 };
 
+// Estilos (mantive como no teu código)
 const Container = styled.View`
   flex: 1;
   background-color: #f9f9f9;
@@ -180,12 +128,6 @@ const HeaderTitle = styled.Text`
 const AvatarContainer = styled.View`
   align-items: center;
   margin-bottom: 20px;
-`;
-
-const Avatar = styled.Image`
-  width: 100px;
-  height: 100px;
-  border-radius: 50px;
 `;
 
 const LevelText = styled.Text`

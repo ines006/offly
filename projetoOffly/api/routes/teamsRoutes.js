@@ -469,6 +469,10 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                 type: string
  *                 description: A brief description of the team (3 to 60 characters, optional)
  *                 example: "A competitive team for the Spring Tournament"
+ *               image:
+ *                 type: string
+ *                 description: Team image URL (optional — auto-generated if not submitted)
+ *                 example: "https://meusite.com/imagens/random.png"
  *               capacity:
  *                 type: integer
  *                 description: The maximum number of participants (3 to 5)
@@ -510,7 +514,7 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                   type: string
  *                   description: The team description
  *                   example: "A competitive team for the Spring Tournament"
-*                  image:
+ *                 image:
  *                   type: string
  *                   description: Team image URL (optional — auto-generated if not submitted)
  *                   example: "https://meusite.com/imagens/random.png"

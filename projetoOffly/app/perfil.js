@@ -56,6 +56,22 @@ const ProfileScreen = () => {
     return <LoadingText>A carregar...</LoadingText>;
   }
 
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("token"); // Remover o token do armazenamento
+      auth.signOut();
+      router.replace("./components/entrar/login");
+    } catch (error) {
+      console.error("Erro ao terminar sessão:", error);
+      Alert.alert("Erro", "Não foi possível terminar a sessão.");
+    }
+  };
+
+  // Renderizar o conteúdo do perfil
+  if (isLoading) {
+    return <LoadingText>Carregando...</LoadingText>;
+  }
+
   return (
     <Container>
       <Header>
@@ -88,6 +104,17 @@ const ProfileScreen = () => {
             <Input value={profileData?.username || ""} editable={false} />
           </InputRow>
         </Row>
+
+        <Row>
+          <Label>Email</Label>
+          <InputRow>
+            <Input value={profileData?.email || ""} editable={false} />
+          </InputRow>
+        </Row>
+
+        <LogoutButton onPress={handleLogout}>
+          <LogoutText>Terminar Sessão</LogoutText>
+        </LogoutButton>
       </Form>
     </Container>
   );

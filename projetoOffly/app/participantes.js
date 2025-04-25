@@ -1,41 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styled from "styled-components/native";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import { baseurl } from "./api-config/apiConfig"; 
-import { Alert, TouchableOpacity } from "react-native"; 
+import { Alert, TouchableOpacity, Text, View } from "react-native"; 
 import imgParticipant from "./imagens/2.png"
+import {AuthContext} from "./components/entrar/AuthContext"
 
 const EcraParticipantes = () => {
-  const [participants, setParticipants] = useState([]);
+  const [answers, setAnswers] = useState([]);
   const [isLoading, setIsLoading] = useState(false); 
   const [error, setError] = useState(null); 
-  const router = useRouter();
+  const { user, accessToken } = useContext(AuthContext);
 
-  // Função para buscar os particiantes
   useEffect(() => {
-    const getParticipants = async () => {
+    const getData = async () => {
+      if (!user || !user.id) return;
+  
       try {
         setIsLoading(true);
-        setError(null); // Resetando erro ao fazer a requisição
-        
-        const response = await axios.get(`${baseurl}/participants`);
-    
-        if (response.data) {
-          console.log("Dados Participantes: ", response.data)
-          setParticipants(response.data);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar os dados:", error);
-        setError("Falha ao carregar dados, tente novamente mais tarde."); 
-        Alert.alert("Erro", "Falha ao carregar dados");
-      } finally {
-        setIsLoading(false);
-      }
+        setError(null);
+  
+        const response = await axios.get(`${baseurl}/participants/${user.id}/answers`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        console.log("resposta: ", response.data)
+        console.log("array answers: ", response.data.answers)
+         
+    setAnswers(response.data.answers);
+
+  } catch (error) {
+    console.error("Erro ao carregar os dados:", error);
+    setError("Falha ao carregar dados");
+    Alert.alert("Erro", "Falha ao carregar dados");
+  } finally {
+    setIsLoading(false);
+  }
     };
   
-    getParticipants();
-  }, []);
+    if (user?.id) {
+      getData();
+    }
+  }, [user]);
+  
 
   if (isLoading) {
     return <LoadingText>Carregando...</LoadingText>;
@@ -48,25 +58,25 @@ const EcraParticipantes = () => {
   return (
     <Container>
       <Header>
-        <HeaderTitle>Participantes</HeaderTitle>
+        <HeaderTitle>Respostas do Participante</HeaderTitle>
       </Header>
-
-      {/* Exibindo os participantes */}
-      <ParticipantsList
-        data={participants}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ParticipantItem>
-            <Avatar source={imgParticipant} />
-            <ParticipantInfo>
-              <ParticipantName>{item.name}</ParticipantName>
-              <ParticipantUsername>@{item.username}</ParticipantUsername>
-            </ParticipantInfo>
-          </ParticipantItem>
-        )}
-      />
+  
+      {answers ? (
+      //{answers.length > 0 ? (
+      // answers.map((resposta, index) => (
+      //   <View key={index}>
+      //       <Text>Resposta {index + 1}</Text>
+      //       <Text>{resposta}</Text>
+      //   </View>
+      // ))
+      <Text>{answers}</Text>
+    ) : (
+      <Text>Sem respostas disponíveis.</Text>
+    )}
     </Container>
   );
+  
+  
 };
 
 const Container = styled.View`

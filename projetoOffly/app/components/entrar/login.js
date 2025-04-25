@@ -78,9 +78,11 @@ const Login = () => {
       setAccessToken(token);
       
       if (hasTeam) {
-        router.push("../../components/navbar");
+        //router.push("../../components/navbar");
+        router.push("../../participantes");
       } else {
-        router.push("../../PaginaPrincipal");
+        // router.push("../../PaginaPrincipal");
+        router.push("../../participantes");
       }
     
 

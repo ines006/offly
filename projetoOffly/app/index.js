@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-
+import EcraParticipantes from './participantes'
 import Login from './components/entrar/login'
 import OfflyScreen from "./OfflyScreen";
 
@@ -22,6 +22,7 @@ export default function Index() {
     <View style={styles.container}>
       {showSplash ? <OfflyScreen /> : <Login />}
     </View>
+    // <EcraParticipantes />
   );
 }
 

@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useFonts } from "expo-font";
 import { Svg, Path } from "react-native-svg";
 import { Image, View } from "react-native";
 import { useRouter } from "expo-router";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { baseurl } from "../app/api-config/apiConfig";
+import { AuthContext } from "../app/components/entrar/AuthContext";
 
 import ProgressBar, {
   Container,
@@ -22,7 +26,6 @@ import ProgressBar, {
   BotaoIniciarQuestionario,
   TextoBotaoComecar,
   TextoCaixaFinal,
-  TextoCaixaFinalp,
 } from "./styles/styles";
 
 export default function Questionario() {
@@ -32,9 +35,12 @@ export default function Questionario() {
 
   const [perguntaAtual, setPerguntaAtual] = useState(0);
   const [respostaSelecionada, setRespostaSelecionada] = useState(null);
+  const [respostas, setRespostas] = useState([]); // Array para armazenar todas as respostas
   const [iniciarQuestionario, setIniciarQuestionario] = useState(false);
   const [mostrarSVG, setMostrarSVG] = useState(true);
   const [mostrarFinal, setMostrarFinal] = useState(false);
+  const [error, setError] = useState("");
+  const { user, accessToken } = useContext(AuthContext);
   const router = useRouter();
 
   const perguntas = [
@@ -68,10 +74,30 @@ export default function Questionario() {
 
   const progresso = ((perguntaAtual + 1) / perguntas.length) * 100;
 
+  const selecionarResposta = (index) => {
+    setRespostaSelecionada(index);
+    // Atualizar o array de respostas
+    const novasRespostas = [...respostas];
+    novasRespostas[perguntaAtual] = perguntas[perguntaAtual].opcoes[index];
+    setRespostas(novasRespostas);
+  };
+
   const avancarPergunta = () => {
+    if (respostaSelecionada === null) {
+      setError("Por favor, seleciona uma resposta antes de avançar.");
+      return;
+    }
+
     if (perguntaAtual < perguntas.length - 1) {
       setPerguntaAtual(perguntaAtual + 1);
-      setRespostaSelecionada(null);
+      setRespostaSelecionada(
+        respostas[perguntaAtual + 1]
+          ? perguntas[perguntaAtual + 1].opcoes.indexOf(
+              respostas[perguntaAtual + 1]
+            )
+          : null
+      );
+      setError("");
     } else {
       setMostrarFinal(true);
     }
@@ -80,22 +106,109 @@ export default function Questionario() {
   const voltarPaginaAnterior = () => {
     if (perguntaAtual > 0) {
       setPerguntaAtual(perguntaAtual - 1);
+      setRespostaSelecionada(
+        respostas[perguntaAtual - 1]
+          ? perguntas[perguntaAtual - 1].opcoes.indexOf(
+              respostas[perguntaAtual - 1]
+            )
+          : null
+      );
+      setError("");
     }
   };
 
-  const selecionarResposta = (index) => {
-    setRespostaSelecionada(index);
-  };
-
   const iniciarQuestionarioHandler = () => {
-    setIniciarQuestionario(true); // Atualiza o estado para iniciar o questionário
+    setIniciarQuestionario(true);
     setMostrarSVG(false);
   };
 
-  const submeterQuestionario = () => {
-    return(
-      router.push("./PaginaPrincipal") // questionário redireciona para a pagina inicial (equipas)
-    )
+  const submeterQuestionario = async () => {
+    if (respostas.length < perguntas.length) {
+      setError("Por favor, responde a todas as perguntas.");
+      return;
+    }
+
+    if (!user?.id || !accessToken) {
+      console.log("❌ Sessão inválida: user.id ou accessToken ausentes");
+      setError("Sessão inválida. Faça login novamente.");
+      router.push("./login");
+      return;
+    }
+
+    try {
+      console.log(
+        "🔄 Enviando respostas para o endpoint:",
+        `${baseurl}/participants/${user.id}/answers`
+      );
+      console.log("📦 Dados enviados:", { answers: respostas });
+      console.log("🔑 AccessToken:", accessToken);
+      console.log("👤 User ID:", user.id);
+
+      const response = await axios.post(
+        `${baseurl}/participants/${user.id}/answers`,
+        {
+          answers: respostas,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      console.log("✅ Resposta do backend:", {
+        status: response.status,
+        data: response.data,
+        headers: response.headers,
+      });
+
+      // Verificar se answers_id foi atualizado
+      console.log(
+        "🔄 Verificando answers_id no endpoint:",
+        `${baseurl}/participants/${user.id}`
+      );
+      const participantResponse = await axios.get(
+        `${baseurl}/participants/${user.id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      console.log("📦 Dados do participante:", participantResponse.data);
+      console.log("👀 answers_id:", participantResponse.data.answers_id);
+
+      if (!participantResponse.data.answers_id) {
+        console.warn("⚠️ answers_id não foi atualizado!");
+        setError(
+          "Respostas salvas, mas não associadas ao perfil. Contacte o suporte."
+        );
+      }
+
+      // Redirecionar para PaginaPrincipal
+      console.log("🚀 Redirecionando para PaginaPrincipal...");
+      router.push("./PaginaPrincipal");
+    } catch (err) {
+      console.error("❌ Erro ao enviar respostas:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
+      if (err.response?.status === 401) {
+        setError("Sessão inválida. Faça login novamente.");
+        router.push("./login");
+      } else if (err.response?.status === 404) {
+        setError("Participante não encontrado. Verifique sua sessão.");
+      } else if (err.response?.status === 400) {
+        setError("Formato inválido das respostas. Tente novamente.");
+      } else {
+        setError("Erro ao enviar o questionário. Tente novamente.");
+      }
+    }
   };
 
   return (
@@ -113,6 +226,7 @@ export default function Questionario() {
             zIndex: 0,
           }}
         >
+          {/* Mantido o SVG original */}
           <Path
             d="M195.045 154.46C195.045 154.46 156.364 131.503 130.411 135.672C113.639 138.366 100.337 143.388 91.0444 154.179C81.752 164.969 74.2625 189.262 82.3201 209.662C91.2269 232.212 114.36 244.909 134.068 243.347C170.82 240.435 183.606 211.219 183.606 211.219L201.082 163.776C201.082 163.776 212.302 125.353 221.278 105.663C224.542 98.5032 236.29 87.0552 250.001 83.3201C270.65 77.6951 289.849 84.1709 300.983 102.448C310.663 118.34 312.716 131.669 305.249 147.957C299.743 159.969 292.467 165.011 280.97 171.526C251.205 188.392 195.045 154.46 195.045 154.46Z"
             stroke="#BFE0FF"
@@ -175,13 +289,17 @@ export default function Questionario() {
               Cria a tua própria equipa e convida os teus amigos. Não tens uma
               equipa? Junta-te a uma existente.
             </TextoCaixaFinal>
+            {error ? (
+              <TextoCaixaFinal style={{ color: "#FF8F8F" }}>
+                {error}
+              </TextoCaixaFinal>
+            ) : null}
             <BotaoIniciarQuestionario onPress={submeterQuestionario}>
               <TextoBotaoComecar>Vamos lá</TextoBotaoComecar>
             </BotaoIniciarQuestionario>
           </CaixaQuestionario2>
         </View>
       ) : iniciarQuestionario ? (
-        // Mostrar o questionário após o clique no botão
         <>
           <PerguntaContador>
             {perguntaAtual + 1} de {perguntas.length}
@@ -191,9 +309,10 @@ export default function Questionario() {
             <PerguntaTexto>{perguntas[perguntaAtual].texto}</PerguntaTexto>
             <SelecionaResposta>Seleciona uma resposta</SelecionaResposta>
 
-            <OpcoesContainer 
-              accessibilityRole="radiogroup" 
-              accessibilityLabel="Escolha uma opção">
+            <OpcoesContainer
+              accessibilityRole="radiogroup"
+              accessibilityLabel="Escolha uma opção"
+            >
               {perguntas[perguntaAtual].opcoes.map((opcao, index) => (
                 <BotaoOpcao
                   key={index}
@@ -201,7 +320,9 @@ export default function Questionario() {
                   onPress={() => selecionarResposta(index)}
                   accessibilityRole="radio"
                   accessibilityLabel={opcao}
-                  accessibilityState={{ selected: respostaSelecionada === index }}
+                  accessibilityState={{
+                    selected: respostaSelecionada === index,
+                  }}
                 >
                   <Circulo selecionado={respostaSelecionada === index}>
                     {respostaSelecionada === index && (
@@ -227,10 +348,24 @@ export default function Questionario() {
               ))}
             </OpcoesContainer>
 
+            {error ? (
+              <TextoBotao style={{ color: "#FF8F8F", marginTop: 10 }}>
+                {error}
+              </TextoBotao>
+            ) : null}
 
             <BotaoNavegacaoContainer>
-              <BotaoNavegacao onPress={voltarPaginaAnterior}>
-                <TextoBotao>Voltar</TextoBotao>
+              <BotaoNavegacao
+                onPress={voltarPaginaAnterior}
+                disabled={perguntaAtual === 0}
+              >
+                <TextoBotao
+                  style={{
+                    color: perguntaAtual === 0 ? "#ccc" : "grey",
+                  }}
+                >
+                  Voltar
+                </TextoBotao>
               </BotaoNavegacao>
               <BotaoNavegacao
                 onPress={avancarPergunta}
@@ -254,7 +389,6 @@ export default function Questionario() {
           </CaixaQuestionario>
         </>
       ) : (
-        // Mostrar o card inicial antes do questionário
         <CaixaQuestionario2>
           <TituloCaixa>Redescobre o teu tempo com a Offly</TituloCaixa>
           <TextoCaixa>

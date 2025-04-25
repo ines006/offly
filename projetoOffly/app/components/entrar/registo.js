@@ -1,6 +1,4 @@
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../../firebase/firebaseApi";
+import React, { useState, useContext } from "react";
 import {
   StyleSheet,
   View,
@@ -16,12 +14,11 @@ import {
   Texto_Botoes_Definir_Visibilidade,
 } from "../../styles/styles";
 import { useRouter } from "expo-router";
-import { doc, setDoc } from "firebase/firestore";
 import { useFonts } from "expo-font";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { baseurl } from "../../api-config/apiConfig"; 
-
+import { baseurl } from "../../api-config/apiConfig";
+import { AuthContext } from "./AuthContext";
 
 const Register = () => {
   const [fullName, setFullName] = useState("");
@@ -40,6 +37,7 @@ const Register = () => {
   const [confirmPasswordBarWidth] = useState(new Animated.Value(0));
 
   const router = useRouter();
+  const { setUser, setAccessToken } = useContext(AuthContext);
 
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../../../assets/fonts/Poppins-Regular.ttf"),
@@ -138,18 +136,27 @@ const Register = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError("A palavra-passe deve conter no mínimo 6 caracteres.");
+    if (password.length < 8) {
+      setError("A palavra-passe deve conter no mínimo 8 caracteres.");
       return;
     }
 
-    if (!fullName || !username) {
+    if (!fullName || !username || gender === undefined) {
       setError("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 
     try {
-      console.log("A iniciar registo...");
+      console.log("🧹 Limpando sessão anterior...");
+      // Limpar AsyncStorage
+      await AsyncStorage.removeItem("accessToken");
+      await AsyncStorage.removeItem("refreshToken");
+      await AsyncStorage.removeItem("user");
+      // Limpar AuthContext
+      setUser(null);
+      setAccessToken(null);
+
+      console.log("🔄 A iniciar registo...");
       const response = await axios.post(`${baseurl}/participants`, {
         name: fullName,
         username: username,
@@ -157,41 +164,59 @@ const Register = () => {
         password: password,
         gender: gender,
         level: 1,
+        image: getRandomImage(gender === 0 ? "Masculino" : "Feminino"),
       });
-    
-      console.log("Registo concluído. A iniciar login...");
-    
+
+      console.log("✅ Registo concluído:", response.data);
+      console.log("🔄 A iniciar login...");
+
       const authResponse = await axios.post(`${baseurl}/auth/login`, {
         email: email,
         password: password,
       });
-    
-      console.log("Login concluído. A guardar no AsyncStorage...");
-    
-      const { token, user } = authResponse.data;
-      console.log("authResponse.data:", authResponse.data);
-    
-      await AsyncStorage.setItem("token", token);
+
+      console.log("✅ Login concluído:", authResponse.data);
+
+      const { token, refreshToken, expiresIn, user } = authResponse.data;
+      console.log("📦 Dados salvos:", { user, token, refreshToken });
+
+      // Salvar novos dados no AsyncStorage
+      await AsyncStorage.setItem("accessToken", token);
+      await AsyncStorage.setItem("refreshToken", refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(user));
-    
-      console.log("Registo e autenticação realizados com sucesso!");
+
+      // Atualizar AuthContext
+      setUser(user);
+      setAccessToken(token);
+
+      console.log("✅ Registo e autenticação realizados com sucesso!");
+      console.log("🚀 Redirecionando para onboarding...");
       router.push("onboarding");
     } catch (err) {
-      console.log("Erro no processo:", err); // <- Este vai mostrar mais detalhes
+      console.error("❌ Erro no processo:", {
+        message: err.message,
+        response: err.response?.data,
+      });
       if (axios.isAxiosError(err)) {
-        setError("Erro: " + JSON.stringify(err.response?.data));
+        setError(
+          err.response?.data?.message ||
+            "Erro ao registar. Verifique os dados e tente novamente."
+        );
       } else {
-        setError("Erro desconhecido: " + err.message);
+        setError("Erro desconhecido. Tente novamente.");
       }
     }
-  }    
+  };
 
   const handleButtonClick = (button) => {
     setActiveButton(button);
     // Definir 0 para Masculino e 1 para Feminino
     setGender(button === "Masculino" ? 0 : 1);
   };
-  
+
+  if (!fontsLoaded) {
+    return null; // Ou um componente de carregamento
+  }
 
   return (
     <View accessibilityRole="main" style={styles.container}>
@@ -573,7 +598,7 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     color: "black",
-    fontWeight: 400,
+    fontWeight: "400",
   },
   errorText: {
     color: "#FFBDBD",
@@ -600,7 +625,7 @@ const styles = StyleSheet.create({
   subtitles: {
     fontSize: 15,
     color: "azure",
-    fontWeight: 500,
+    fontWeight: "500",
   },
   mandatory: {
     color: "#FF8F8F",

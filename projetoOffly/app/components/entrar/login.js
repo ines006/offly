@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { baseurl } from "../../api-config/apiConfig"; 
-import {AuthContext} from "./AuthContext"
+import { baseurl } from "../../api-config/apiConfig";
+import { AuthContext } from "./AuthContext";
 
 import {
   StyleSheet,
@@ -55,41 +55,85 @@ const Login = () => {
   // se o utilizador tiver equipa deve ir para a pagina onde ja existe equipa. caso contrario vai para a página de procurar equipa
   const handleSubmit = async () => {
     try {
+      // 1. Fazer login
+      console.log("🔄 Iniciando login com baseurl:", baseurl);
       const response = await axios.post(`${baseurl}/auth/login`, {
         email,
         password,
       });
-  
+
       const { token, refreshToken, expiresIn, user } = response.data;
-  
-      // Guardar token (para futuras requests autenticadas)
+
+      // Logs para debug
+      console.log("✅ Login efetuado com sucesso!");
+      console.log("📦 Dados do login:", { token, user });
+
+      // Verificar se user.id existe
+      if (!user?.id) {
+        console.error("❌ Erro: user.id não encontrado na resposta do login");
+        throw new Error("ID do utilizador não encontrado");
+      }
+
+      // Guardar token e dados do utilizador
       await AsyncStorage.setItem("accessToken", token);
       await AsyncStorage.setItem("refreshToken", refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(user));
-  
-      // Logs para debug
-      console.log("✅ Login efetuado com sucesso!");
-      console.log("📦 Resposta completa do endpoint:", response.data);
-  
-      // Exemplo: simular se o user tem equipa
-      const hasTeam = true; // aqui mais tarde fazes um fetch real, ex: /users/:id/team
-  
-      setUser(user);
-      setAccessToken(token);
-      
-      if (hasTeam) {
-        router.push("../../components/navbar");
-      } else {
+
+      // 2. Verificar se o utilizador tem equipa
+      const participantUrl = `${baseurl}/participants/${user.id}`;
+      console.log("🔄 Verificando equipa no endpoint:", participantUrl);
+      try {
+        const participantResponse = await axios.get(participantUrl, {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+
+        // Verificar se teams_id existe na resposta
+        const hasTeam = participantResponse.data.teams_id !== null;
+        console.log("👥 Utilizador tem equipa?", hasTeam);
+
+        // Atualizar contexto de autenticação
+        setUser(user);
+        setAccessToken(token);
+
+        // 3. Redirecionar com base na existência de equipa
+        if (hasTeam) {
+          router.push("../../components/navbar");
+        } else {
+          router.push("../../PaginaPrincipal");
+        }
+      } catch (participantError) {
+        console.error(
+          "❌ Erro ao verificar equipa:",
+          participantError.message,
+          participantError.response?.data || participantError
+        );
+        console.log("🔍 Detalhes do erro:", {
+          url: participantUrl,
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+        setUser(user);
+        setAccessToken(token);
         router.push("../../PaginaPrincipal");
       }
-    
-
     } catch (err) {
-      console.error("❌ Erro ao fazer login:", err.response?.data || err.message);
-      setError("O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!");
+      console.error(
+        "❌ Erro ao fazer login:",
+        err.response?.data || err.message
+      );
+      setError(
+        "O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!"
+      );
     }
   };
-  
+
   return (
     <View accessibilityRole="main" astyle={styles.container}>
       <View style={styles.wrapLogin}>

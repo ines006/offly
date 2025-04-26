@@ -1,7 +1,7 @@
 import * as Clipboard from "expo-clipboard";
 import { TextInput } from "react-native";
 import { useFonts } from "expo-font";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import {
   Modal,
   Text,
@@ -15,17 +15,10 @@ import {
 import { Svg, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import Card_Equipa from "./components/Equipas-copy";
-
-// Firebase Imports
-import {
-  getDocs,
-  getDoc,
-  doc,
-  setDoc,
-  updateDoc,
-  collection,
-} from "firebase/firestore";
-import { auth, db } from "./firebase/firebaseApi";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { baseurl } from "../app/api-config/apiConfig";
+import { AuthContext } from "../app/components/entrar/AuthContext";
 
 // Estilos
 import {
@@ -116,41 +109,36 @@ export default function PaginaPrincipal() {
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
+  const { user, accessToken } = useContext(AuthContext);
+  const [userName, setUserName] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
+  const [userLevel, setUserLevel] = useState(1);
+
   const [equipas, setEquipas] = useState([]);
-  const [filteredEquipas, setFilteredEquipas] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalEquipa, setModalEquipa] = useState(false);
+  const [selectedEquipaId, setSelectedEquipaId] = useState(null);
 
   const [NomeEquipa, setNomeEquipa] = useState("");
   const [DescricaoEquipa, setDescricaoEquipa] = useState("");
-  const [activeButton, setActiveButton] = useState(null); // Estado do botão de visibilidade
+  const [activeButton, setActiveButton] = useState(null);
   const [selectedValue, setSelectedValue] = useState("3");
-
   const [nomeEquipaError, setNomeEquipaError] = useState("");
   const [descricaoEquipaError, setDescricaoEquipaError] = useState("");
   const [visibilidadeError, setVisibilidadeError] = useState("");
+  const [inviteLink, setInviteLink] = useState(null);
 
-  const [inviteLink, setInviteLink] = useState(null); // Estado para o link de convite
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const options = ["3", "4", "5"];
   const router = useRouter();
 
-  const [userId, setUserId] = useState(null);
-  const [userName, setUserName] = useState("");
-  const [profileImage, setProfileImage] = useState(null);
-
-  const [selectedEquipaId, setSelectedEquipaId] = useState(null);
-  const [modalEquipa, setModalEquipa] = useState(false);
-
   const imageTeamUrls = [
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.50.14-removebg-preview.png",
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.51.27-removebg-preview.png",
-    // ... restante das URLs ...
-  ];
-
-  const imageUserUrls = [
-    "https://celina05.sirv.com/avatares/avatar4.png",
-    "https://celina05.sirv.com/avatares/avatar5.png",
     // ... restante das URLs ...
   ];
 
@@ -159,208 +147,245 @@ export default function PaginaPrincipal() {
     return tipo[randomIndex];
   };
 
+  // Buscar informações do utilizador
   useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUserId(currentUser.uid);
-      console.log("Utilizador logado na pag principal", currentUser);
-    } else {
-      Alert.alert("Erro", "Nenhum utilizador logado!");
-    }
-  }, []);
+    const fetchUserData = async () => {
+      console.log("🔍 Depurando dados do utilizador...");
+      console.log("👤 User:", user);
+      console.log("🔑 AccessToken:", accessToken);
 
-  useEffect(() => {
-    const userData = async () => {
-      try {
-        if (!userId) return;
-        const userDocRef = doc(db, "users", userId);
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists()) {
-          const { fullName, team, image } = docSnap.data();
-          setUserName(fullName);
-          if (image) {
-            setProfileImage({ uri: image });
-          } else {
-            const newProfileImage = getRandomImage(imageUserUrls);
-            setProfileImage({ uri: newProfileImage });
-            await updateDoc(userDocRef, { image: newProfileImage });
-          }
-        } else {
-          console.log("Documento do utilizador não encontrado.");
-        }
-      } catch (error) {
-        console.error("Erro ao verificar o nome", error);
-      }
-    };
-    userData();
-  }, [userId]);
-
-  const fetchEquipas = async () => {
-    try {
-      const equipasCollectionRef = collection(db, "equipas");
-      const querySnapshot = await getDocs(equipasCollectionRef);
-      const equipaData = [];
-      for (const equipaDoc of querySnapshot.docs) {
-        const equipa = { id: equipaDoc.id, ...equipaDoc.data() };
-        const membrosCollectionRef = collection(
-          db,
-          `equipas/${equipaDoc.id}/membros`
-        );
-        const membrosSnapshot = await getDocs(membrosCollectionRef);
-        let currentParticipants = 0;
-        membrosSnapshot.forEach((membroDoc) => {
-          if (membroDoc.id === "participantes") {
-            currentParticipants = Object.keys(membroDoc.data()).length;
-          }
-        });
-        if (Math.abs(currentParticipants - equipa.numparticipantes) === 1) {
-          equipaData.push({ ...equipa, currentParticipants });
-        }
-      }
-      setEquipas(equipaData);
-      setFilteredEquipas(equipaData);
-    } catch (error) {
-      console.error("Erro ao buscar equipas:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchEquipas();
-  }, []);
-
-  useEffect(() => {
-    const filtered = equipas.filter(
-      (equipa) =>
-        equipa.nome &&
-        equipa.nome.toLowerCase().includes(searchText.toLowerCase())
-    );
-    setFilteredEquipas(filtered);
-  }, [searchText, equipas]);
-
-  const criarEquipa = async () => {
-    try {
-      console.log("Iniciando criação da equipa...");
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error(
-          "Nenhum utilizador logado! Não é possível criar equipa."
-        );
-      }
-
-      const equipaData = {
-        nome: NomeEquipa,
-        descricao: DescricaoEquipa,
-        numparticipantes: parseInt(selectedValue),
-        visibilidade: activeButton === "public" ? "publica" : "privada",
-        adquiridos: 0,
-        pontos: 1000,
-        imagem: getRandomImage(imageTeamUrls),
-      };
-
-      const equipaDocRef = doc(db, "equipas", NomeEquipa);
-      await setDoc(equipaDocRef, equipaData);
-      console.log("Equipa criada com sucesso com ID:", NomeEquipa);
-
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (!userDocSnap.exists()) {
-        throw new Error("Utilizador não encontrado na coleção 'users'.");
-      }
-
-      const userFullName = userDocSnap.data().fullName;
-      console.log("Nome do utilizador logado:", userFullName);
-
-      const membrosDocRef = doc(
-        collection(equipaDocRef, "membros"),
-        "participantes"
-      );
-      const participantes = { participante1: userFullName };
-      const nomesAleatorios = [
-        "Ana",
-        "João",
-        "Maria",
-        "Pedro",
-        "Rita",
-        "Carlos",
-        "Luísa",
-        "Tiago",
-        "Sofia",
-        "Miguel",
-      ];
-
-      for (let i = 2; i <= equipaData.numparticipantes; i++) {
-        const nomeAleatorio =
-          nomesAleatorios[Math.floor(Math.random() * nomesAleatorios.length)];
-        participantes[`participante${i}`] = nomeAleatorio;
-      }
-
-      await setDoc(membrosDocRef, participantes);
-      console.log(
-        "Coleção 'membros' e documento 'participantes' criados com sucesso!"
-      );
-
-      await updateDoc(userDocRef, { team: NomeEquipa });
-      console.log("Campo 'team' do utilizador atualizado com sucesso!");
-
-      setModalVisible(false);
-      console.log("Processo concluído sem erros.");
-    } catch (error) {
-      console.error("Erro ao criar a equipa:", error.message);
-    }
-  };
-
-  const handleEntrarnaEquipa = async () => {
-    if (!userId || !selectedEquipaId) return;
-    try {
-      const equipaRef = doc(db, "equipas", selectedEquipaId);
-      const equipaDoc = await getDoc(equipaRef);
-      const equipaData = equipaDoc.data();
-      const numParticipantes = equipaData.numparticipantes;
-
-      const membrosRef = collection(equipaRef, "membros");
-      const membrosDoc = await getDoc(doc(membrosRef, "participantes"));
-      const participantes = membrosDoc.data() || {};
-
-      let newParticipantKey = null;
-      if (Object.keys(participantes).length < numParticipantes) {
-        for (let i = 1; i <= numParticipantes; i++) {
-          if (!participantes[`participante${i}`]) {
-            newParticipantKey = `participante${i}`;
-            break;
-          }
-        }
-      }
-
-      if (!newParticipantKey) {
-        Alert.alert(
-          "Erro",
-          "Não há espaço disponível para entrar nesta equipa."
-        );
+      if (!user?.id || !accessToken) {
+        console.error("❌ user.id ou accessToken estão indefinidos");
+        Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
+        router.push("./login");
         return;
       }
 
-      const userDocRef = doc(db, "users", userId);
-      const userDocSnap = await getDoc(userDocRef);
-      const userData = userDocSnap.data();
-      const userName = userData.fullName;
+      try {
+        console.log(
+          `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
+        );
+        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
 
-      if (userData.team) {
-        await updateDoc(userDocRef, {
-          team: selectedEquipaId,
+        console.log("✅ Resposta da API:", response.data);
+
+        const userData = response.data;
+        const name =
+          userData.name || userData.fullName || "Nome não disponível";
+        const image = userData.image || null;
+        const level = userData.level;
+
+        setUserName(name);
+        setUserLevel(level);
+        setProfileImage(image ? { uri: image } : null);
+
+        console.log("✅ Dados processados:", { name, image, level });
+      } catch (error) {
+        console.error("❌ Erro ao buscar dados do utilizador:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
         });
-      } else {
-        await setDoc(userDocRef, {
-          team: selectedEquipaId,
-        });
+        Alert.alert(
+          "Erro",
+          error.response?.data?.message ||
+            "Não foi possível carregar os dados do utilizador."
+        );
       }
+    };
 
-      await updateDoc(doc(membrosRef, "participantes"), {
-        [newParticipantKey]: userName,
+    fetchUserData();
+  }, [user, accessToken]);
+
+  // Buscar equipas disponíveis
+  const fetchEquipas = async (page = 1, search = "") => {
+    setIsLoading(true);
+    console.log("🔍 Depurando listagem de equipas...");
+    console.log("👤 User ID:", user?.id);
+    console.log("🔑 AccessToken:", accessToken);
+    console.log("📄 Página atual:", page);
+    console.log("🔎 Texto da pesquisa:", search);
+
+    try {
+      const endpoint = search.trim()
+        ? `${baseurl}/teams/search?name=${encodeURIComponent(
+            search
+          )}&page=${page}`
+        : `${baseurl}/teams?capacity=under-5&page=${page}`;
+      console.log(`🌐 Fazendo requisição para ${endpoint}`);
+
+      const response = await axios.get(endpoint, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
       });
 
-      Alert.alert("Sucesso", `Você entrou na equipa ${equipaData.nome}!`);
+      console.log("✅ Resposta da API:", response.data);
+
+      // Normalizar a resposta
+      let teams = [];
+      let pagination = { totalPages: 1 };
+
+      if (search.trim()) {
+        teams =
+          response.data.teams ||
+          (Array.isArray(response.data) ? response.data : []);
+        pagination = response.data.pagination || { totalPages: 1 };
+      } else {
+        teams = response.data.teams || [];
+        pagination = response.data.pagination || { totalPages: 1 };
+      }
+
+      const formattedTeams = teams.map((team, index) => ({
+        id: team.id || `team-${index}`,
+        nome: team.name || "Equipa sem nome",
+        imagem: team.image,
+        currentParticipants:
+          team.participant_count ??
+          (Array.isArray(team.participants) ? team.participants.length : 0),
+        numparticipantes: team.capacity ?? 5,
+      }));
+
+      setEquipas(formattedTeams);
+      setTotalPages(pagination.totalPages || 1);
+      setCurrentPage(page);
+
+      console.log("✅ Equipas processadas:", formattedTeams);
+      console.log("📄 Total de páginas:", pagination.totalPages);
     } catch (error) {
-      console.error("Erro ao entrar na equipa:", error);
+      console.error("❌ Erro ao buscar equipas:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      setEquipas([]);
+      setTotalPages(1);
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message || "Não foi possível carregar as equipas."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // useEffect para buscar equipas
+  useEffect(() => {
+    if (accessToken && user?.id) {
+      console.log("🔄 useEffect disparado:", { currentPage, searchText });
+      const debounce = setTimeout(
+        () => {
+          console.log(
+            "🔄 Buscando equipas para página:",
+            currentPage,
+            "Pesquisa:",
+            searchText
+          );
+          fetchEquipas(currentPage, searchText);
+        },
+        searchText ? 500 : 0
+      );
+
+      return () => clearTimeout(debounce);
+    } else {
+      console.error("❌ accessToken ou user.id não estão definidos");
+      Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
+      router.push("./login");
+    }
+  }, [accessToken, user, currentPage, searchText]);
+
+  // Reiniciar página quando searchText muda
+  useEffect(() => {
+    console.log(
+      "🔄 Reiniciando página devido a mudança em searchText:",
+      searchText
+    );
+    setCurrentPage(1);
+  }, [searchText]);
+
+  // Criar equipa
+  const criarEquipa = async () => {
+    try {
+      console.log("🔄 Criando equipa...");
+      const equipaData = {
+        name: NomeEquipa,
+        description: DescricaoEquipa,
+        maxParticipants: parseInt(selectedValue),
+        visibility: activeButton === "public" ? "public" : "private",
+        image: getRandomImage(imageTeamUrls),
+      };
+
+      const response = await axios.post(`${baseurl}/teams`, equipaData, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const teamId = response.data.id;
+      console.log("✅ Equipa criada com ID:", teamId);
+
+      await axios.post(
+        `${baseurl}/teams/${teamId}/join`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      console.log("✅ Utilizador adicionado à equipa");
+
+      setModalVisible(false);
+      router.push({
+        pathname: "./EquipaCriada",
+        params: { teamId },
+      });
+    } catch (error) {
+      console.error("❌ Erro ao criar equipa:", error);
+      Alert.alert("Erro", "Não foi possível criar a equipa.");
+    }
+  };
+
+  // Entrar numa equipa
+  const handleEntrarnaEquipa = async () => {
+    if (!user?.id || !selectedEquipaId) return;
+
+    try {
+      console.log("🔄 Entrando na equipa:", selectedEquipaId);
+      await axios.post(
+        `${baseurl}/teams/${selectedEquipaId}/join`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      Alert.alert("Sucesso", "Você entrou na equipa!");
+      setModalEquipa(false);
+      router.push({
+        pathname: "./EquipaCriada",
+        params: { teamId: selectedEquipaId },
+      });
+    } catch (error) {
+      console.error("❌ Erro ao entrar na equipa:", error);
       Alert.alert("Erro", "Não foi possível entrar na equipa.");
     }
   };
@@ -408,11 +433,6 @@ export default function PaginaPrincipal() {
     const { isValid, errorMessages } = validateForm();
     if (isValid) {
       criarEquipa();
-      setModalVisible(false);
-      router.push({
-        pathname: "./EquipaCriada",
-        params: { teamId: NomeEquipa },
-      });
     } else {
       setTimeout(() => {
         if (errorMessages.length > 0) {
@@ -426,11 +446,6 @@ export default function PaginaPrincipal() {
 
   const handleNext2 = () => {
     handleEntrarnaEquipa();
-    setModalEquipa(false);
-    router.push({
-      pathname: "./EquipaCriada",
-      params: { teamId: selectedEquipaId },
-    });
   };
 
   const handleButtonClick = (button) => {
@@ -439,13 +454,12 @@ export default function PaginaPrincipal() {
       setVisibilidadeError("");
     }
 
-    // Gerar o link de convite apenas quando "Privada" é selecionado
     if (button === "private") {
-      const generatedInviteCode = generateInviteCode(); // Função para gerar o código de convite
+      const generatedInviteCode = generateInviteCode();
       const inviteUrl = `https://offly/join-team?invitecode=${generatedInviteCode}`;
       setInviteLink(inviteUrl);
     } else {
-      setInviteLink(null); // Limpar o link quando "Pública" for selecionado
+      setInviteLink(null);
     }
   };
 
@@ -477,7 +491,6 @@ export default function PaginaPrincipal() {
     </Svg>
   );
 
-  // Função para gerar o código de convite aleatório
   function generateInviteCode() {
     const characters =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -490,10 +503,39 @@ export default function PaginaPrincipal() {
     return inviteCode;
   }
 
-  // Função para copiar o link para a área de transferência
   function copyToClipboard(text) {
     Clipboard.setStringAsync(text);
     Alert.alert("Sucesso", "Link copiado para a área de transferência!");
+  }
+
+  // Memoizar as estrelas para evitar renderizações desnecessárias
+  const stars = useMemo(() => {
+    console.log("🔍 Gerando estrelas:", { userLevel });
+    return Array.from({ length: 4 }, (_, index) => {
+      const starLevel = index + 1;
+      const starColor = starLevel <= userLevel ? "#263A83" : "#BEC4DA";
+
+      return (
+        <Svg
+          key={`star-${starLevel}`}
+          accessibilityLabel={`Estrela nível ${starLevel}`}
+          width="13"
+          height="11"
+          viewBox="0 0 13 11"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <Path
+            d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+            fill={starColor}
+          />
+        </Svg>
+      );
+    });
+  }, [userLevel]);
+
+  if (!fontsLoaded) {
+    return null;
   }
 
   return (
@@ -503,13 +545,19 @@ export default function PaginaPrincipal() {
         accessibilityRole="section"
       >
         <TouchableOpacity onPress={handlePerfil}>
-          <Avatar source={profileImage} accessibilityRole="imagebutton" />
+          <Avatar
+            source={profileImage}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={`Imagem de perfil de ${userName}`}
+          />
         </TouchableOpacity>
         <ProfileTextContainer>
-          <UserName accessibilityRole="text">{userName}</UserName>
-          <UserLevel accessibilityRole="text">Nível 1</UserLevel>
+          <UserName accessibilityRole="text">
+            {userName || "Carregando..."}
+          </UserName>
+          <UserLevel accessibilityRole="text">Nível {userLevel}</UserLevel>
           <StarsContainer accessibilityRole="progressbar">
-            {/* SVGs das estrelas */}
+            {stars}
           </StarsContainer>
         </ProfileTextContainer>
       </ProfileContainer>
@@ -536,32 +584,228 @@ export default function PaginaPrincipal() {
             placeholderTextColor="rgba(38, 58, 131, 0.5)"
             value={searchText}
             onChangeText={setSearchText}
+            accessibilityLabel="Pesquisar equipas por nome"
+            accessibilityRole="search"
           />
         </SearchBarContainer>
 
-        {filteredEquipas.length > 0 ? (
-          filteredEquipas
-            .slice(0, 4)
-            .map((equipa) => (
-              <Card_Equipa
-                accessibilityRole="button"
-                key={equipa.id}
-                onPress={() => handleModalEquipa(equipa.id)}
-                icon={equipa.imagem}
-                teamName={equipa.nome}
-                playerCount={`${equipa.currentParticipants}/${equipa.numparticipantes}`}
-                accessibilityLabel={`${equipa.nome}, ${equipa.currentParticipants} de ${equipa.numparticipantes} participantes`}
-              />
-            ))
-        ) : (
+        {isLoading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#263A83" />
+          </View>
+        ) : equipas.length > 0 ? (
+          equipas.map((equipa) => (
+            <Card_Equipa
+              accessibilityRole="button"
+              key={equipa.id}
+              onPress={() => handleModalEquipa(equipa.id)}
+              icon={equipa.imagem}
+              teamName={equipa.nome}
+              playerCount={`${equipa.currentParticipants}/${equipa.numparticipantes}`}
+              accessibilityLabel={`${equipa.nome}, ${equipa.currentParticipants} de ${equipa.numparticipantes} participantes`}
+            />
+          ))
+        ) : (
+          <Text style={styles.noTeamsText}>Nenhuma equipa encontrada.</Text>
+        )}
+
+        {/* Controles de Paginação */}
+        {totalPages > 1 && (
+          <View style={styles.paginationContainer}>
+            {console.log("🔍 Renderizando paginação:", {
+              currentPage,
+              totalPages,
+            })}
+
+            {/* Página 1 */}
+            <TouchableOpacity
+              style={[
+                styles.paginationButton,
+                currentPage === 1
+                  ? styles.paginationButtonActive
+                  : styles.paginationButtonInactive,
+              ]}
+              onPress={() => {
+                console.log("Navegando para página 1");
+                setCurrentPage(1);
+              }}
+              accessibilityLabel="Página 1"
+              accessibilityRole="button"
+              accessibilityState={{ selected: currentPage === 1 }}
+            >
+              <Text
+                style={
+                  currentPage === 1
+                    ? styles.paginationTextActive
+                    : styles.paginationTextInactive
+                }
+              >
+                1
+              </Text>
+            </TouchableOpacity>
+
+            {/* Página 2 (visível para currentPage <= 3) */}
+            {totalPages > 2 && currentPage <= 3 && (
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  currentPage === 2
+                    ? styles.paginationButtonActive
+                    : styles.paginationButtonInactive,
+                ]}
+                onPress={() => {
+                  console.log("Navegando para página 2");
+                  setCurrentPage(2);
+                }}
+                accessibilityLabel="Página 2"
+                accessibilityRole="button"
+                accessibilityState={{ selected: currentPage === 2 }}
+              >
+                <Text
+                  style={
+                    currentPage === 2
+                      ? styles.paginationTextActive
+                      : styles.paginationTextInactive
+                  }
+                >
+                  2
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Página 3 (visível para currentPage = 3 ou totalPages <= 4) */}
+            {totalPages > 2 &&
+              (currentPage === 3 || (totalPages <= 4 && currentPage === 4)) && (
+                <TouchableOpacity
+                  style={[
+                    styles.paginationButton,
+                    currentPage === 3
+                      ? styles.paginationButtonActive
+                      : styles.paginationButtonInactive,
+                  ]}
+                  onPress={() => {
+                    console.log("Navegando para página 3");
+                    setCurrentPage(3);
+                  }}
+                  accessibilityLabel="Página 3"
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: currentPage === 3 }}
+                >
+                  <Text
+                    style={
+                      currentPage === 3
+                        ? styles.paginationTextActive
+                        : styles.paginationTextInactive
+                    }
+                  >
+                    3
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+            {/* Página anterior à atual (para currentPage > 4) */}
+            {totalPages > 4 && currentPage > 4 && (
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  styles.paginationButtonInactive,
+                ]}
+                onPress={() => {
+                  const prevPage = currentPage - 1;
+                  console.log("Navegando para página:", prevPage);
+                  setCurrentPage(prevPage);
+                }}
+                accessibilityLabel={`Página ${currentPage - 1}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: false }}
+              >
+                <Text style={styles.paginationTextInactive}>
+                  {currentPage - 1}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Elipse antes da página 3 ou anterior à atual (para currentPage >= 4) */}
+            {totalPages > 3 && currentPage >= 4 && (
+              <TouchableOpacity
+                style={styles.ellipsisButton}
+                onPress={() => {
+                  const prevPage = currentPage - 2 > 1 ? currentPage - 2 : 2;
+                  console.log("Navegando para página via elipse:", prevPage);
+                  setCurrentPage(prevPage);
+                }}
+                accessibilityLabel={`Ir para página ${
+                  currentPage - 2 > 1 ? currentPage - 2 : 2
+                }`}
+                accessibilityRole="button"
+                accessibilityHint="Navega para a página anterior"
+              >
+                <Text style={styles.ellipsis}>...</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Elipse antes da última página (para currentPage <= 2 e totalPages > 3) */}
+            {totalPages > 3 && currentPage <= 2 && (
+              <TouchableOpacity
+                style={styles.ellipsisButton}
+                onPress={() => {
+                  console.log("Navegando para página 3 via elipse");
+                  setCurrentPage(3);
+                }}
+                accessibilityLabel="Ir para página 3"
+                accessibilityRole="button"
+                accessibilityHint="Navega para a página 3"
+              >
+                <Text style={styles.ellipsis}>...</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Última página (ou página 4 para totalPages <= 4) */}
+            {totalPages > 2 && (
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  currentPage === (totalPages <= 4 ? 4 : totalPages)
+                    ? styles.paginationButtonActive
+                    : currentPage > 4 && currentPage < totalPages
+                    ? styles.paginationButtonInactive
+                    : currentPage === totalPages
+                    ? styles.paginationButtonActive
+                    : styles.paginationButtonInactive,
+                ]}
+                onPress={() => {
+                  const lastPage = totalPages <= 4 ? 4 : totalPages;
+                  console.log("Navegando para última página:", lastPage);
+                  setCurrentPage(lastPage);
+                }}
+                accessibilityLabel={`Página ${
+                  totalPages <= 4 ? 4 : totalPages
+                }`}
+                accessibilityRole="button"
+                accessibilityState={{
+                  selected:
+                    currentPage === (totalPages <= 4 ? 4 : totalPages) ||
+                    (currentPage === totalPages && totalPages > 4),
+                }}
+              >
+                <Text
+                  style={
+                    currentPage === (totalPages <= 4 ? 4 : totalPages) ||
+                    (currentPage === totalPages && totalPages > 4)
+                      ? styles.paginationTextActive
+                      : styles.paginationTextInactive
+                  }
+                >
+                  {totalPages <= 4 ? 4 : totalPages}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
         <Botoes_Pagina_principal
           accessibilityRole="button"
-          style={{ marginTop: 45 }}
+          style={{ marginTop: 15 }}
           onPress={Criar_Equipa}
         >
           <Texto_Botoes_Pagina_principal accessibilityRole="button">
@@ -933,6 +1177,62 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   visibilidadeContainer: {
-    marginBottom: 10, // Adiciona espaço vertical após os botões
+    marginBottom: 10,
+  },
+  noTeamsText: {
+    fontSize: 16,
+    color: "#263A83",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    minHeight: 40, // Garante espaço suficiente
+  },
+  paginationButton: {
+    width: 60, // Aumentado para melhor visibilidade
+    height: 35,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 8,
+    overflow: "visible", // Evita corte de texto
+  },
+  paginationButtonActive: {
+    backgroundColor: "#E3FC87",
+    borderWidth: 1,
+    borderColor: "#263A83",
+  },
+  paginationButtonInactive: {
+    backgroundColor: "#263A83",
+  },
+  paginationTextActive: {
+    color: "#263A83",
+    fontWeight: "bold",
+    fontSize: 16, // Aumentado para legibilidade
+    textAlign: "center",
+  },
+  paginationTextInactive: {
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  ellipsis: {
+    fontSize: 18, // Aumentado para visibilidade
+    color: "#263A83",
+    marginHorizontal: 8,
+    alignSelf: "center",
+  },
+  ellipsisButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 30, // Garante espaço para elipse
   },
 });

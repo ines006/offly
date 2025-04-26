@@ -455,7 +455,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
   }
 };
 
-// Listar equipas com filtro opcional de lotação < 5 participantes e paginação
+// Listar equipas com filtro opcional de pelo menos uma vaga e paginação
 exports.getTeams = async (req, res) => {
   try {
     const { capacity, page = 1 } = req.query; // page padrão é 1
@@ -469,71 +469,59 @@ exports.getTeams = async (req, res) => {
       });
     }
 
-    // Condição base para filtro de capacity
-    let havingCondition = null;
-    if (capacity === "under-5") {
-      havingCondition = Sequelize.literal("COUNT(`participants`.`id`) < 5");
+    // Condição base para filtro
+    let whereCondition = {};
+    if (capacity === "has-vacancy") {
+      whereCondition = {
+        [Sequelize.Op.and]: [
+          Sequelize.literal(
+            `(SELECT COUNT(*) FROM participants WHERE participants.teams_id = Teams.id) < Teams.capacity`
+          ),
+          { visibility: 1 }, // Apenas equipes públicas
+        ],
+      };
     }
 
     // Contar total de equipes (para metadados da paginação)
-    const totalTeamsResult = await Teams.findAll({
-      attributes: [
-        [
-          Sequelize.fn(
-            "COUNT",
-            Sequelize.fn("DISTINCT", Sequelize.col("Teams.id"))
-          ),
-          "total",
-        ],
-      ],
-      include: [
-        {
-          model: Participants,
-          as: "participants",
-          attributes: [],
-          required: false, // LEFT JOIN
-        },
-      ],
-      group: ["Teams.id"],
-      having: havingCondition,
-      raw: true,
-      subQuery: false, // Evitar subquery
+    const totalTeamsResult = await Teams.count({
+      distinct: true,
+      col: "Teams.id",
+      where: whereCondition,
+      logging: console.log, // Log da query SQL
     });
 
-    const totalTeams = totalTeamsResult.length;
+    const totalTeams = totalTeamsResult;
     const totalPages = Math.ceil(totalTeams / limit);
 
     // Buscar equipas com paginação
     const teams = await Teams.findAll({
       attributes: [
+        [Sequelize.fn("DISTINCT", Sequelize.col("Teams.id")), "id"], // Garantir IDs únicos
         "name",
         "capacity",
         "image",
+        "visibility",
         [
-          Sequelize.fn("COUNT", Sequelize.col("participants.id")), // Usar alias participants
+          Sequelize.literal(
+            `(SELECT COUNT(*) FROM participants WHERE participants.teams_id = Teams.id)`
+          ),
           "participant_count",
         ],
       ],
-      include: [
-        {
-          model: Participants,
-          as: "participants",
-          attributes: [],
-          required: false, // LEFT JOIN
-        },
+      where: whereCondition,
+      order: [
+        [Sequelize.literal("participant_count"), "DESC"],
+        ["id", "ASC"], // Ordenação secundária por ID para estabilidade
       ],
-      group: ["Teams.id", "Teams.name", "Teams.capacity", "Teams.image"],
-      having: havingCondition,
-      order: [[Sequelize.literal("participant_count"), "DESC"]],
       limit: limit,
       offset: offset,
       raw: true,
-      subQuery: false,
+      logging: console.log, // Log da query SQL
     });
 
-    if (!teams.length && capacity === "under-5") {
+    if (!teams.length && capacity === "has-vacancy") {
       return res.status(404).json({
-        message: "No teams found with fewer than 5 participants",
+        message: "No public teams found with available vacancies",
       });
     }
 
@@ -542,6 +530,9 @@ exports.getTeams = async (req, res) => {
         message: "No teams found for this page",
       });
     }
+
+    // Log para depuração
+    console.log("Equipes retornadas:", teams);
 
     res.json({
       teams,
@@ -559,7 +550,6 @@ exports.getTeams = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
-
 // Pesquisar equipas por nome na barra de pesquisa
 exports.searchTeamsByName = async (req, res) => {
   try {
@@ -772,7 +762,7 @@ exports.joinTeam = async (req, res) => {
     }
 
     // Verifica se a equipa é pública
-    if (team.visibility === 1) {
+    if (team.visibility === 0) {
       return res
         .status(403)
         .json({ error: "Cannot join a private team without an invite" });

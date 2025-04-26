@@ -218,7 +218,7 @@ export default function PaginaPrincipal() {
         ? `${baseurl}/teams/search?name=${encodeURIComponent(
             search
           )}&page=${page}`
-        : `${baseurl}/teams?capacity=under-5&page=${page}`;
+        : `${baseurl}/teams?capacity=has-vacancy&page=${page}`;
       console.log(`🌐 Fazendo requisição para ${endpoint}`);
 
       const response = await axios.get(endpoint, {
@@ -320,11 +320,15 @@ export default function PaginaPrincipal() {
       const equipaData = {
         name: NomeEquipa,
         description: DescricaoEquipa,
-        maxParticipants: parseInt(selectedValue),
-        visibility: activeButton === "public" ? "public" : "private",
+        capacity: parseInt(selectedValue),
+        visibility: activeButton === "public" ? 1 : 0,
         image: getRandomImage(imageTeamUrls),
+        competitions_id: 1, // Ajuste conforme necessário
+        team_passbooks_id: 1, // Ajuste conforme necessário
+        team_admin: 1, // Ajuste conforme necessário (ex.: ID do usuário logado)
       };
 
+      // Criar a equipa
       const response = await axios.post(`${baseurl}/teams`, equipaData, {
         headers: {
           "Content-Type": "application/json",
@@ -336,37 +340,54 @@ export default function PaginaPrincipal() {
       const teamId = response.data.id;
       console.log("✅ Equipa criada com ID:", teamId);
 
-      await axios.post(
-        `${baseurl}/teams/${teamId}/join`,
-        {},
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      console.log("✅ Utilizador adicionado à equipa");
+      // Fechar o modal
+      if (typeof setModalVisible === "function") {
+        setModalVisible(false);
+      } else {
+        console.warn(
+          "⚠️ setModalVisible não é uma função ou não está definido. Modal não será fechado."
+        );
+      }
 
-      setModalVisible(false);
+      // Redirecionar para a página EquipaCriada
       router.push({
-        pathname: "./EquipaCriada",
+        pathname: "/EquipaCriada",
         params: { teamId },
       });
     } catch (error) {
       console.error("❌ Erro ao criar equipa:", error);
-      Alert.alert("Erro", "Não foi possível criar a equipa.");
+      let errorMessage = "Não foi possível criar a equipa.";
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      }
+      Alert.alert("Erro", errorMessage);
     }
   };
 
   // Entrar numa equipa
   const handleEntrarnaEquipa = async () => {
-    if (!user?.id || !selectedEquipaId) return;
+    if (!user?.id) {
+      console.warn("⚠️ Utilizador não autenticado ou ID não disponível.");
+      Alert.alert(
+        "Erro",
+        "Você precisa estar autenticado para entrar numa equipa."
+      );
+      return;
+    }
+    if (!selectedEquipaId) {
+      console.warn("⚠️ Nenhuma equipa selecionada.");
+      Alert.alert("Erro", "Selecione uma equipa para entrar.");
+      return;
+    }
+    if (!accessToken) {
+      console.warn("⚠️ Token de acesso não disponível.");
+      Alert.alert("Erro", "Token de autenticação não encontrado.");
+      return;
+    }
 
     try {
       console.log("🔄 Entrando na equipa:", selectedEquipaId);
-      await axios.post(
+      const response = await axios.post(
         `${baseurl}/teams/${selectedEquipaId}/join`,
         {},
         {
@@ -378,15 +399,48 @@ export default function PaginaPrincipal() {
         }
       );
 
-      Alert.alert("Sucesso", "Você entrou na equipa!");
-      setModalEquipa(false);
+      console.log("✅ Sucesso:", response.data);
+      Alert.alert("Sucesso", "Você entrou na equipa com sucesso!");
+
+      // Fechar o modal
+      if (typeof setModalEquipa === "function") {
+        setModalEquipa(false);
+      } else {
+        console.warn(
+          "⚠️ setModalEquipa não é uma função ou não está definido."
+        );
+      }
+
+      // Redirecionar
       router.push({
-        pathname: "./EquipaCriada",
+        pathname: "/EquipaCriada",
         params: { teamId: selectedEquipaId },
       });
     } catch (error) {
       console.error("❌ Erro ao entrar na equipa:", error);
-      Alert.alert("Erro", "Não foi possível entrar na equipa.");
+      let errorMessage = "Não foi possível entrar na equipa.";
+      if (error.response) {
+        errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          errorMessage;
+        console.log("Resposta do backend:", error.response.data);
+      }
+      if (error.response?.status === 403) {
+        errorMessage =
+          error.response.data.message ||
+          "Acesso negado: equipa privada ou sem permissão.";
+      } else if (error.response?.status === 404) {
+        errorMessage = error.response.data.message || "Equipa não encontrada.";
+      } else if (error.response?.status === 400) {
+        errorMessage =
+          error.response.data.message ||
+          "A equipa está cheia ou você já está associado.";
+      } else if (error.response?.status === 401) {
+        errorMessage =
+          error.response.data.message || "Token inválido ou expirado.";
+      }
+      Alert.alert("Erro", errorMessage);
     }
   };
 

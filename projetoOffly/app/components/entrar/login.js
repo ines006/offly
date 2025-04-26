@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { baseurl } from "../../api-config/apiConfig";
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "./AuthContext"; // Ajuste o caminho se necessário
 
 import {
   StyleSheet,
@@ -22,7 +22,8 @@ const Login = () => {
   const [focusField, setFocusField] = useState("");
   const [emailBarWidth] = useState(new Animated.Value(email ? 100 : 0));
   const [passwordBarWidth] = useState(new Animated.Value(password ? 100 : 0));
-  const { setUser, setAccessToken } = useContext(AuthContext);
+  const { setUser, setAccessToken, setRefreshToken, setLoading } =
+    useContext(AuthContext);
 
   const router = useRouter();
 
@@ -51,11 +52,8 @@ const Login = () => {
     }
   };
 
-  // após login
-  // se o utilizador tiver equipa deve ir para a pagina onde ja existe equipa. caso contrario vai para a página de procurar equipa
   const handleSubmit = async () => {
     try {
-      // 1. Fazer login
       console.log("🔄 Iniciando login com baseurl:", baseurl);
       const response = await axios.post(`${baseurl}/auth/login`, {
         email,
@@ -64,22 +62,24 @@ const Login = () => {
 
       const { token, refreshToken, expiresIn, user } = response.data;
 
-      // Logs para debug
       console.log("✅ Login efetuado com sucesso!");
-      console.log("📦 Dados do login:", { token, user });
+      console.log("🔑 Dados do login:", { token, refreshToken, user });
 
-      // Verificar se user.id existe
       if (!user?.id) {
         console.error("❌ Erro: user.id não encontrado na resposta do login");
         throw new Error("ID do utilizador não encontrado");
       }
 
-      // Guardar token e dados do utilizador
       await AsyncStorage.setItem("accessToken", token);
       await AsyncStorage.setItem("refreshToken", refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(user));
 
-      // 2. Verificar se o utilizador tem equipa
+      setUser(user);
+      setAccessToken(token);
+      setRefreshToken(refreshToken);
+      setLoading(false);
+      console.log("🔍 RefreshToken salvo no AuthContext:", refreshToken);
+
       const participantUrl = `${baseurl}/participants/${user.id}`;
       console.log("🔄 Verificando equipa no endpoint:", participantUrl);
       try {
@@ -91,37 +91,20 @@ const Login = () => {
           },
         });
 
-        // Verificar se teams_id existe na resposta
         const hasTeam = participantResponse.data.teams_id !== null;
         console.log("👥 Utilizador tem equipa?", hasTeam);
 
-        // Atualizar contexto de autenticação
-        setUser(user);
-        setAccessToken(token);
-
-        // 3. Redirecionar com base na existência de equipa
-        if (hasTeam) {
-          router.push("../../components/navbar");
-        } else {
-          router.push("../../PaginaPrincipal");
-        }
+        const targetRoute = hasTeam ? "/components/navbar" : "/PaginaPrincipal";
+        console.log("🚪 Redirecionando para:", targetRoute);
+        router.push(targetRoute);
       } catch (participantError) {
         console.error(
           "❌ Erro ao verificar equipa:",
           participantError.message,
           participantError.response?.data || participantError
         );
-        console.log("🔍 Detalhes do erro:", {
-          url: participantUrl,
-          headers: {
-            "ngrok-skip-browser-warning": "true",
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-        setUser(user);
-        setAccessToken(token);
-        router.push("../../PaginaPrincipal");
+        console.log("🚪 Redirecionando para PaginaPrincipal como fallback");
+        router.push("/PaginaPrincipal");
       }
     } catch (err) {
       console.error(
@@ -135,7 +118,7 @@ const Login = () => {
   };
 
   return (
-    <View accessibilityRole="main" astyle={styles.container}>
+    <View accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
           Bem-vindo!
@@ -172,7 +155,6 @@ const Login = () => {
             }}
             accessibilityLabel="Endereço de e-mail"
           />
-
           <Animated.View
             style={[
               styles.bar,

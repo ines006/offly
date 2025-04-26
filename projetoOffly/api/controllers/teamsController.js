@@ -656,6 +656,15 @@ exports.deleteTeam = async (req, res) => {
         .json({ message: "Only the team admin can delete the team" });
     }
 
+    // Excluir todos os convites associados à equipe
+    const deletedInvitesCount = await Invites.destroy({
+      where: { teamId },
+      transaction,
+    });
+    console.log(
+      `Deleted ${deletedInvitesCount} invites associated with team ${teamId}`
+    );
+
     // Atualizar registros onde teams_id é igual a teamId
     const [updatedTeamsIdCount] = await Participants.update(
       { teams_id: null, teams_team_admin: null },
@@ -862,67 +871,86 @@ exports.joinByInvite = async (req, res) => {
   try {
     const { token } = req.body;
     const userId = req.user.id;
+    console.log("Recebido token:", token, "userId:", userId);
 
     if (!token) {
+      console.log("Token não fornecido");
       return res.status(400).json({ error: "Invite token is required" });
     }
 
     // Busca o convite
-    const invite = await Invites.findOne({
-      where: { token },
-    });
+    const invite = await Invites.findOne({ where: { token } });
+    console.log("Convite encontrado:", invite);
     if (!invite) {
+      console.log("Token inválido:", token);
       return res.status(404).json({ error: "Invalid or expired invite token" });
     }
 
     // Verifica se o convite expirou
+    console.log("expiresAt:", invite.expiresAt);
     if (new Date() > invite.expiresAt) {
+      console.log("Convite expirado:", token);
       return res.status(400).json({ error: "Invite token has expired" });
     }
 
     // Busca a equipa
     const team = await Teams.findByPk(invite.teamId);
+    console.log("Equipa encontrada:", team);
     if (!team) {
+      console.log("Equipa não encontrada:", invite.teamId);
       return res.status(404).json({ error: "Team not found" });
     }
 
-    // Procurar o utilizador
-    const participant = await Participants.findByPk(userId);
-    if (!participant) {
-      return res.status(404).json({ error: "Participant not found" });
+    // Verificar se o utilizador já está em uma equipa
+    const existingParticipant = await Participants.findOne({
+      where: { id: userId },
+    });
+    console.log("Participante existente:", existingParticipant);
+    if (!existingParticipant) {
+      console.log("Usuário não encontrado:", userId);
+      return res.status(404).json({ error: "User not found" });
     }
-
-    // Verificar se o utilizador já está numa equipa
-    if (participant.teams_id) {
+    if (existingParticipant.teams_id) {
+      console.log("Usuário já está em uma equipe:", userId);
       return res
         .status(400)
         .json({ error: "Participant is already a member of a team" });
     }
 
-    // Contar o número atual de participantes na equipa
+    // Contar o número atual de participantes na equipe
     const currentMembersCount = await Participants.count({
       where: { teams_id: invite.teamId },
     });
-
-    // Verificar se a equipa tem lotação disponível
+    console.log(
+      "Contagem de membros:",
+      currentMembersCount,
+      "Capacidade:",
+      team.capacity
+    );
     if (currentMembersCount >= team.capacity) {
+      console.log("Equipa cheia:", invite.teamId);
       return res.status(400).json({ error: "Team has no available slots" });
     }
 
-    // Associar o utilizador à equipa
-    participant.teams_id = invite.teamId;
-    await participant.save();
+    // Atualizar o participante com o teams_id
+    console.log("Atualizando participante:", {
+      id: userId,
+      teams_id: invite.teamId,
+    });
+    await existingParticipant.update({
+      teams_id: invite.teamId,
+    });
 
-    // Remover o convite após uso (para uso único)
-    await invite.destroy();
-
-    return res
-      .status(201)
-      .json({ message: "Successfully joined the team via invite" });
+    console.log("Usuário entrou na equipe com sucesso:", userId, invite.teamId);
+    return res.status(201).json({
+      message: "Successfully joined the team via invite",
+      teamId: invite.teamId,
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Erro em /teams/join-by-invite:", error.message, error.stack);
+    return res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
   }
 };
-
 module.exports = exports;

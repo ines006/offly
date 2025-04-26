@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
-import Login from './components/entrar/login'
+import Login from "./components/entrar/login";
 import OfflyScreen from "./OfflyScreen";
 
 export default function Index() {
@@ -30,6 +30,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#263330", // mesmo fundo da splash
+    backgroundColor: "#d2e9ff", // mesmo fundo da splash
   },
 });

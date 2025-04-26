@@ -44,7 +44,7 @@ import {
   StarsContainer,
 } from "./styles/styles";
 
-// Componente para os campos de texto de criação de equipa
+// Componente para os campos de texto
 function Caixas_de_Texto_Criar_Equipa(props) {
   const {
     titulo,
@@ -77,7 +77,7 @@ function Caixas_de_Texto_Criar_Equipa(props) {
         accessibilityRole="textbox"
         accessibilityValue={{ text: value ? value : "campo vazio" }}
         placeholderTextColor={placeholderTextColor || "rgba(38, 58, 131, 0.5)"}
-        autoCapitalize="sentences"
+        autoCapitalize="none"
         returnKeyType="done"
         onBlur={() => {
           if (!value.trim()) {
@@ -85,6 +85,8 @@ function Caixas_de_Texto_Criar_Equipa(props) {
               onError("Tens de definir um nome para a tua equipa");
             } else if (titulo === "Adiciona uma descrição") {
               onError("A tua equipa deve ter uma descrição que a caraterize");
+            } else if (titulo === "Insere o link de convite") {
+              onError("Tens de inserir um link de convite válido");
             }
           } else {
             onError("");
@@ -118,7 +120,10 @@ export default function PaginaPrincipal() {
   const [searchText, setSearchText] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [modalEquipa, setModalEquipa] = useState(false);
+  const [modalJoinByInvite, setModalJoinByInvite] = useState(false);
   const [selectedEquipaId, setSelectedEquipaId] = useState(null);
+  const [inviteToken, setInviteToken] = useState("");
+  const [inviteTokenError, setInviteTokenError] = useState("");
 
   const [NomeEquipa, setNomeEquipa] = useState("");
   const [DescricaoEquipa, setDescricaoEquipa] = useState("");
@@ -128,6 +133,7 @@ export default function PaginaPrincipal() {
   const [descricaoEquipaError, setDescricaoEquipaError] = useState("");
   const [visibilidadeError, setVisibilidadeError] = useState("");
   const [inviteLink, setInviteLink] = useState(null);
+  const [teamId, setTeamId] = useState(null); // Estado para teamId
 
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -139,7 +145,6 @@ export default function PaginaPrincipal() {
   const imageTeamUrls = [
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.50.14-removebg-preview.png",
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.51.27-removebg-preview.png",
-    // ... restante das URLs ...
   ];
 
   const getRandomImage = (tipo) => {
@@ -232,7 +237,6 @@ export default function PaginaPrincipal() {
 
       console.log("✅ Resposta da API:", response.data);
 
-      // Normalizar a resposta
       let teams = [];
       let pagination = { totalPages: 1 };
 
@@ -313,7 +317,6 @@ export default function PaginaPrincipal() {
     setCurrentPage(1);
   }, [searchText]);
 
-  // Criar equipa
   const criarEquipa = async () => {
     try {
       console.log("🔄 Criando equipa...");
@@ -323,10 +326,12 @@ export default function PaginaPrincipal() {
         capacity: parseInt(selectedValue),
         visibility: activeButton === "public" ? 1 : 0,
         image: getRandomImage(imageTeamUrls),
-        competitions_id: 1, // Ajuste conforme necessário
-        team_passbooks_id: 1, // Ajuste conforme necessário
-        team_admin: 1, // Ajuste conforme necessário (ex.: ID do usuário logado)
+        competitions_id: 1,
+        team_passbooks_id: 1,
+        team_admin: user.id,
       };
+
+      console.log("📤 Dados da equipa:", equipaData);
 
       // Criar a equipa
       const response = await axios.post(`${baseurl}/teams`, equipaData, {
@@ -334,37 +339,91 @@ export default function PaginaPrincipal() {
           "Content-Type": "application/json",
           Accept: "application/json",
           Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
         },
       });
 
-      const teamId = response.data.id;
-      console.log("✅ Equipa criada com ID:", teamId);
+      const newTeamId = response.data.id;
+      console.log("✅ Equipa criada com ID:", newTeamId);
+      setTeamId(newTeamId); // Armazena teamId no estado
+      console.log("🆔 teamId definido no estado:", newTeamId);
 
-      // Fechar o modal
-      if (typeof setModalVisible === "function") {
-        setModalVisible(false);
+      // Criar convite para equipe privada
+      let newInviteLink = null;
+      if (activeButton === "private") {
+        try {
+          const inviteUrl = `${baseurl}/teams/${newTeamId}/invites`;
+          console.log(`🌐 Chamando convite: ${inviteUrl}`);
+          const inviteResponse = await axios.post(
+            inviteUrl,
+            {},
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: `Bearer ${accessToken}`,
+                "ngrok-skip-browser-warning": "true",
+              },
+            }
+          );
+
+          newInviteLink = inviteResponse.data.inviteLink;
+          console.log("🔗 Invite link criado:", newInviteLink);
+          setInviteLink(newInviteLink);
+          await Clipboard.setStringAsync(newInviteLink);
+          Alert.alert(
+            "Sucesso",
+            "Equipa privada criada! O link de convite foi copiado para a área de transferência."
+          );
+        } catch (inviteError) {
+          console.error("❌ Erro ao criar convite:", inviteError);
+          let inviteErrorMessage = "Não foi possível gerar o link de convite.";
+          if (inviteError.response) {
+            inviteErrorMessage =
+              inviteError.response.data.message ||
+              inviteError.response.data.error ||
+              inviteErrorMessage;
+          }
+          Alert.alert(
+            "Aviso",
+            `Equipa criada com sucesso, mas houve um erro ao gerar o convite: ${inviteErrorMessage}`
+          );
+        }
       } else {
-        console.warn(
-          "⚠️ setModalVisible não é uma função ou não está definido. Modal não será fechado."
+        Alert.alert("Sucesso", "Equipa pública criada com sucesso!");
+        setModalVisible(false);
+        console.log(
+          "🔄 Redirecionando para /EquipaCriada com teamId:",
+          newTeamId
         );
+        try {
+          router.push({
+            pathname: "/EquipaCriada",
+            params: { teamId: newTeamId },
+          });
+        } catch (error) {
+          console.error("❌ Erro ao redirecionar (pública):", error);
+          Alert.alert(
+            "Erro",
+            "Não foi possível redirecionar para a página da equipe."
+          );
+        }
       }
-
-      // Redirecionar para a página EquipaCriada
-      router.push({
-        pathname: "/EquipaCriada",
-        params: { teamId },
-      });
     } catch (error) {
       console.error("❌ Erro ao criar equipa:", error);
       let errorMessage = "Não foi possível criar a equipa.";
       if (error.response) {
-        errorMessage = error.response.data.message || errorMessage;
+        errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          errorMessage;
+        console.log("🔍 Resposta do erro:", error.response.data);
       }
       Alert.alert("Erro", errorMessage);
     }
   };
 
-  // Entrar numa equipa
+  // Entrar numa equipa pública
   const handleEntrarnaEquipa = async () => {
     if (!user?.id) {
       console.warn("⚠️ Utilizador não autenticado ou ID não disponível.");
@@ -395,6 +454,7 @@ export default function PaginaPrincipal() {
             "Content-Type": "application/json",
             Accept: "application/json",
             Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
           },
         }
       );
@@ -402,7 +462,6 @@ export default function PaginaPrincipal() {
       console.log("✅ Sucesso:", response.data);
       Alert.alert("Sucesso", "Você entrou na equipa com sucesso!");
 
-      // Fechar o modal
       if (typeof setModalEquipa === "function") {
         setModalEquipa(false);
       } else {
@@ -411,7 +470,6 @@ export default function PaginaPrincipal() {
         );
       }
 
-      // Redirecionar
       router.push({
         pathname: "/EquipaCriada",
         params: { teamId: selectedEquipaId },
@@ -444,6 +502,91 @@ export default function PaginaPrincipal() {
     }
   };
 
+  // Entrar numa equipa privada por convite
+  const handleJoinByInvite = async () => {
+    if (!user?.id) {
+      console.warn("⚠️ Utilizador não autenticado ou ID não disponível.");
+      Alert.alert(
+        "Erro",
+        "Você precisa estar autenticado para entrar numa equipa."
+      );
+      return;
+    }
+    if (!accessToken) {
+      console.warn("⚠️ Token de acesso não disponível.");
+      Alert.alert("Erro", "Token de autenticação não encontrado.");
+      return;
+    }
+    if (!inviteToken.trim()) {
+      setInviteTokenError("Tens de inserir um link de convite válido");
+      return;
+    }
+
+    let token = inviteToken;
+    let urlMatch = null;
+    if (inviteToken.includes("token=")) {
+      urlMatch = inviteToken.match(/token=([^&]+)/);
+      if (urlMatch && urlMatch[1]) {
+        token = urlMatch[1];
+      }
+    }
+    console.log("🔍 inviteToken original:", inviteToken);
+    console.log("🔍 urlMatch:", urlMatch);
+    console.log("🔍 Token extraído:", token);
+
+    try {
+      console.log("🔄 Entrando na equipa privada com token:", token);
+      const response = await axios.post(
+        `${baseurl}/teams/join-by-invite`,
+        { token },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      console.log("✅ Sucesso:", response.data);
+      const teamId = response.data.teamId || response.data.id;
+      Alert.alert("Sucesso", "Você entrou na equipa privada com sucesso!");
+
+      setModalJoinByInvite(false);
+      router.push({
+        pathname: "/EquipaCriada",
+        params: { teamId },
+      });
+    } catch (error) {
+      console.error("❌ Erro ao entrar na equipa privada:", error);
+      let errorMessage = "Não foi possível entrar na equipa privada.";
+      if (error.response) {
+        console.log("🔍 Resposta do backend:", error.response.data);
+        const { status, data } = error.response;
+        if (status === 400) {
+          errorMessage = data.error || "Convite inválido ou equipa cheia.";
+        } else if (status === 403) {
+          errorMessage =
+            data.error || "Acesso negado: token inválido ou sem permissão.";
+        } else if (status === 404) {
+          errorMessage = data.error || "Convite ou equipa não encontrados.";
+        } else if (status === 500) {
+          errorMessage =
+            data.details ||
+            data.error ||
+            "Erro interno no servidor. Tente novamente mais tarde.";
+        }
+      } else if (error.request) {
+        console.log("🔍 Sem resposta do servidor:", error.request);
+        errorMessage = "Sem resposta do servidor. Verifique sua conexão.";
+      } else {
+        console.log("🔍 Erro na configuração da requisição:", error.message);
+        errorMessage = "Erro ao configurar a requisição.";
+      }
+      Alert.alert("Erro", errorMessage);
+    }
+  };
   const validateForm = () => {
     let isValid = true;
     let errorMessages = [];
@@ -502,19 +645,16 @@ export default function PaginaPrincipal() {
     handleEntrarnaEquipa();
   };
 
+  const handleNext3 = () => {
+    handleJoinByInvite();
+  };
+
   const handleButtonClick = (button) => {
     setActiveButton(button);
     if (button) {
       setVisibilidadeError("");
     }
-
-    if (button === "private") {
-      const generatedInviteCode = generateInviteCode();
-      const inviteUrl = `https://offly/join-team?invitecode=${generatedInviteCode}`;
-      setInviteLink(inviteUrl);
-    } else {
-      setInviteLink(null);
-    }
+    setInviteLink(null); // Resetar o link de convite
   };
 
   const handlePerfil = () => {
@@ -523,6 +663,12 @@ export default function PaginaPrincipal() {
 
   const Criar_Equipa = () => {
     setModalVisible(true);
+  };
+
+  const Entrar_Por_Convite = () => {
+    setInviteToken("");
+    setInviteTokenError("");
+    setModalJoinByInvite(true);
   };
 
   const handleModalEquipa = (id) => {
@@ -545,24 +691,11 @@ export default function PaginaPrincipal() {
     </Svg>
   );
 
-  function generateInviteCode() {
-    const characters =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let inviteCode = "";
-    for (let i = 0; i < 8; i++) {
-      inviteCode += characters.charAt(
-        Math.floor(Math.random() * characters.length)
-      );
-    }
-    return inviteCode;
-  }
-
   function copyToClipboard(text) {
     Clipboard.setStringAsync(text);
     Alert.alert("Sucesso", "Link copiado para a área de transferência!");
   }
 
-  // Memoizar as estrelas para evitar renderizações desnecessárias
   const stars = useMemo(() => {
     console.log("🔍 Gerando estrelas:", { userLevel });
     return Array.from({ length: 4 }, (_, index) => {
@@ -630,7 +763,6 @@ export default function PaginaPrincipal() {
           Junta-te a uma equipa
         </Sub_Titulos>
 
-        {/* Barra de Pesquisa */}
         <SearchBarContainer>
           <SearchIcon />
           <SearchInput
@@ -663,15 +795,8 @@ export default function PaginaPrincipal() {
           <Text style={styles.noTeamsText}>Nenhuma equipa encontrada.</Text>
         )}
 
-        {/* Controles de Paginação */}
         {totalPages > 1 && (
           <View style={styles.paginationContainer}>
-            {console.log("🔍 Renderizando paginação:", {
-              currentPage,
-              totalPages,
-            })}
-
-            {/* Página 1 */}
             <TouchableOpacity
               style={[
                 styles.paginationButton,
@@ -679,10 +804,7 @@ export default function PaginaPrincipal() {
                   ? styles.paginationButtonActive
                   : styles.paginationButtonInactive,
               ]}
-              onPress={() => {
-                console.log("Navegando para página 1");
-                setCurrentPage(1);
-              }}
+              onPress={() => setCurrentPage(1)}
               accessibilityLabel="Página 1"
               accessibilityRole="button"
               accessibilityState={{ selected: currentPage === 1 }}
@@ -697,8 +819,6 @@ export default function PaginaPrincipal() {
                 1
               </Text>
             </TouchableOpacity>
-
-            {/* Página 2 (visível para currentPage <= 3) */}
             {totalPages > 2 && currentPage <= 3 && (
               <TouchableOpacity
                 style={[
@@ -707,10 +827,7 @@ export default function PaginaPrincipal() {
                     ? styles.paginationButtonActive
                     : styles.paginationButtonInactive,
                 ]}
-                onPress={() => {
-                  console.log("Navegando para página 2");
-                  setCurrentPage(2);
-                }}
+                onPress={() => setCurrentPage(2)}
                 accessibilityLabel="Página 2"
                 accessibilityRole="button"
                 accessibilityState={{ selected: currentPage === 2 }}
@@ -726,8 +843,6 @@ export default function PaginaPrincipal() {
                 </Text>
               </TouchableOpacity>
             )}
-
-            {/* Página 3 (visível para currentPage = 3 ou totalPages <= 4) */}
             {totalPages > 2 &&
               (currentPage === 3 || (totalPages <= 4 && currentPage === 4)) && (
                 <TouchableOpacity
@@ -737,10 +852,7 @@ export default function PaginaPrincipal() {
                       ? styles.paginationButtonActive
                       : styles.paginationButtonInactive,
                   ]}
-                  onPress={() => {
-                    console.log("Navegando para página 3");
-                    setCurrentPage(3);
-                  }}
+                  onPress={() => setCurrentPage(3)}
                   accessibilityLabel="Página 3"
                   accessibilityRole="button"
                   accessibilityState={{ selected: currentPage === 3 }}
@@ -756,19 +868,13 @@ export default function PaginaPrincipal() {
                   </Text>
                 </TouchableOpacity>
               )}
-
-            {/* Página anterior à atual (para currentPage > 4) */}
             {totalPages > 4 && currentPage > 4 && (
               <TouchableOpacity
                 style={[
                   styles.paginationButton,
                   styles.paginationButtonInactive,
                 ]}
-                onPress={() => {
-                  const prevPage = currentPage - 1;
-                  console.log("Navegando para página:", prevPage);
-                  setCurrentPage(prevPage);
-                }}
+                onPress={() => setCurrentPage(currentPage - 1)}
                 accessibilityLabel={`Página ${currentPage - 1}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: false }}
@@ -778,16 +884,12 @@ export default function PaginaPrincipal() {
                 </Text>
               </TouchableOpacity>
             )}
-
-            {/* Elipse antes da página 3 ou anterior à atual (para currentPage >= 4) */}
             {totalPages > 3 && currentPage >= 4 && (
               <TouchableOpacity
                 style={styles.ellipsisButton}
-                onPress={() => {
-                  const prevPage = currentPage - 2 > 1 ? currentPage - 2 : 2;
-                  console.log("Navegando para página via elipse:", prevPage);
-                  setCurrentPage(prevPage);
-                }}
+                onPress={() =>
+                  setCurrentPage(currentPage - 2 > 1 ? currentPage - 2 : 2)
+                }
                 accessibilityLabel={`Ir para página ${
                   currentPage - 2 > 1 ? currentPage - 2 : 2
                 }`}
@@ -797,15 +899,10 @@ export default function PaginaPrincipal() {
                 <Text style={styles.ellipsis}>...</Text>
               </TouchableOpacity>
             )}
-
-            {/* Elipse antes da última página (para currentPage <= 2 e totalPages > 3) */}
             {totalPages > 3 && currentPage <= 2 && (
               <TouchableOpacity
                 style={styles.ellipsisButton}
-                onPress={() => {
-                  console.log("Navegando para página 3 via elipse");
-                  setCurrentPage(3);
-                }}
+                onPress={() => setCurrentPage(3)}
                 accessibilityLabel="Ir para página 3"
                 accessibilityRole="button"
                 accessibilityHint="Navega para a página 3"
@@ -813,39 +910,26 @@ export default function PaginaPrincipal() {
                 <Text style={styles.ellipsis}>...</Text>
               </TouchableOpacity>
             )}
-
-            {/* Última página (ou página 4 para totalPages <= 4) */}
             {totalPages > 2 && (
               <TouchableOpacity
                 style={[
                   styles.paginationButton,
                   currentPage === (totalPages <= 4 ? 4 : totalPages)
                     ? styles.paginationButtonActive
-                    : currentPage > 4 && currentPage < totalPages
-                    ? styles.paginationButtonInactive
-                    : currentPage === totalPages
-                    ? styles.paginationButtonActive
                     : styles.paginationButtonInactive,
                 ]}
-                onPress={() => {
-                  const lastPage = totalPages <= 4 ? 4 : totalPages;
-                  console.log("Navegando para última página:", lastPage);
-                  setCurrentPage(lastPage);
-                }}
+                onPress={() => setCurrentPage(totalPages <= 4 ? 4 : totalPages)}
                 accessibilityLabel={`Página ${
                   totalPages <= 4 ? 4 : totalPages
                 }`}
                 accessibilityRole="button"
                 accessibilityState={{
-                  selected:
-                    currentPage === (totalPages <= 4 ? 4 : totalPages) ||
-                    (currentPage === totalPages && totalPages > 4),
+                  selected: currentPage === (totalPages <= 4 ? 4 : totalPages),
                 }}
               >
                 <Text
                   style={
-                    currentPage === (totalPages <= 4 ? 4 : totalPages) ||
-                    (currentPage === totalPages && totalPages > 4)
+                    currentPage === (totalPages <= 4 ? 4 : totalPages)
                       ? styles.paginationTextActive
                       : styles.paginationTextInactive
                   }
@@ -857,15 +941,26 @@ export default function PaginaPrincipal() {
           </View>
         )}
 
-        <Botoes_Pagina_principal
-          accessibilityRole="button"
-          style={{ marginTop: 15 }}
-          onPress={Criar_Equipa}
-        >
-          <Texto_Botoes_Pagina_principal accessibilityRole="button">
-            Criar Equipa
-          </Texto_Botoes_Pagina_principal>
-        </Botoes_Pagina_principal>
+        {/* Botões Criar Equipa e Entrar por Convite */}
+        <View style={styles.buttonsContainer}>
+          <Botoes_Pagina_principal
+            accessibilityRole="button"
+            style={{ marginRight: 10, flex: 1 }}
+            onPress={Criar_Equipa}
+          >
+            <Texto_Botoes_Pagina_principal accessibilityRole="button">
+              Criar Equipa
+            </Texto_Botoes_Pagina_principal>
+          </Botoes_Pagina_principal>
+          <Botoes_Pagina_principal
+            accessibilityRole="button"
+            onPress={Entrar_Por_Convite}
+          >
+            <Texto_Botoes_Pagina_principal accessibilityRole="button">
+              Convite
+            </Texto_Botoes_Pagina_principal>
+          </Botoes_Pagina_principal>
+        </View>
 
         {/* Modal de Criação de Equipa */}
         <Modal animationType="fade" transparent={true} visible={modalVisible}>
@@ -889,7 +984,7 @@ export default function PaginaPrincipal() {
                 placeholder="Exemplo: Os incríveis"
                 value={NomeEquipa}
                 onChangeText={setNomeEquipa}
-                editable={true}
+                editable={!inviteLink}
                 error={nomeEquipaError}
                 onError={setNomeEquipaError}
               />
@@ -898,7 +993,7 @@ export default function PaginaPrincipal() {
                 placeholder="Exemplo: Vamos ganhar!"
                 value={DescricaoEquipa}
                 onChangeText={setDescricaoEquipa}
-                editable={true}
+                editable={!inviteLink}
                 error={descricaoEquipaError}
                 onError={setDescricaoEquipaError}
               />
@@ -918,6 +1013,7 @@ export default function PaginaPrincipal() {
                         selectedValue === option && styles.optionButtonSelected,
                       ]}
                       onPress={() => setSelectedValue(option)}
+                      disabled={!!inviteLink}
                       accessibilityRole="button"
                       accessibilityLabel={`${option} participantes`}
                       accessibilityHint={
@@ -956,6 +1052,7 @@ export default function PaginaPrincipal() {
                         activeButton === "public" ? "#E3FC87" : "transparent",
                     }}
                     onPress={() => handleButtonClick("public")}
+                    disabled={!!inviteLink}
                     accessibilityLabel="Tornar equipa pública"
                     accessibilityRole="button"
                   >
@@ -969,6 +1066,7 @@ export default function PaginaPrincipal() {
                         activeButton === "private" ? "#E3FC87" : "transparent",
                     }}
                     onPress={() => handleButtonClick("private")}
+                    disabled={!!inviteLink}
                     accessibilityLabel="Tornar equipa privada"
                     accessibilityRole="button"
                   >
@@ -1019,7 +1117,7 @@ export default function PaginaPrincipal() {
                         fill="#263A83"
                       >
                         <Path
-                          d="M18 6H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 9.5c.83 0 1.5-.67 1.5-1.5S18.83 8 18 8s-.67 1.5-1.5 1.5S15 11.5 15 13z"
+                          d="M16 1H4a2 2 0 00-2 2v14h2V3h12V1zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11v14z"
                           fill="#263A83"
                         />
                       </Svg>
@@ -1027,25 +1125,60 @@ export default function PaginaPrincipal() {
                   </View>
                 </View>
               )}
+
               <BotaoNavegacaoContainer>
                 <Botoes_Pagina_principal
                   style={{ backgroundColor: "transparent" }}
-                  onPress={() => setModalVisible(false)}
-                  accessibilityLabel="Voltar"
+                  onPress={() => {
+                    setModalVisible(false);
+                    setInviteLink(null);
+                    setTeamId(null);
+                    setNomeEquipa("");
+                    setDescricaoEquipa("");
+                    setActiveButton(null);
+                    setSelectedValue("3");
+                  }}
+                  accessibilityLabel="Cancelar"
                   accessibilityRole="button"
                 >
                   <Texto_Botoes_Pagina_principal_Voltar>
-                    Voltar
+                    {inviteLink ? "Fechar" : "Cancelar"}
                   </Texto_Botoes_Pagina_principal_Voltar>
                 </Botoes_Pagina_principal>
                 <Botoes_Pagina_principal
                   style={{ backgroundColor: "#263A83" }}
-                  onPress={handleNext}
-                  accessibilityLabel="Seguinte"
+                  onPress={() => {
+                    if (inviteLink && teamId) {
+                      console.log(
+                        "🔄 Redirecionando para /EquipaCriada com teamId:",
+                        teamId
+                      );
+                      try {
+                        setModalVisible(false);
+                        router.push({
+                          pathname: "/EquipaCriada",
+                          params: { teamId },
+                        });
+                      } catch (error) {
+                        console.error("❌ Erro ao redirecionar:", error);
+                        Alert.alert(
+                          "Erro",
+                          "Não foi possível redirecionar para a página da equipe."
+                        );
+                      }
+                    } else {
+                      console.log("⚠️ teamId ou inviteLink não definido:", {
+                        teamId,
+                        inviteLink,
+                      });
+                      handleNext();
+                    }
+                  }}
+                  accessibilityLabel={inviteLink ? "Concluir" : "Seguinte"}
                   accessibilityRole="button"
                 >
                   <Texto_Botoes_Pagina_principal>
-                    Seguinte
+                    {inviteLink ? "Concluir" : "Seguinte"}
                   </Texto_Botoes_Pagina_principal>
                 </Botoes_Pagina_principal>
               </BotaoNavegacaoContainer>
@@ -1053,7 +1186,7 @@ export default function PaginaPrincipal() {
           </View>
         </Modal>
 
-        {/* Modal de Entrada na Equipa */}
+        {/* Modal de Entrada na Equipa Pública */}
         {modalEquipa && (
           <Modal
             visible={modalEquipa}
@@ -1108,6 +1241,63 @@ export default function PaginaPrincipal() {
             </View>
           </Modal>
         )}
+
+        {/* Modal de Entrada por Convite */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalJoinByInvite}
+          onRequestClose={() => setModalJoinByInvite(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+            }}
+          >
+            <CaixaQuestionario>
+              <Titulos
+                accessibilityRole="header"
+                accessibilityLabel="Entrar por Convite"
+              >
+                Entrar por Convite
+              </Titulos>
+              <Caixas_de_Texto_Criar_Equipa
+                titulo="Insere o link de convite"
+                placeholder="Exemplo: http://offly.com/join?token"
+                value={inviteToken}
+                onChangeText={setInviteToken}
+                editable={true}
+                error={inviteTokenError}
+                onError={setInviteTokenError}
+              />
+              <BotaoNavegacaoContainer>
+                <Botoes_Pagina_principal
+                  style={{ backgroundColor: "transparent" }}
+                  onPress={() => setModalJoinByInvite(false)}
+                  accessibilityLabel="Cancelar"
+                  accessibilityRole="button"
+                >
+                  <Texto_Botoes_Pagina_principal_Voltar>
+                    Cancelar
+                  </Texto_Botoes_Pagina_principal_Voltar>
+                </Botoes_Pagina_principal>
+                <Botoes_Pagina_principal
+                  style={{ backgroundColor: "#263A83" }}
+                  onPress={handleNext3}
+                  accessibilityLabel="Entrar"
+                  accessibilityRole="button"
+                >
+                  <Texto_Botoes_Pagina_principal>
+                    Entrar
+                  </Texto_Botoes_Pagina_principal>
+                </Botoes_Pagina_principal>
+              </BotaoNavegacaoContainer>
+            </CaixaQuestionario>
+          </View>
+        </Modal>
       </Container_Pagina_Principal>
     </>
   );
@@ -1246,16 +1436,16 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
     paddingHorizontal: 16,
-    minHeight: 40, // Garante espaço suficiente
+    minHeight: 40,
   },
   paginationButton: {
-    width: 60, // Aumentado para melhor visibilidade
+    width: 60,
     height: 35,
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 8,
-    overflow: "visible", // Evita corte de texto
+    overflow: "visible",
   },
   paginationButtonActive: {
     backgroundColor: "#E3FC87",
@@ -1268,7 +1458,7 @@ const styles = StyleSheet.create({
   paginationTextActive: {
     color: "#263A83",
     fontWeight: "bold",
-    fontSize: 16, // Aumentado para legibilidade
+    fontSize: 16,
     textAlign: "center",
   },
   paginationTextInactive: {
@@ -1277,7 +1467,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   ellipsis: {
-    fontSize: 18, // Aumentado para visibilidade
+    fontSize: 18,
     color: "#263A83",
     marginHorizontal: 8,
     alignSelf: "center",
@@ -1287,6 +1477,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     justifyContent: "center",
     alignItems: "center",
-    minWidth: 30, // Garante espaço para elipse
+    minWidth: 30,
+  },
+  buttonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 15,
   },
 });

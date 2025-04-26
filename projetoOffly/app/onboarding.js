@@ -1088,7 +1088,7 @@ const screens = [
     logo: false,
     heading: "Sobe no ranking",
     subheading:
-      "Cada vitória conta! Acumula pontos,  sobe de posiçõe e ganha reconhecimento como uma das melhores equipas do torneio.",
+      "Cada vitória conta! Acumula pontos,  sobe de posições e ganha reconhecimento como uma das melhores equipas do torneio.",
     renderContent: () => (
       <Svg
         accessible={true}
@@ -2159,7 +2159,6 @@ const App = () => {
           </Button>
         </ButtonsContainer>
       </Footer>
-      ;
     </Container>
   );
 };

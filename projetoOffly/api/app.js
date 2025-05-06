@@ -63,7 +63,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/auth", authRoutes);
 app.use("/participants", participantsRoutes);
 app.use("/teams", teamsRoutes);
-app.use("/api", challengeRoutes); // ativa /api/desafios
+app.use("/api/challenges", challengeRoutes);
 app.use("/api/participants-has-challenges", participantsHasChallengesRoutes);
 
 // Testar conexão e iniciar servidor

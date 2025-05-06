@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Alert } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Container_Pagina_Equipa_Criada,
   Sub_Titulos_Criar_Equipa,
@@ -31,22 +31,31 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "./firebase/firebaseApi";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { AuthContext } from "./components/entrar/AuthContext"; 
+import { baseurl } from "./api-config/apiConfig"; 
+import axios from "axios";
 
 export default function EquipaCriada() {
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
+  const { user, accessToken } = useContext(AuthContext); 
+  
   const { teamId } = useLocalSearchParams();
-  const [teamDetails, setTeamDetails] = useState(null);
-  const [participants, setParticipants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorLoading, setErrorLoading] = useState(false);
-  const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
-  const [userName, setUserName] = useState(""); // var de estado que guarda o nome do user logado
-  const [profileImage, setProfileImage] = useState(null); // var de estado que guarda a imagem do utilizador
+  
+  //const [loading, setLoading] = useState(true);
+
+  const [userId, setUserId] = useState(null);
+  const [userName, setUserName] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
+  const [teamName, setTeamName] = useState("");
+  const [teamDescription, setTeamDescription] = useState("");
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [teamCapacity, setteamCapacity] = useState();
 
   const router = useRouter();
+
 
   // Array de URLs das imagens p/ users
   const imageUrls = [
@@ -78,112 +87,126 @@ export default function EquipaCriada() {
     return imageUrls[randomIndex];
   };
 
-  // Verificação de utilizador logado
+  // Utilizador logado + Dados do utilizador
   useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUserId(currentUser.uid);
-      console.log("utilizador logado na pag principal", currentUser);
-    } else {
-      Alert.alert("Erro", "Nenhum utilizador logado!");
-    }
-  }, []);
+    const fetchUserData = async () => {
+      console.log("🔍 Depurando dados do utilizador...");
+      console.log("👤 User:", user);
+      console.log("🔑 AccessToken:", accessToken);
 
-  // Função para obter o dados do utilizador (imagem)
-  useEffect(() => {
-    const userData = async () => {
+      if (!user?.id || !accessToken) {
+        console.error("❌ user.id ou accessToken estão indefinidos");
+        Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
+        router.push("./login");
+        return;
+      }
+
       try {
-        if (!userId) return;
-        const userDocRef = doc(db, "users", userId);
-        const docSnap = await getDoc(userDocRef);
+        console.log(
+          `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
+        );
+        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
 
-        if (docSnap.exists()) {
-          const { fullName, image } = docSnap.data();
-          setUserName(fullName);
+        console.log("✅ Resposta da API:", response.data);
 
-          if (image) {
-            // Atribuir a imagem existente ao estado
-            setProfileImage(image);
-          } else {
-            // Gerar e atribuir uma nova imagem aleatória
-            const newProfileImage = getRandomImage();
-            setProfileImage(newProfileImage);
+        const userData = response.data;
+        const name = userData.name || userData.fullName;
+        const image = userData.image || null;
+        
+        setUserId(user.id);
+        setUserName(name);
+        setProfileImage(image ? { uri: image } : null);
 
-            // Atualizar o documento do utilizador com a nova imagem
-            await updateDoc(userDocRef, { image: newProfileImage });
-          }
-        } else {
-          console.log("Documento do utilizador não encontrado.");
-        }
+        console.log("✅ Dados processados:", { name, image });
       } catch (error) {
-        console.error("Erro", error);
+        console.error("❌ Erro ao buscar dados do utilizador:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Alert.alert(
+          "Erro",
+          error.response?.data?.message ||
+            "Não foi possível carregar os dados do utilizador."
+        );
       }
     };
 
-    userData();
-  }, [userId]);
+    fetchUserData();
+  }, [user, accessToken]);
 
-  // Dados dos participantes da equipa
-  const fetchData = async () => {
+
+  // Função para buscar os dados da equipa 
+  const teamData = async () => {
+    //setLoading(true);
     try {
-      setErrorLoading(false);
-      const docRef = doc(db, "equipas", teamId);
-      const docSnap = await getDoc(docRef);
+      const response = await axios.get(`${baseurl}/teams/${teamId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
 
-      if (docSnap.exists()) {
-        setTeamDetails(docSnap.data());
-      } else {
-        console.error("Documento da equipa não encontrado!");
-      }
+      console.log("✅ Resposta da API:", response.data);
 
-      const participantsRef = doc(
-        db,
-        "equipas",
-        teamId,
-        "membros",
-        "participantes"
-      );
-      const participantsSnap = await getDoc(participantsRef);
+      const teamData = response.data;
+      const name = teamData.name;
+      const members = teamData.participants;
+      const capacity = teamData.capacity;
+      const description = teamData.description;
 
-      if (participantsSnap.exists()) {
-        const participantsData = Object.values(participantsSnap.data());
-        setParticipants(participantsData);
-      } else {
-        console.error("Documento de participantes não encontrado!");
-      }
+      setTeamName(name);
+      setTeamMembers(members);
+      setteamCapacity(capacity);
+      setTeamDescription(description);
+
+      console.log("✅ Dados processados:", { name, description, capacity, members });
+
     } catch (error) {
-      console.error("Erro ao buscar dados:", error);
-      setErrorLoading(true);
-    } finally {
-      setLoading(false);
-    }
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message ||
+          "Não foi possível carregar os dados da equipa."
+      );
+    } 
+    // finally {
+    //   setLoading(false);
+    // }
   };
 
+  // 👇 Carrega os dados da equipa ao entrar
   useEffect(() => {
-    if (teamId) {
-      fetchData();
-    }
-  }, [teamId]);
+    teamData();
+  }, [userId, teamId]);
 
+  // 🔁 Atualização automática
   useEffect(() => {
-    if (errorLoading) {
-      const timer = setTimeout(() => {
-        console.log("Tentando carregar novamente os dados...");
-        fetchData();
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [errorLoading]);
+    const intervalId = setInterval(() => {
+      teamData();
+    }, 10000); // 10 segundos
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#263A83" />
-      </View>
-    );
-  }
+    return () => clearInterval(intervalId);
+  }, [userId, teamId]);
 
-  if (!teamDetails) {
+
+  // if (loading) {
+  //   return (
+  //     <View style={styles.loaderContainer}>
+  //       <ActivityIndicator size="large" color="#263A83" />
+  //     </View>
+  //   );
+  // }
+
+  if (!teamName && !teamDescription) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>
@@ -194,17 +217,8 @@ export default function EquipaCriada() {
   }
 
   // Função para entrar no torneio
-  const handleTorneio = async () => {
-    try {
-      const torneioRef = doc(db, "torneios", "Torneio XPTO");
-      await updateDoc(torneioRef, {
-        equipas: arrayUnion(teamId),
-      });
-      console.log("Equipa adicionada ao torneio com sucesso!");
+  const handleTorneio =  () => {
       router.push("./components/navbar");
-    } catch (error) {
-      console.error("Erro ao adicionar equipa ao torneio:", error);
-    }
   };
 
   return (
@@ -231,70 +245,46 @@ export default function EquipaCriada() {
             />
           </Svg>
         </TouchableOpacity>
-        <Titulos_Equipa_Criada
-          accessibilityRole="text"
-          accessibilityLabel={teamDetails?.nome}
-        >
-          {teamDetails?.nome}
+        <Titulos_Equipa_Criada accessibilityRole="text" accessibilityLabel={teamName}>
+          {teamName}
         </Titulos_Equipa_Criada>
-        <Sub_Titulos_Criar_Equipa
-          accessibilityRole="text"
-          accessibilityLabel={teamDetails?.descricao}
-        >
-          {teamDetails?.descricao}
+        <Sub_Titulos_Criar_Equipa accessibilityRole="text" accessibilityLabel={teamDescription}>
+          {teamDescription}
         </Sub_Titulos_Criar_Equipa>
 
-        <View style={styles.remainingTeamsContainer}>
-          {participants.length > 0 ? (
-            <>
-              {participants.map((participant, index) => (
-                <View key={index} style={styles.card}>
-                  <Image
-                    accessibilityLabel="Imagem do participante"
-                    source={{
-                      uri:
-                        participant === userName
-                          ? profileImage
-                          : getRandomImage(),
-                    }}
-                    style={styles.peopleImage}
-                  />
-                  <Text
-                    style={styles.participantText}
-                    accessibilityRole="text"
-                    accessibilityLabel={participant}
-                  >
-                    {participant}
-                  </Text>
-                </View>
-              ))}
-              <Botoes_Pagina_principal onPress={handleTorneio}>
-                <Texto_Botoes_Pagina_principal
-                  accessibilityRole="button"
-                  accessibilityLabel="Entrar no Torneio"
-                >
-                  Entrar no Torneio
-                </Texto_Botoes_Pagina_principal>
-              </Botoes_Pagina_principal>
-            </>
-          ) : (
-            <>
-              <Text style={styles.noParticipants}>
-                Nenhum participante encontrado.
-              </Text>
-              {/* Botão de Refresh */}
-              <Botoes_Pagina_principal onPress={fetchData}>
-                <Texto_Botoes_Pagina_principal>
-                  Atualizar Participantes
-                </Texto_Botoes_Pagina_principal>
-              </Botoes_Pagina_principal>
 
-              <Botoes_Pagina_principal_Desativado>
-                <Texto_Botoes_Pagina_principal_Desativado>
-                  Entrar no Torneio
-                </Texto_Botoes_Pagina_principal_Desativado>
-              </Botoes_Pagina_principal_Desativado>
-            </>
+        <View style={styles.remainingTeamsContainer}>
+        {Array.from({ length: teamCapacity }).map((_, index) => {
+            const participant = teamMembers[index];
+            const isEmptySlot = !participant;
+
+            return (
+              <View key={index} style={[styles.card, isEmptySlot && styles.cardVazio]}>
+                <Image
+                  source={{
+                    uri: isEmptySlot
+                      ? "https://celina05.sirv.com/icones/empty-user.png"
+                      : participant.image || getRandomImage(),
+                  }}
+                  style={styles.peopleImage}
+                />
+                <Text style={styles.participantText}>
+                  {isEmptySlot ? "À espera de jogador..." : participant.name}
+                </Text>
+              </View>
+            );
+          })}
+
+          {teamMembers.length === teamCapacity ? (
+            <Botoes_Pagina_principal onPress={handleTorneio}>
+              <Texto_Botoes_Pagina_principal>Entrar no Torneio</Texto_Botoes_Pagina_principal>
+            </Botoes_Pagina_principal>
+          ) : (
+            <Botoes_Pagina_principal_Desativado>
+              <Texto_Botoes_Pagina_principal_Desativado>
+                Aguardando membros...
+              </Texto_Botoes_Pagina_principal_Desativado>
+            </Botoes_Pagina_principal_Desativado>
           )}
         </View>
       </Container_Pagina_Equipa_Criada>

@@ -60,35 +60,6 @@ export default function Home() {
   const [tournamentEnd, setTournamentEnd] = useState(null);
   const [competitionDay, setCompetitionDay] = useState(null);
 
-  
-  const imageUserUrls = [
-    "https://celina05.sirv.com/avatares/avatar4.png",
-    "https://celina05.sirv.com/avatares/avatar5.png",
-    "https://celina05.sirv.com/avatares/avatar6.png",
-    "https://celina05.sirv.com/avatares/avatar9.png",
-    "https://celina05.sirv.com/avatares/avatar10.png",
-    "https://celina05.sirv.com/avatares/avatar11.png",
-    "https://celina05.sirv.com/avatares/avatar12.png",
-    "https://celina05.sirv.com/avatares/avatar13.png",
-    "https://celina05.sirv.com/avatares/avatar16.png",
-    "https://celina05.sirv.com/avatares/avatar18.png",
-    "https://celina05.sirv.com/avatares/avatar20.png",
-    "https://celina05.sirv.com/avatares/avatar1.png",
-    "https://celina05.sirv.com/avatares/avatar2.png",
-    "https://celina05.sirv.com/avatares/avatar3.png",
-    "https://celina05.sirv.com/avatares/avatar7.png",
-    "https://celina05.sirv.com/avatares/avatar8.png",
-    "https://celina05.sirv.com/avatares/avatar14.png",
-    "https://celina05.sirv.com/avatares/avatar15.png",
-    "https://celina05.sirv.com/avatares/avatar17.png",
-    "https://celina05.sirv.com/avatares/avatar19.png",
-  ];
-
-  const getRandomImage = (tipo) => {
-    const randomIndex = Math.floor(Math.random() * tipo.length);
-    return tipo[randomIndex];
-  };
-
   // Utilizador logado + Dados do utilizador
   useEffect(() => {
     const fetchUserData = async () => {

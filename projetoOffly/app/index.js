@@ -31,6 +31,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#263330", // mesmo fundo da splash
+    backgroundColor: "#d2e9ff", // mesmo fundo da splash
   },
 });

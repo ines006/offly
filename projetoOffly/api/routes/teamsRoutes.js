@@ -16,17 +16,17 @@ const teamsController = require("../controllers/teamsController");
  * /teams:
  *   get:
  *     summary: List teams with optional filtering and pagination
- *     description: Retrieves a paginated list of teams, including their name, capacity, and participant count. Optionally filters teams with fewer than 5 participants using the capacity query parameter. Supports pagination with a fixed limit of 4 teams per page.
+ *     description: Retrieves a paginated list of teams, including their name, capacity, and participant count. Optionally filters teams with at least one available vacancy (participant count less than capacity) using the capacity query parameter. Supports pagination with a fixed limit of 4 teams per page.
  *     tags: [Teams]
  *     parameters:
  *       - in: query
  *         name: capacity
  *         schema:
  *           type: string
- *           enum: [under-5]
+ *           enum: [has-vacancy]
  *         required: false
- *         description: Filter teams with fewer than 5 participants
- *         example: under-5
+ *         description: Filter teams with at least one available vacancy (participant count less than capacity)
+ *         example: has-vacancy
  *       - in: query
  *         name: page
  *         schema:
@@ -97,22 +97,22 @@ const teamsController = require("../controllers/teamsController");
  *                       capacity: 4
  *                       participant_count: "2"
  *                     - name: "owls"
- *                       capacity: 5
+ *                       capacity: 3
  *                       participant_count: "1"
  *                   pagination:
  *                     currentPage: 1
  *                     totalPages: 3
  *                     totalTeams: 10
  *                     limit: 4
- *               under5Filter:
- *                 summary: Teams with fewer than 5 participants
+ *               hasVacancyFilter:
+ *                 summary: Teams with at least one available vacancy
  *                 value:
  *                   teams:
  *                     - name: "hawks"
  *                       capacity: 4
  *                       participant_count: "2"
  *                     - name: "owls"
- *                       capacity: 5
+ *                       capacity: 3
  *                       participant_count: "1"
  *                   pagination:
  *                     currentPage: 1
@@ -139,10 +139,10 @@ const teamsController = require("../controllers/teamsController");
  *                   type: string
  *                   description: Error message indicating no teams were found
  *             examples:
- *               noTeamsUnder5:
- *                 summary: No teams with fewer than 5 participants
+ *               noTeamsWithVacancy:
+ *                 summary: No teams with available vacancies
  *                 value:
- *                   message: No teams found with fewer than 5 participants
+ *                   message: No teams found with available vacancies
  *               invalidPage:
  *                 summary: No teams for the requested page
  *                 value:
@@ -157,7 +157,7 @@ const teamsController = require("../controllers/teamsController");
  *                 message:
  *                   type: string
  *                   description: Error message indicating invalid page parameter
- *                   example: The page parameter must be an integer greater than 0
+ *                   example: Parameter must be greater than or equal to 1
  *       500:
  *         description: Internal server error
  *         content:
@@ -168,7 +168,7 @@ const teamsController = require("../controllers/teamsController");
  *                 message:
  *                   type: string
  *                   description: General error message
- *                   example: Error listing teams
+ *                   example: Internal server error
  *                 error:
  *                   type: string
  *                   description: Detailed error message from the server

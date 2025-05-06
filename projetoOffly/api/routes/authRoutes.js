@@ -14,7 +14,7 @@ const authController = require("../controllers/authController");
  * /auth/login:
  *   post:
  *     summary: Authenticate a user
- *     description: Authenticates a user with email and password, returning a JWT token. Limits to 3 failed login attempts per email, after which the user is locked out for 15 minutes.
+ *     description: Authenticates a user with email and password, returning a JWT token. Limits to 5 failed login attempts per email, after which the user is locked out for 15 minutes.
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -41,6 +41,9 @@ const authController = require("../controllers/authController");
  *               type: object
  *               properties:
  *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 refreshToken:
  *                   type: string
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *                 expiresIn:
@@ -102,14 +105,13 @@ const authController = require("../controllers/authController");
  */
 router.post("/login", authController.applyLoginLimiter, authController.login);
 
-
 /**
  * @swagger
  * /auth/refresh:
  *   post:
  *     summary: Refresh JWT token using a refresh token
  *     operationId: refreshToken
- *     tags: [Auth]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       description: Refresh token
@@ -142,5 +144,50 @@ router.post("/login", authController.applyLoginLimiter, authController.login);
  *         description: Invalid refresh token
  */
 router.post("/refresh", authController.refreshToken);
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Log out a user
+ *     description: Invalidates the refresh token, effectively logging out the user.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *             required:
+ *               - refreshToken
+ *     responses:
+ *       200:
+ *         description: Successfully logged out
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Logout successful
+ *       400:
+ *         description: Missing or invalid refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   enum:
+ *                     - Refresh token missing
+ *                     - Invalid refresh token
+ */
+router.post("/logout", authController.logout);
 
 module.exports = router;

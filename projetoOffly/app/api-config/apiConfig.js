@@ -1,5 +1,2 @@
-
-export const baseurl = "http://localhost:3010"; // usar via web/browser
-
-//export const baseurl = "http://192.168.1.70:3010"; //substituir pelo ip de cada pc para usar no emulador expo
-// fazer 'ipconfig' no terminal e retirar o ip da máquina local
+export const baseurl =
+  "https://d991-2001-8a0-f53e-6f00-ac75-2c21-180f-1ca5.ngrok-free.app"; // URL que varia conforme a indica pelo NGROk

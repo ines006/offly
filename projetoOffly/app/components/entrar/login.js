@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { baseurl } from "../../api-config/apiConfig"; 
-import {AuthContext} from "./AuthContext"
+import { baseurl } from "../../api-config/apiConfig";
+import { AuthContext } from "./AuthContext"; // Ajuste o caminho se necessário
 
 import {
   StyleSheet,
@@ -22,7 +22,8 @@ const Login = () => {
   const [focusField, setFocusField] = useState("");
   const [emailBarWidth] = useState(new Animated.Value(email ? 100 : 0));
   const [passwordBarWidth] = useState(new Animated.Value(password ? 100 : 0));
-  const { setUser, setAccessToken } = useContext(AuthContext);
+  const { setUser, setAccessToken, setRefreshToken, setLoading } =
+    useContext(AuthContext);
 
   const router = useRouter();
 
@@ -51,31 +52,31 @@ const Login = () => {
     }
   };
 
-  // após login
-  // se o utilizador tiver equipa deve ir para a pagina onde ja existe equipa. caso contrario vai para a página de procurar equipa
   const handleSubmit = async () => {
     try {
+      console.log("🔄 Iniciando login com baseurl:", baseurl);
       const response = await axios.post(`${baseurl}/auth/login`, {
         email,
         password,
       });
-  
+
       const { token, refreshToken, expiresIn, user } = response.data;
-  
-      // Guardar token (para futuras requests autenticadas)
+
+      console.log("✅ Login efetuado com sucesso!");
+      console.log("🔑 Dados do login:", { token, refreshToken, user });
+
+      if (!user?.id) {
+        console.error("❌ Erro: user.id não encontrado na resposta do login");
+        throw new Error("ID do utilizador não encontrado");
+      }
+
       await AsyncStorage.setItem("accessToken", token);
       await AsyncStorage.setItem("refreshToken", refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(user));
-  
-      // Logs para debug
-      console.log("✅ Login efetuado com sucesso!");
-      console.log("📦 Resposta completa do endpoint:", response.data);
-  
-      // Exemplo: simular se o user tem equipa
-      const hasTeam = true; // aqui mais tarde fazes um fetch real, ex: /users/:id/team
-  
+
       setUser(user);
       setAccessToken(token);
+<<<<<<< HEAD
       
       if (hasTeam) {
         //router.push("../../components/navbar");
@@ -85,15 +86,51 @@ const Login = () => {
         router.push("../../participantes");
       }
     
+=======
+      setRefreshToken(refreshToken);
+      setLoading(false);
+      console.log("🔍 RefreshToken salvo no AuthContext:", refreshToken);
+>>>>>>> api-ligar-pags
 
+      const participantUrl = `${baseurl}/participants/${user.id}`;
+      console.log("🔄 Verificando equipa no endpoint:", participantUrl);
+      try {
+        const participantResponse = await axios.get(participantUrl, {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+
+        const hasTeam = participantResponse.data.teams_id !== null;
+        console.log("👥 Utilizador tem equipa?", hasTeam);
+
+        const targetRoute = hasTeam ? "/components/navbar" : "/PaginaPrincipal";
+        console.log("🚪 Redirecionando para:", targetRoute);
+        router.push(targetRoute);
+      } catch (participantError) {
+        console.error(
+          "❌ Erro ao verificar equipa:",
+          participantError.message,
+          participantError.response?.data || participantError
+        );
+        console.log("🚪 Redirecionando para PaginaPrincipal como fallback");
+        router.push("/PaginaPrincipal");
+      }
     } catch (err) {
-      console.error("❌ Erro ao fazer login:", err.response?.data || err.message);
-      setError("O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!");
+      console.error(
+        "❌ Erro ao fazer login:",
+        err.response?.data || err.message
+      );
+      setError(
+        "O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!"
+      );
     }
   };
-  
+
   return (
-    <View accessibilityRole="main" astyle={styles.container}>
+    <View accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
         <Text style={styles.h1} accessibilityRole="header">
           Bem-vindo!
@@ -130,7 +167,6 @@ const Login = () => {
             }}
             accessibilityLabel="Endereço de e-mail"
           />
-
           <Animated.View
             style={[
               styles.bar,

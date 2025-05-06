@@ -455,7 +455,7 @@ exports.getTeamParticipantsStreaks = async (req, res) => {
   }
 };
 
-// Listar equipas com filtro opcional de lotação < 5 participantes e paginação
+// Listar equipas com filtro opcional de pelo menos uma vaga e paginação
 exports.getTeams = async (req, res) => {
   try {
     const { capacity, page = 1 } = req.query; // page padrão é 1
@@ -469,71 +469,59 @@ exports.getTeams = async (req, res) => {
       });
     }
 
-    // Condição base para filtro de capacity
-    let havingCondition = null;
-    if (capacity === "under-5") {
-      havingCondition = Sequelize.literal("COUNT(`participants`.`id`) < 5");
+    // Condição base para filtro
+    let whereCondition = {};
+    if (capacity === "has-vacancy") {
+      whereCondition = {
+        [Sequelize.Op.and]: [
+          Sequelize.literal(
+            `(SELECT COUNT(*) FROM participants WHERE participants.teams_id = Teams.id) < Teams.capacity`
+          ),
+          { visibility: 1 }, // Apenas equipes públicas
+        ],
+      };
     }
 
     // Contar total de equipes (para metadados da paginação)
-    const totalTeamsResult = await Teams.findAll({
-      attributes: [
-        [
-          Sequelize.fn(
-            "COUNT",
-            Sequelize.fn("DISTINCT", Sequelize.col("Teams.id"))
-          ),
-          "total",
-        ],
-      ],
-      include: [
-        {
-          model: Participants,
-          as: "participants",
-          attributes: [],
-          required: false, // LEFT JOIN
-        },
-      ],
-      group: ["Teams.id"],
-      having: havingCondition,
-      raw: true,
-      subQuery: false, // Evitar subquery
+    const totalTeamsResult = await Teams.count({
+      distinct: true,
+      col: "Teams.id",
+      where: whereCondition,
+      logging: console.log, // Log da query SQL
     });
 
-    const totalTeams = totalTeamsResult.length;
+    const totalTeams = totalTeamsResult;
     const totalPages = Math.ceil(totalTeams / limit);
 
     // Buscar equipas com paginação
     const teams = await Teams.findAll({
       attributes: [
+        [Sequelize.fn("DISTINCT", Sequelize.col("Teams.id")), "id"], // Garantir IDs únicos
         "name",
         "capacity",
         "image",
+        "visibility",
         [
-          Sequelize.fn("COUNT", Sequelize.col("participants.id")), // Usar alias participants
+          Sequelize.literal(
+            `(SELECT COUNT(*) FROM participants WHERE participants.teams_id = Teams.id)`
+          ),
           "participant_count",
         ],
       ],
-      include: [
-        {
-          model: Participants,
-          as: "participants",
-          attributes: [],
-          required: false, // LEFT JOIN
-        },
+      where: whereCondition,
+      order: [
+        [Sequelize.literal("participant_count"), "DESC"],
+        ["id", "ASC"], // Ordenação secundária por ID para estabilidade
       ],
-      group: ["Teams.id", "Teams.name", "Teams.capacity", "Teams.image"],
-      having: havingCondition,
-      order: [[Sequelize.literal("participant_count"), "DESC"]],
       limit: limit,
       offset: offset,
       raw: true,
-      subQuery: false,
+      logging: console.log, // Log da query SQL
     });
 
-    if (!teams.length && capacity === "under-5") {
+    if (!teams.length && capacity === "has-vacancy") {
       return res.status(404).json({
-        message: "No teams found with fewer than 5 participants",
+        message: "No public teams found with available vacancies",
       });
     }
 
@@ -542,6 +530,9 @@ exports.getTeams = async (req, res) => {
         message: "No teams found for this page",
       });
     }
+
+    // Log para depuração
+    console.log("Equipes retornadas:", teams);
 
     res.json({
       teams,
@@ -559,7 +550,6 @@ exports.getTeams = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
-
 // Pesquisar equipas por nome na barra de pesquisa
 exports.searchTeamsByName = async (req, res) => {
   try {
@@ -665,6 +655,15 @@ exports.deleteTeam = async (req, res) => {
         .status(403)
         .json({ message: "Only the team admin can delete the team" });
     }
+
+    // Excluir todos os convites associados à equipe
+    const deletedInvitesCount = await Invites.destroy({
+      where: { teamId },
+      transaction,
+    });
+    console.log(
+      `Deleted ${deletedInvitesCount} invites associated with team ${teamId}`
+    );
 
     // Atualizar registros onde teams_id é igual a teamId
     const [updatedTeamsIdCount] = await Participants.update(
@@ -772,7 +771,7 @@ exports.joinTeam = async (req, res) => {
     }
 
     // Verifica se a equipa é pública
-    if (team.visibility === 1) {
+    if (team.visibility === 0) {
       return res
         .status(403)
         .json({ error: "Cannot join a private team without an invite" });
@@ -872,67 +871,86 @@ exports.joinByInvite = async (req, res) => {
   try {
     const { token } = req.body;
     const userId = req.user.id;
+    console.log("Recebido token:", token, "userId:", userId);
 
     if (!token) {
+      console.log("Token não fornecido");
       return res.status(400).json({ error: "Invite token is required" });
     }
 
     // Busca o convite
-    const invite = await Invites.findOne({
-      where: { token },
-    });
+    const invite = await Invites.findOne({ where: { token } });
+    console.log("Convite encontrado:", invite);
     if (!invite) {
+      console.log("Token inválido:", token);
       return res.status(404).json({ error: "Invalid or expired invite token" });
     }
 
     // Verifica se o convite expirou
+    console.log("expiresAt:", invite.expiresAt);
     if (new Date() > invite.expiresAt) {
+      console.log("Convite expirado:", token);
       return res.status(400).json({ error: "Invite token has expired" });
     }
 
     // Busca a equipa
     const team = await Teams.findByPk(invite.teamId);
+    console.log("Equipa encontrada:", team);
     if (!team) {
+      console.log("Equipa não encontrada:", invite.teamId);
       return res.status(404).json({ error: "Team not found" });
     }
 
-    // Procurar o utilizador
-    const participant = await Participants.findByPk(userId);
-    if (!participant) {
-      return res.status(404).json({ error: "Participant not found" });
+    // Verificar se o utilizador já está em uma equipa
+    const existingParticipant = await Participants.findOne({
+      where: { id: userId },
+    });
+    console.log("Participante existente:", existingParticipant);
+    if (!existingParticipant) {
+      console.log("Usuário não encontrado:", userId);
+      return res.status(404).json({ error: "User not found" });
     }
-
-    // Verificar se o utilizador já está numa equipa
-    if (participant.teams_id) {
+    if (existingParticipant.teams_id) {
+      console.log("Usuário já está em uma equipe:", userId);
       return res
         .status(400)
         .json({ error: "Participant is already a member of a team" });
     }
 
-    // Contar o número atual de participantes na equipa
+    // Contar o número atual de participantes na equipe
     const currentMembersCount = await Participants.count({
       where: { teams_id: invite.teamId },
     });
-
-    // Verificar se a equipa tem lotação disponível
+    console.log(
+      "Contagem de membros:",
+      currentMembersCount,
+      "Capacidade:",
+      team.capacity
+    );
     if (currentMembersCount >= team.capacity) {
+      console.log("Equipa cheia:", invite.teamId);
       return res.status(400).json({ error: "Team has no available slots" });
     }
 
-    // Associar o utilizador à equipa
-    participant.teams_id = invite.teamId;
-    await participant.save();
+    // Atualizar o participante com o teams_id
+    console.log("Atualizando participante:", {
+      id: userId,
+      teams_id: invite.teamId,
+    });
+    await existingParticipant.update({
+      teams_id: invite.teamId,
+    });
 
-    // Remover o convite após uso (para uso único)
-    await invite.destroy();
-
-    return res
-      .status(201)
-      .json({ message: "Successfully joined the team via invite" });
+    console.log("Usuário entrou na equipe com sucesso:", userId, invite.teamId);
+    return res.status(201).json({
+      message: "Successfully joined the team via invite",
+      teamId: invite.teamId,
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Erro em /teams/join-by-invite:", error.message, error.stack);
+    return res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
   }
 };
-
 module.exports = exports;

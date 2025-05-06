@@ -149,4 +149,24 @@ const clearExpiredTokens = () => {
 // Limpar tokens expirados a cada hora
 setInterval(clearExpiredTokens, 1000 * 60 * 60);
 
+// Endpoint para logout
+exports.logout = (req, res) => {
+  const { refreshToken } = req.body;
 
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Refresh token missing" });
+  }
+
+  // Verificar se o refresh token existe e removê-lo
+  const tokenIndex = refreshTokens.indexOf(refreshToken);
+  if (tokenIndex === -1) {
+    return res.status(400).json({ message: "Invalid refresh token" });
+  }
+
+  // Remover o refresh token do array
+  refreshTokens.splice(tokenIndex, 1);
+
+  console.log("🔓 Refresh token removido com sucesso");
+
+  res.status(200).json({ message: "Logout successful" });
+};

@@ -76,7 +76,7 @@ const Login = () => {
 
       setUser(user);
       setAccessToken(token);
-<<<<<<< HEAD
+
       
       if (hasTeam) {
         //router.push("../../components/navbar");
@@ -86,11 +86,11 @@ const Login = () => {
         router.push("../../participantes");
       }
     
-=======
+
       setRefreshToken(refreshToken);
       setLoading(false);
       console.log("🔍 RefreshToken salvo no AuthContext:", refreshToken);
->>>>>>> api-ligar-pags
+
 
       const participantUrl = `${baseurl}/participants/${user.id}`;
       console.log("🔄 Verificando equipa no endpoint:", participantUrl);

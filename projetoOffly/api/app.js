@@ -5,6 +5,8 @@ const { sequelize, testConnection } = require("./models");
 const participantsRoutes = require("./routes/participantsRoutes");
 const teamsRoutes = require("./routes/teamsRoutes");
 const authRoutes = require("./routes/authRoutes");
+const challengeRoutes = require("./routes/challengeRoutes");
+const participantsHasChallengesRoutes = require("./routes/participantsHasChallengesRoutes");
 const { swaggerUi, specs } = require("./config/swagger");
 
 require("dotenv").config();
@@ -61,6 +63,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/auth", authRoutes);
 app.use("/participants", participantsRoutes);
 app.use("/teams", teamsRoutes);
+app.use("/api", challengeRoutes); // ativa /api/desafios
+app.use("/api/participants-has-challenges", participantsHasChallengesRoutes);
 
 // Testar conexão e iniciar servidor
 testConnection()

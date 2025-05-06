@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Image, Alert } from "react-native";
+import React, { useEffect, useState, useContext } from "react";
+import {
+  View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Image, Alert
+} from "react-native";
 import { useRouter } from "expo-router";
-import { getDocs, collection, doc, setDoc } from "firebase/firestore";
-import { db, auth } from "../../firebase/firebaseApi"; // Certifique-se de importar auth corretamente
+import axios from "axios";
+import { AuthContext } from "../entrar/AuthContext";
+import { baseurl } from "../../api-config/apiConfig";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 
@@ -10,23 +13,28 @@ export default function Cards() {
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   const [scaleAnimations, setScaleAnimations] = useState([]);
-  const [revealedCards, setRevealedCards] = useState([]); // Estado para controlar se as cartas foram reveladas
+  const [revealedCards, setRevealedCards] = useState([]);
+  const { user } = useContext(AuthContext);
   const router = useRouter();
 
   useEffect(() => {
     async function fetchCards() {
-      const querySnapshot = await getDocs(collection(db, "cartas"));
-      const fetchedCards = querySnapshot.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }));
+      try {
+        const response = await axios.get(`${baseurl}/api/desafios?userId=${user.id}`);
+        const fetchedCards = response.data;
 
-      const shuffledCards = fetchedCards.sort(() => 0.5 - Math.random()).slice(0, 3);
-      setCards(shuffledCards);
-      setSelectedCard(shuffledCards[0]);
+        const shuffledCards = fetchedCards
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3);
 
-      setScaleAnimations(shuffledCards.map(() => new Animated.Value(1)));
-      setRevealedCards(shuffledCards.map(() => false)); // Inicializa com todas as cartas como não reveladas
+        setCards(shuffledCards);
+        setSelectedCard(shuffledCards[0]);
+        setScaleAnimations(shuffledCards.map(() => new Animated.Value(1)));
+        setRevealedCards(shuffledCards.map(() => false));
+      } catch (error) {
+        console.error("❌ Erro ao buscar cartas:", error);
+        Alert.alert("Erro", "Não foi possível buscar as cartas.");
+      }
     }
 
     fetchCards();
@@ -35,7 +43,6 @@ export default function Cards() {
   const handleCardSelect = (index) => {
     setSelectedCard(cards[index]);
 
-    // Revela a carta selecionada
     setRevealedCards((prev) =>
       prev.map((isRevealed, i) => (i === index ? true : isRevealed))
     );
@@ -50,33 +57,36 @@ export default function Cards() {
   };
 
   const handleSelectButton = async () => {
-    if (selectedCard) {
-      const user = auth.currentUser; // aqui obtem-se o id do utilizador autenticado
+    if (!user || !user.id) {
+      Alert.alert("Erro", "É necessário estar autenticado.");
+      return;
+    }
 
-      if (!user) {
-        Alert.alert("Erro", "É necessário estar autenticado para salvar a carta.");
-        return;
-      }
+    if (!selectedCard) {
+      Alert.alert("Erro", "Nenhuma carta selecionada.");
+      return;
+    }
 
-      const userId = user.uid; // ID do utilizador autenticado
+    try {
+      const payload = {
+        participants_id: user.id,
+        challenges_id: selectedCard.id,
+        starting_date: new Date().toISOString(),
+      };
 
-      try {
-        // Referência à subcoleção 'cartas' no Firestore dentro do documento do utilizador
-        const cardRef = doc(db, "users", userId, "cartas", selectedCard.id);
+      await axios.post(`${baseurl}/api/participants-has-challenges`, payload);
 
-        // Salve os dados da carta
-        await setDoc(cardRef, selectedCard, { merge: true });
-
-        // Após salvar a carta, redireciona para a página de detalhes
-        const selectedIndex = cards.indexOf(selectedCard);
-        router.push({
-          pathname: "./cartaSelecionada",
-          params: { card: JSON.stringify(selectedCard), cardNumber: selectedIndex + 1 },
-        });
-      } catch (error) {
-        console.error("Erro ao salvar a carta no Firestore:", error);
-        Alert.alert("Erro", "Não foi possível salvar a carta.");
-      }
+      const selectedIndex = cards.indexOf(selectedCard);
+      router.push({
+        pathname: "./cartaSelecionada",
+        params: {
+          card: JSON.stringify(selectedCard),
+          cardNumber: selectedIndex + 1,
+        },
+      });
+    } catch (error) {
+      console.error("❌ Erro ao guardar seleção:", error);
+      Alert.alert("Erro", "Não foi possível registar a carta.");
     }
   };
 
@@ -88,7 +98,7 @@ export default function Cards() {
 
         <View style={styles.topCards}>
           {cards.map((card, index) => (
-            <TouchableOpacity accessible={true} key={index} onPress={() => handleCardSelect(index)}>
+            <TouchableOpacity key={index} onPress={() => handleCardSelect(index)}>
               <Animated.View
                 style={[
                   styles.smallCard,
@@ -99,10 +109,10 @@ export default function Cards() {
                   },
                 ]}
               >
-                {revealedCards[index] && card.imagem && ( // Só exibe a imagem se a carta for revelada
+                {revealedCards[index] && card.img && (
                   <Image
-                    accessibilityLabel="Carta minimizada revelada"
-                    source={{ uri: card.imagem }}
+                    accessibilityLabel="Carta revelada"
+                    source={{ uri: card.img }}
                     style={styles.smallCardImage}
                     resizeMode="cover"
                   />
@@ -113,18 +123,18 @@ export default function Cards() {
         </View>
 
         {selectedCard && (
-          <View accessible={true} style={styles.mainCard}>
-            {selectedCard.imagem && (
+          <View style={styles.mainCard}>
+            {selectedCard.img && (
               <Image
                 accessibilityLabel="Imagem da carta selecionada"
-                source={{ uri: selectedCard.imagem }}
+                source={{ uri: selectedCard.img }}
                 style={styles.cardImage}
                 resizeMode="cover"
               />
             )}
             <View style={styles.cardContent}>
-              <Text style={styles.mainTitle}>{selectedCard.titulo}</Text>
-              <Text style={styles.mainDescription}>{selectedCard.carta}</Text>
+              <Text style={styles.mainTitle}>{selectedCard.title}</Text>
+              <Text style={styles.mainDescription}>{selectedCard.description}</Text>
             </View>
           </View>
         )}
@@ -187,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "space-between", 
+    justifyContent: "space-between",
     padding: 10,
     overflow: "hidden",
   },

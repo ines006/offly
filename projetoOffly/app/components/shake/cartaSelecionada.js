@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -7,62 +7,51 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db, auth } from "../../firebase/firebaseApi";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Svg, Circle, Path, G } from "react-native-svg";
+import { AuthContext } from "../entrar/AuthContext";
+import axios from "axios";
+import { baseurl } from "../../api-config/apiConfig";
 
 export default function CartaSelecionada() {
   const router = useRouter();
-  const { card, cardNumber } = useLocalSearchParams();
-  const [selectedCard, setSelectedCard] = useState(() => JSON.parse(card));
+  const { user } = useContext(AuthContext);
+  const [selectedCard, setSelectedCard] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
-  const [isValidated, setIsValidated] = useState(false);
 
   useEffect(() => {
-    const initializeTimer = async () => {
+    const fetchCarta = async () => {
       try {
-        const user = auth.currentUser;
-        if (!user) {
-          Alert.alert("Erro", "Usuário não autenticado.");
-          return;
-        }
+        console.log("Usuário autenticado:", user);
+        const response = await axios.get(
+          `${baseurl}/api/participants-has-challenges/active/${user.id}`
+        );
 
-        const cardRef = doc(db, "users", user.uid, "cartas", selectedCard.id);
-        const cardSnapshot = await getDoc(cardRef);
+        const data = response.data;
 
-        if (cardSnapshot.exists()) {
-          const data = cardSnapshot.data();
-          if (data.validada) {
-            setIsValidated(true);
-            setTimeLeft(0);
-            return;
-          }
+        if (data) {
+          setSelectedCard(data);
 
-          if (data.timerStart) {
-            const now = new Date().getTime();
-            const timeElapsed = now - data.timerStart;
-            const timeRemaining = 24 * 60 * 60 * 1000 - timeElapsed;
-
-            setTimeLeft(timeRemaining > 0 ? timeRemaining : 0);
-          } else {
-            const now = new Date().getTime();
-            await updateDoc(cardRef, { timerStart: now });
-            setTimeLeft(24 * 60 * 60 * 1000);
-          }
+          const now = new Date();
+          const startDate = new Date(data.starting_date);
+          const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+          const remaining = endDate - now;
+          setTimeLeft(remaining > 0 ? remaining : 0);
         } else {
-          Alert.alert("Erro", "Carta não encontrada no banco de dados!");
+          Alert.alert("Erro", "Nenhuma carta ativa encontrada.");
         }
       } catch (error) {
-        console.error("Erro ao inicializar o timer:", error);
-        Alert.alert("Erro", "Não foi possível inicializar o timer.");
+        console.error("Erro ao buscar carta ativa:", error);
+        Alert.alert("Erro", "Não foi possível obter a carta.");
       }
     };
 
-    initializeTimer();
-  }, [selectedCard]);
+    if (user?.id) {
+      fetchCarta();
+    }
+  }, [user]);
 
   useEffect(() => {
     let timer;
@@ -70,12 +59,12 @@ export default function CartaSelecionada() {
       timer = setInterval(() => {
         setTimeLeft((prev) => Math.max(prev - 1000, 0));
       }, 1000);
-    } else if (timeLeft === 0 && !isValidated) {
+    } else if (timeLeft === 0 && selectedCard) {
       Alert.alert("Tempo Esgotado", "O tempo para validar esta carta acabou.");
     }
 
     return () => clearInterval(timer);
-  }, [timeLeft, isValidated]);
+  }, [timeLeft]);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -92,96 +81,88 @@ export default function CartaSelecionada() {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
-          accessibilityLabel="Botão voltar atrás"
         >
-          <Text style={styles.backButtonText}>
-            <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
-              <Circle
-                cx="18.1351"
-                cy="17.1713"
-                r="16.0177"
-                stroke="#263A83"
-                strokeWidth={2}
-              />
-              <Path
-                d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
-                stroke="#263A83"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-            </Svg>
-          </Text>
+          <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+            <Circle
+              cx="18.1351"
+              cy="17.1713"
+              r="16.0177"
+              stroke="#263A83"
+              strokeWidth={2}
+            />
+            <Path
+              d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+              stroke="#263A83"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </Svg>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.homeButton}
           onPress={() => router.push("../navbar")}
-          accessibilityLabel="Botão fechar"
         >
-          <Text style={styles.homeButtonText}>
-            <Svg
-              width="800px"
-              height="800px"
-              viewBox="0 0 21 21"
-              xmlns="http://www.w3.org/2000/svg"
+          <Svg width="40px" height="800px" viewBox="0 0 21 21">
+            <G
+              fill="none"
+              stroke="#263A83"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              transform="translate(2 2)"
             >
-              <G
-                fill="none"
-                fill-rule="evenodd"
-                stroke="#263A83"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                transform="translate(2 2)"
-              >
-                <Circle cx="8.5" cy="8.5" r="8" />
-
-                <G transform="matrix(0 1 -1 0 17 0)">
-                  <Path d="m5.5 11.5 6-6" />
-
-                  <Path d="m5.5 5.5 6 6" />
-                </G>
+              <Circle cx="8.5" cy="8.5" r="8" />
+              <G transform="matrix(0 1 -1 0 17 0)">
+                <Path d="m5.5 11.5 6-6" />
+                <Path d="m5.5 5.5 6 6" />
               </G>
-            </Svg>
-          </Text>
+            </G>
+          </Svg>
         </TouchableOpacity>
 
-        {timeLeft !== null && timeLeft > 0 && (
-          <View style={styles.timerContainer}>
-            <Icon name="time-outline" size={24} color="#263A83" />
-            <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-          </View>
-        )}
+        {selectedCard ? (
+          <>
+            {timeLeft !== null && (
+              <View style={styles.timerContainer}>
+                <Icon name="time-outline" size={24} color="#263A83" />
+                <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+              </View>
+            )}
 
-        {isValidated && (
-          <Text style={styles.validationMessage}>
-            Esta carta já foi validada!
+            <Text style={styles.title}>Carta atribuída</Text>
+
+            <View style={[styles.mainCard, { marginTop: 20 }]}>
+              {selectedCard.challenge?.imagem && (
+                <Image
+                  accessibilityLabel="Imagem da carta"
+                  source={{ uri: selectedCard.challenge.imagem }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                />
+              )}
+              <View style={styles.cardContent}>
+                <Text style={styles.mainTitle}>
+                  {selectedCard.challenge?.titulo}
+                </Text>
+                <Text style={styles.mainDescription}>
+                  {selectedCard.challenge?.carta}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.validateButton}
+              onPress={() => router.push("./uploadDesafio")}
+            >
+              <Text style={styles.validateButtonText}>
+                Comprova o teu desafio
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <Text style={{ color: "#263A83", marginTop: 50 }}>
+            Nenhuma carta ativa encontrada.
           </Text>
-        )}
-
-        <Text style={styles.title}>Escolheste a carta {cardNumber}</Text>
-
-        <View accessible={true} style={[styles.mainCard, { marginTop: 20 }]}>
-          {selectedCard.imagem && (
-            <Image
-              accessibilityLabel="Imagem da carta escolhida"
-              source={{ uri: selectedCard.imagem }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
-          )}
-          <View style={styles.cardContent}>
-            <Text style={styles.mainTitle}>{selectedCard.titulo}</Text>
-            <Text style={styles.mainDescription}>{selectedCard.carta}</Text>
-          </View>
-        </View>
-
-        {!isValidated && (
-          <TouchableOpacity
-            style={styles.validateButton}
-            onPress={() => router.push("./uploadDesafio")}
-          >
-            <Text style={styles.validateButtonText}>Comprova o teu desafio</Text>
-          </TouchableOpacity>
         )}
       </SafeAreaView>
     </View>

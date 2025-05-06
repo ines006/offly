@@ -250,16 +250,6 @@ const ProfileScreen = () => {
     return <LoadingText>A carregar...</LoadingText>;
   }
 
-  if (error) {
-    return (
-      <ErrorContainer>
-        <ErrorText>{error}</ErrorText>
-        <RetryButton onPress={fetchUserProfile}>
-          <RetryButtonText>Tentar novamente</RetryButtonText>
-        </RetryButton>
-      </ErrorContainer>
-    );
-  }
 
   return (
     <Container>
@@ -479,11 +469,19 @@ const ProfileScreen = () => {
             )}
           </InputRow>
         </Row>
+
+        <Row>
+          <Label>Email</Label>
+          <InputRow>
+            <Input value={profileData?.email || ""} editable={false} />
+          </InputRow>
+        </Row>
+
+        <LogoutButton onPress={handleLogout}>
+          <LogoutText>Terminar Sessão</LogoutText>
+        </LogoutButton>
       </Form>
 
-      <LogoutButton onPress={handleLogout}>
-        <LogoutText>Terminar Sessão</LogoutText>
-      </LogoutButton>
     </Container>
   );
 };

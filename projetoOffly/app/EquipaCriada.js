@@ -268,8 +268,8 @@ export default function EquipaCriada() {
                   }}
                   style={styles.peopleImage}
                 />
-                <Text style={styles.participantText}>
-                  {isEmptySlot ? "À espera de jogador..." : participant.name}
+                <Text style={[styles.participantText, isEmptySlot && styles.participantTextVazio]}>
+                  {isEmptySlot ? ". . ." : participant.name}
                 </Text>
               </View>
             );
@@ -277,12 +277,12 @@ export default function EquipaCriada() {
 
           {teamMembers.length === teamCapacity ? (
             <Botoes_Pagina_principal onPress={handleTorneio}>
-              <Texto_Botoes_Pagina_principal>Entrar no Torneio</Texto_Botoes_Pagina_principal>
+              <Texto_Botoes_Pagina_principal>Entrar Torneio</Texto_Botoes_Pagina_principal>
             </Botoes_Pagina_principal>
           ) : (
             <Botoes_Pagina_principal_Desativado>
               <Texto_Botoes_Pagina_principal_Desativado>
-                Aguardando membros...
+                Entrar Torneio
               </Texto_Botoes_Pagina_principal_Desativado>
             </Botoes_Pagina_principal_Desativado>
           )}
@@ -331,6 +331,24 @@ const styles = StyleSheet.create({
     elevation: 5,
     height: 75,
   },
+  cardVazio: {
+    flexDirection: "row",
+    padding: 15,
+    width: 330,
+    marginVertical: 8,
+    marginHorizontal: 10,
+    backgroundColor: "#DDDFE6",
+    borderRadius: 20,
+    alignItems: "center",
+    textAlign: "center",
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+    height: 75,
+  },
   peopleImage: {
     width: 60,
     height: 60,
@@ -339,6 +357,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#fff",
     marginLeft: 10,
+    fontWeight: "bold",
+  },
+  participantTextVazio: {
+    fontSize: 40,
+    color: "#263a83",
+    paddingLeft: 50,
     fontWeight: "bold",
   },
   noParticipants: {

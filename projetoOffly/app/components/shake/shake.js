@@ -1,10 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import { BackHandler } from "react-native";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import React, { useEffect, useRef, useState, useContext } from "react";
+import { BackHandler, View, Text, StyleSheet, TouchableOpacity, Image, AccessibilityInfo } from "react-native";
 import { useRouter } from "expo-router";
 import { Accelerometer } from "expo-sensors";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase/firebaseApi";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,11 +12,15 @@ import Animated, {
   runOnJS,
   Easing,
 } from "react-native-reanimated";
+import axios from "axios";
 import { TittlePagina } from "../../styles/styles";
-import { AccessibilityInfo } from "react-native";
+import { AuthContext } from "../entrar/AuthContext";
+import { baseurl } from "../../api-config/apiConfig"; 
 
 export default function Shake() {
   const router = useRouter();
+  const { user } = useContext(AuthContext);
+
   const scaleAnimation = useSharedValue(1);
   const rotateAnimation = useSharedValue(0);
   const distributeOffset1 = useSharedValue(0);
@@ -28,28 +29,26 @@ export default function Shake() {
   const shakeCount = useRef(0);
   const [isNavigating, setIsNavigating] = useState(false);
   const shakeAnimation = useSharedValue(0);
-  const [imageURL, setImageURL] = useState(null);
+  const [cards, setCards] = useState([]);
 
   useEffect(() => {
-    // Fetch image from Firestore
-    const fetchImage = async () => {
-      try {
-        const docRef = doc(db, "shakecarta", "shake");
-        const docSnap = await getDoc(docRef);
+    const fetchChallenges = async () => {
+      if (!user?.id) {
+        console.warn("❌ Utilizador não autenticado.");
+        return;
+      }
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setImageURL(data.imagem);
-        } else {
-          console.error("Documento não encontrado!");
-        }
+      try {
+        const url = `${baseurl}/api/desafios?userId=${user.id}`;
+        const response = await axios.get(url);
+        setCards(response.data);
       } catch (error) {
-        console.error("Erro ao buscar a imagem:", error);
+        console.error("❌ Erro ao buscar desafios:", error);
       }
     };
 
-    fetchImage();
-  }, []);
+    fetchChallenges();
+  }, [user]);
 
   useEffect(() => {
     shakeAnimation.value = withRepeat(
@@ -66,10 +65,8 @@ export default function Shake() {
   }, []);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => true
-    );
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => true);
+
     const subscription = Accelerometer.addListener(({ x, y, z }) => {
       const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
@@ -93,48 +90,28 @@ export default function Shake() {
 
     AccessibilityInfo.announceForAccessibility("O Shake foi feito");
 
-    rotateAnimation.value = withTiming(
-      360,
-      { duration: 1000, easing: Easing.out(Easing.ease) },
-      () => {
-        rotateAnimation.value = 0;
-      }
-    );
+    rotateAnimation.value = withTiming(360, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
+      rotateAnimation.value = 0;
+    });
 
-    scaleAnimation.value = withTiming(
-      1.5,
-      { duration: 1000, easing: Easing.out(Easing.ease) },
-      () => {
-        distributeOffset1.value = withTiming(-150, {
-          duration: 1500,
-          easing: Easing.out(Easing.ease),
-        });
-        distributeOffset2.value = withTiming(0, {
-          duration: 1500,
-          easing: Easing.out(Easing.ease),
-        });
-        distributeOffset3.value = withTiming(150, {
-          duration: 1500,
-          easing: Easing.out(Easing.ease),
-        });
+    scaleAnimation.value = withTiming(1.5, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
+      distributeOffset1.value = withTiming(-150, { duration: 1500, easing: Easing.out(Easing.ease) });
+      distributeOffset2.value = withTiming(0, { duration: 1500, easing: Easing.out(Easing.ease) });
+      distributeOffset3.value = withTiming(150, { duration: 1500, easing: Easing.out(Easing.ease) });
 
-        scaleAnimation.value = withTiming(
-          1,
-          { duration: 500, easing: Easing.out(Easing.ease) },
-          () => {
-            runOnJS(navigateToCards)();
-          }
-        );
-      }
-    );
+      scaleAnimation.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) }, () => {
+        runOnJS(navigateToCards)();
+      });
+    });
   };
 
   const navigateToCards = () => {
     router.push("../shake/cartas");
   };
 
-  const animatedMainCardStyle = useAnimatedStyle(() => ({
+  const combinedStyle = useAnimatedStyle(() => ({
     transform: [
+      { translateX: shakeAnimation.value },
       { scale: scaleAnimation.value },
       { rotate: `${rotateAnimation.value}deg` },
     ],
@@ -164,14 +141,6 @@ export default function Shake() {
     opacity: distributeOffset3.value ? 1 : 0,
   }));
 
-  const combinedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: shakeAnimation.value },
-      { scale: scaleAnimation.value },
-      { rotate: `${rotateAnimation.value}deg` },
-    ],
-  }));
-
   return (
     <View style={styles.background}>
       <View
@@ -179,22 +148,14 @@ export default function Shake() {
         accessibilityRole="header"
         accessibilityLabel="Título: Shake"
       >
-        <TittlePagina
-          accessible={true}
-          accessibilityRole="header"
-          accessibilityLabel="Título: Shake"
-        >
-          {" "}
-          Shake{" "}
-        </TittlePagina>
+        <TittlePagina> Shake </TittlePagina>
       </View>
       <View style={styles.container}>
-        {/* Carta principal */}
         <Animated.View style={[styles.card, combinedStyle]}>
-          {imageURL ? (
+          {cards[0]?.img ? (
             <Image
-              accessibilityLabel="Imagem de ilustração da carta de shake"
-              source={{ uri: imageURL }}
+              accessibilityLabel="Imagem da carta principal"
+              source={{ uri: cards[0].img }}
               style={{ width: "100%", height: "100%", borderRadius: 15 }}
               resizeMode="cover"
             />
@@ -203,25 +164,34 @@ export default function Shake() {
           )}
         </Animated.View>
 
-        {/* Cartas distribuídas */}
         <Animated.View style={[styles.smallCard, animatedDistributedStyle1]}>
-          <Text style={styles.cardText}>Carta 1</Text>
-        </Animated.View>
-        <Animated.View style={[styles.smallCard, animatedDistributedStyle2]}>
-          <Text style={styles.cardText}>Carta 2</Text>
-        </Animated.View>
-        <Animated.View style={[styles.smallCard, animatedDistributedStyle3]}>
-          <Text style={styles.cardText}>Carta 3</Text>
+          {cards[0]?.img ? (
+            <Image source={{ uri: cards[0].img }} style={styles.smallImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.cardText}>Carta 1</Text>
+          )}
         </Animated.View>
 
-        {/* Texto e botão */}
+        <Animated.View style={[styles.smallCard, animatedDistributedStyle2]}>
+          {cards[1]?.img ? (
+            <Image source={{ uri: cards[1].img }} style={styles.smallImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.cardText}>Carta 2</Text>
+          )}
+        </Animated.View>
+
+        <Animated.View style={[styles.smallCard, animatedDistributedStyle3]}>
+          {cards[2]?.img ? (
+            <Image source={{ uri: cards[2].img }} style={styles.smallImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.cardText}>Carta 3</Text>
+          )}
+        </Animated.View>
+
         <Text style={styles.description}>Abana o telemóvel</Text>
         <Text style={styles.description2}>descobre o desafio do dia</Text>
 
-        <TouchableOpacity
-          style={styles.shakeButton}
-          onPress={() => triggerCardAnimation()}
-        >
+        <TouchableOpacity style={styles.shakeButton} onPress={() => triggerCardAnimation()}>
           <Text style={styles.shakeButtonText}>Fazer Shake</Text>
         </TouchableOpacity>
       </View>
@@ -262,6 +232,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
+    overflow: "hidden",
+  },
+  smallImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
   },
   cardText: {
     color: "#FFF",

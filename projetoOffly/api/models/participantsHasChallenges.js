@@ -1,6 +1,8 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 
+
+
 const ParticipantsHasChallenges = sequelize.define(
   "ParticipantsHasChallenges",
   {
@@ -14,7 +16,7 @@ const ParticipantsHasChallenges = sequelize.define(
     },
     starting_date: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
     },
     end_date: {
       type: DataTypes.DATE,
@@ -26,11 +28,11 @@ const ParticipantsHasChallenges = sequelize.define(
     },
     validated: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     streak: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     challenge_levels_id_challenge_levels: {
       type: DataTypes.INTEGER,
@@ -45,5 +47,6 @@ const ParticipantsHasChallenges = sequelize.define(
     tableName: "participants_has_challenges",
   }
 );
+
 
 module.exports = ParticipantsHasChallenges;

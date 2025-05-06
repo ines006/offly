@@ -1,53 +1,57 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, ActivityIndicator } from "react-native";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase/firebaseApi";
-import Icon from "react-native-vector-icons/Ionicons";
+import React, { useState, useEffect, useContext } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Ionicons";
+import { Svg, Circle, Path, G } from "react-native-svg";
+import { AuthContext } from "../entrar/AuthContext";
+import axios from "axios";
+import { baseurl } from "../../api-config/apiConfig";
 
-export default function CartaSelecionada2({ userId, carta, onValidated }) {
-  const [timeLeft, setTimeLeft] = useState(null);
-  const [isValidated, setIsValidated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+export default function CartaSelecionada() {
   const router = useRouter();
+  const { user } = useContext(AuthContext);
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
-    const initializeTimer = async () => {
+    const fetchCarta = async () => {
       try {
-        // Referência ao documento da carta no Firestore
-        const cartaRef = doc(db, "users", userId, "cartas", carta.id);
-        const cartaSnapshot = await getDoc(cartaRef);
+        console.log("Usuário autenticado:", user);
+        const response = await axios.get(
+          `${baseurl}/api/participants-has-challenges/active/${user.id}`
+        );
 
-        if (cartaSnapshot.exists()) {
-          const data = cartaSnapshot.data();
+        const data = response.data;
 
-          // Verifica se a carta já foi validada
-          if (data.validada) {
-            setIsValidated(true);
-            setTimeLeft(0);
-          } else if (data.timerStart) {
-            // Calcula o tempo restante com base no timerStart
-            const now = new Date().getTime();
-            const timeElapsed = now - data.timerStart;
-            const timeRemaining = 24 * 60 * 60 * 1000 - timeElapsed;
+        if (data) {
+          setSelectedCard(data);
 
-            setTimeLeft(timeRemaining > 0 ? timeRemaining : 0);
-          } else {
-            Alert.alert("Erro", "O timer não foi encontrado para esta carta.");
-          }
+          const now = new Date();
+          const startDate = new Date(data.starting_date);
+          const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+          const remaining = endDate - now;
+          setTimeLeft(remaining > 0 ? remaining : 0);
         } else {
-          Alert.alert("Erro", "Carta não encontrada no banco de dados!");
+          Alert.alert("Erro", "Nenhuma carta ativa encontrada.");
         }
       } catch (error) {
-        console.error("Erro ao inicializar o timer:", error);
-        Alert.alert("Erro", "Não foi possível inicializar o timer.");
-      } finally {
-        setIsLoading(false);
+        console.error("Erro ao buscar carta ativa:", error);
+        Alert.alert("Erro", "Não foi possível obter a carta.");
       }
     };
 
-    initializeTimer();
-  }, [carta, userId]);
+    if (user?.id) {
+      fetchCarta();
+    }
+  }, [user]);
 
   useEffect(() => {
     let timer;
@@ -55,12 +59,12 @@ export default function CartaSelecionada2({ userId, carta, onValidated }) {
       timer = setInterval(() => {
         setTimeLeft((prev) => Math.max(prev - 1000, 0));
       }, 1000);
-    } else if (timeLeft === 0 && !isValidated) {
+    } else if (timeLeft === 0 && selectedCard) {
       Alert.alert("Tempo Esgotado", "O tempo para validar esta carta acabou.");
     }
 
     return () => clearInterval(timer);
-  }, [timeLeft, isValidated]);
+  }, [timeLeft]);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -71,50 +75,95 @@ export default function CartaSelecionada2({ userId, carta, onValidated }) {
     return `${hours}h ${minutes}m ${seconds}s`;
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E3A8C" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.background}>
-      <View style={styles.container}>
-        {timeLeft !== null && timeLeft > 0 && (
-          <View style={styles.timerContainer}>
-            <Icon name="time-outline" size={24} color="#263A83" />
-            <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-          </View>
-        )}
-
-        <View style={styles.mainCard}>
-          {carta.imagem && (
-            <Image
-              accessibilityLabel="Imagem da carta do desafio diário"
-              source={{ uri: carta.imagem }}
-              style={styles.cardImage}
-              resizeMode="cover"
+      <SafeAreaView style={styles.container}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+            <Circle
+              cx="18.1351"
+              cy="17.1713"
+              r="16.0177"
+              stroke="#263A83"
+              strokeWidth={2}
             />
-          )}
-          <View style={styles.cardContent}>
-            <Text style={styles.mainTitle}>{carta.titulo}</Text>
-            <Text style={styles.mainDescription}>{carta.carta}</Text>
-          </View>
-        </View>
+            <Path
+              d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+              stroke="#263A83"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </Svg>
+        </TouchableOpacity>
 
-        {!isValidated ? (
-          <TouchableOpacity
-            style={styles.validateButton}
-            onPress={() => router.push("../shake/uploadDesafio")}
-          >
-            <Text style={styles.validateButtonText}>Comprova o teu desafio</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.homeButton}
+          onPress={() => router.push("../navbar")}
+        >
+          <Svg width="40px" height="800px" viewBox="0 0 21 21">
+            <G
+              fill="none"
+              stroke="#263A83"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              transform="translate(2 2)"
+            >
+              <Circle cx="8.5" cy="8.5" r="8" />
+              <G transform="matrix(0 1 -1 0 17 0)">
+                <Path d="m5.5 11.5 6-6" />
+                <Path d="m5.5 5.5 6 6" />
+              </G>
+            </G>
+          </Svg>
+        </TouchableOpacity>
+
+        {selectedCard ? (
+          <>
+            {timeLeft !== null && (
+              <View style={styles.timerContainer}>
+                <Icon name="time-outline" size={24} color="#263A83" />
+                <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+              </View>
+            )}
+
+
+            <View style={[styles.mainCard, { marginTop: 20 }]}>
+              {selectedCard.challenge?.imagem && (
+                <Image
+                  accessibilityLabel="Imagem da carta"
+                  source={{ uri: selectedCard.challenge.imagem }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                />
+              )}
+              <View style={styles.cardContent}>
+                <Text style={styles.mainTitle}>
+                  {selectedCard.challenge?.titulo}
+                </Text>
+                <Text style={styles.mainDescription}>
+                  {selectedCard.challenge?.carta}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.validateButton}
+              onPress={() => router.push("../shake/uploadDesafio")}
+            >
+              <Text style={styles.validateButtonText}>
+                Comprova o teu desafio
+              </Text>
+            </TouchableOpacity>
+          </>
         ) : (
-          <Text style={styles.validationMessage}>Esta carta já foi validada!</Text>
+          <Text style={{ color: "#263A83", marginTop: 50 }}>
+            Nenhuma carta ativa encontrada.
+          </Text>
         )}
-      </View>
+      </SafeAreaView>
     </View>
   );
 }
@@ -128,12 +177,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 50,
   },
-  loadingContainer: {
-    flex: 1,
+  backButton: {
+    position: "absolute",
+    top: 40,
+    width: 40,
+    height: 40,
+    left: 25,
+    borderRadius: 25,
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#BFE0FF",
+    zIndex: 999,
+  },
+  homeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backButtonText: {
+    color: "#263A83",
+    fontSize: 30,
+    alignItems: "center",
+    marginTop: -4,
   },
   timerContainer: {
     flexDirection: "row",
@@ -153,6 +226,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#2E3A8C",
     marginVertical: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#263A83",
+    textAlign: "center",
+    marginVertical: 20,
+    backgroundColor: "white",
+    padding: 13,
+    borderRadius: 12,
   },
   mainCard: {
     width: 210,

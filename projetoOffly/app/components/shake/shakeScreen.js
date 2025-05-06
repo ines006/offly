@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useContext } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { AuthContext } from "../entrar/AuthContext"; // Ajusta o caminho conforme necessário
+import { AuthContext } from "../entrar/AuthContext";
 import Shake from "./shake";
-import CartaSelecionada2 from "./cartaSelecionada2"; // Componente para mostrar carta
+import CartaSelecionada2 from "./cartaSelecionada2";
+import axios from "axios";
+import { baseurl } from "../../api-config/apiConfig"; 
 
 export default function ShakeScreen() {
   const { user } = useContext(AuthContext);
@@ -10,36 +12,47 @@ export default function ShakeScreen() {
   const [carta, setCarta] = useState(null);
 
   useEffect(() => {
-    const fetchCarta = async () => {
-      if (!user) {
-        console.warn("❌ Utilizador não autenticado.");
+    const fetchCartaAtiva = async () => {
+      if (!user || !user.id) {
+        console.warn("❌ Utilizador não autenticado ou sem ID.");
         setLoading(false);
         return;
       }
 
-      console.log("👤 Utilizador autenticado:", user);
+      try {
+        const response = await axios.get(
+          `${baseurl}/api/participants-has-challenges/active/${user.id}`
+        );
 
-      // Simular busca de carta
-      setTimeout(() => {
-        const cartaFicticia = {
-          id: "12345",
-          nome: "Carta Exemplo",
-          descricao: "Esta é uma carta fictícia para teste.",
-          validada: false,
-        };
+        const data = response.data;
 
-        setCarta(cartaFicticia);
+        console.log("🔍 Resposta da API:", data);
+
+        // Se a API retorna um array, procura a carta ativa
+        let cartaAtiva = null;
+
+        if (Array.isArray(data)) {
+          cartaAtiva = data.find((c) => c.completed_date === null);
+        } else if (data && typeof data === "object" && data.completed_date === null) {
+          cartaAtiva = data;
+        }
+
+        setCarta(cartaAtiva || null);
+      } catch (error) {
+        console.error("❌ Erro ao buscar carta ativa:", error);
+        setCarta(null);
+      } finally {
         setLoading(false);
-      }, 1000); // Simula delay
+      }
     };
 
-    fetchCarta();
+    fetchCartaAtiva();
   }, [user]);
 
   const handleValidated = () => {
     console.log("✅ Carta validada com sucesso!");
-    setCarta(null);
-    setLoading(true);
+    setCarta(null);      
+    setLoading(true);    
   };
 
   if (loading) {
@@ -61,7 +74,6 @@ export default function ShakeScreen() {
   if (!carta) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Nenhuma carta precisa de validação.</Text>
         <Shake />
       </View>
     );
@@ -70,7 +82,7 @@ export default function ShakeScreen() {
   return (
     <CartaSelecionada2
       carta={carta}
-      userId={user.id || user.uid}
+      userId={user.id}
       cartaId={carta.id}
       onValidated={handleValidated}
     />

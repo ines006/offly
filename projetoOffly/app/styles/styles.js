@@ -426,6 +426,13 @@ export const Avatar = styled.Image.attrs({
   margin-right: 15px;
 `;
 
+export const TeamImage = styled.Image.attrs({
+  accessibilityLabel: 'Imagem da equipa'
+})`
+  width: 40px;
+  height: 40px;
+  border-radius: 100px;
+`;
 
 export const ProfileTextContainer = styled.View`
   flex: 1;

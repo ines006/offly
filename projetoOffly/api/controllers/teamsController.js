@@ -15,18 +15,18 @@ const { v4: uuidv4 } = require("uuid"); //gerar os tokens
 exports.getTeamParticipants = async (req, res) => {
   try {
     const team = await Teams.findByPk(req.params.id, {
-      attributes: ["name", "points", "capacity", "image"],
+      attributes: ["name", "description", "points", "capacity", "image"],
       include: [
         {
           model: Participants,
           as: "participants",
-          attributes: ["id", "name"],
+          attributes: ["id", "name", "image"],
           required: false,
         },
         {
           model: Competitions,
           as: "competition",
-          attributes: ["name"],
+          attributes: ["id", "name", "starting_date", "end_date"],
           required: false,
         },
       ],
@@ -38,13 +38,18 @@ exports.getTeamParticipants = async (req, res) => {
 
     res.json({
       name: team.name,
+      description: team.description,
       points: team.points,
       capacity: team.capacity,
-      name: team.competition ? team.competition.name : null,
+      tournament_id: team.competition.id,
+      tournament_name: team.competition ? team.competition.name : null,
+      tournament_start_date: team.competition ? team.competition.starting_date : null,
+      tournament_end_date: team.competition ? team.competition.end_date : null,
       image: team.image,
       participants: team.participants.map((p) => ({
         id: p.id,
         name: p.name,
+        image: p.image,
       })),
     });
   } catch (error) {

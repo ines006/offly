@@ -76,21 +76,9 @@ const Login = () => {
 
       setUser(user);
       setAccessToken(token);
-
-      
-      if (hasTeam) {
-        //router.push("../../components/navbar");
-        router.push("../../participantes");
-      } else {
-        // router.push("../../PaginaPrincipal");
-        router.push("../../participantes");
-      }
-    
-
       setRefreshToken(refreshToken);
       setLoading(false);
       console.log("🔍 RefreshToken salvo no AuthContext:", refreshToken);
-
 
       const participantUrl = `${baseurl}/participants/${user.id}`;
       console.log("🔄 Verificando equipa no endpoint:", participantUrl);

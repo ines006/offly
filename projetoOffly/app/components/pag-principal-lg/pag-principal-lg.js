@@ -25,6 +25,7 @@ import {
   DesafioText,
   ProfileContainer,
   Avatar,
+  TeamImage,
   ProfileTextContainer,
   UserName,
   UserLevel,
@@ -33,109 +34,200 @@ import {
 } from "../../styles/styles.js";
 import { auth, db } from "../../firebase/firebaseApi";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { AuthContext } from "../entrar/AuthContext"; // importa o contexto
+import { AuthContext } from "../entrar/AuthContext"; 
+import { baseurl } from "../../api-config/apiConfig"; 
+import axios from "axios";
 
 export default function Home() {
   const router = useRouter();
 
-  const { user } = useContext(AuthContext); // acede ao utilizador logado
+  const { user, accessToken } = useContext(AuthContext); // acede ao utilizador logado
 
   const [userId, setUserId] = useState(null);
-  const [isUploadedToday, setIsUploadedToday] = useState(false);
+  const [isUploadedToday, setIsUploadedToday] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [userName, setUserName] = useState("");
+  const [userLevel, setUserLevel] = useState();
   const [teamId, setTeamId] = useState("");
-  const [teamPoints, setTeamPoints] = useState(0);
-  const [teamMembers, setTeamMembers] = useState(0);
+  const [teamName, setTeamName] = useState("");
+  const [teamPoints, setTeamPoints] = useState();
+  const [teamMembers, setTeamMembers] = useState();
+  const [teamCapacity, setteamCapacity] = useState();
   const [profileImage, setProfileImage] = useState(null);
+  const [teamImage, setTeamImage] = useState(null);
+  const [tournamentName, setTournamentName] = useState(null);
+  const [tournamentStart, setTournamentStart] = useState(null);
+  const [tournamentEnd, setTournamentEnd] = useState(null);
+  const [competitionDay, setCompetitionDay] = useState(null);
 
-  const imageUserUrls = [
-    "https://celina05.sirv.com/avatares/avatar4.png",
-    "https://celina05.sirv.com/avatares/avatar5.png",
-    "https://celina05.sirv.com/avatares/avatar6.png",
-    "https://celina05.sirv.com/avatares/avatar9.png",
-    "https://celina05.sirv.com/avatares/avatar10.png",
-    "https://celina05.sirv.com/avatares/avatar11.png",
-    "https://celina05.sirv.com/avatares/avatar12.png",
-    "https://celina05.sirv.com/avatares/avatar13.png",
-    "https://celina05.sirv.com/avatares/avatar16.png",
-    "https://celina05.sirv.com/avatares/avatar18.png",
-    "https://celina05.sirv.com/avatares/avatar20.png",
-    "https://celina05.sirv.com/avatares/avatar1.png",
-    "https://celina05.sirv.com/avatares/avatar2.png",
-    "https://celina05.sirv.com/avatares/avatar3.png",
-    "https://celina05.sirv.com/avatares/avatar7.png",
-    "https://celina05.sirv.com/avatares/avatar8.png",
-    "https://celina05.sirv.com/avatares/avatar14.png",
-    "https://celina05.sirv.com/avatares/avatar15.png",
-    "https://celina05.sirv.com/avatares/avatar17.png",
-    "https://celina05.sirv.com/avatares/avatar19.png",
-  ];
-
-  const getRandomImage = (tipo) => {
-    const randomIndex = Math.floor(Math.random() * tipo.length);
-    return tipo[randomIndex];
-  };
-
+  // Utilizador logado + Dados do utilizador
   useEffect(() => {
-    if (user && user.id) {
-      setUserId(user.id); // assumindo que guardas o id como "id" no objeto user
-      console.log("Utilizador logado via contexto:", user);
-    } else {
-      Alert.alert("Erro", "Nenhum utilizador logado!");
-    }
-  }, [user]);
+    const fetchUserData = async () => {
+      console.log("🔍 Depurando dados do utilizador...");
+      console.log("👤 User:", user);
+      console.log("🔑 AccessToken:", accessToken);
 
-  useEffect(() => {
-    const Data = async () => {
+      if (!user?.id || !accessToken) {
+        console.error("❌ user.id ou accessToken estão indefinidos");
+        Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
+        router.push("./login");
+        return;
+      }
+
       try {
-        if (!userId) return;
-        const userDocRef = doc(db, "users", userId);
-        const docSnap = await getDoc(userDocRef);
+        console.log(
+          `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
+        );
+        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
 
-        if (docSnap.exists()) {
-          const { fullName, team, image } = docSnap.data();
-          setUserName(fullName);
-          setTeamId(team);
+        console.log("✅ Resposta da API:", response.data);
 
-          if (team) {
-            const teamDocRef = doc(db, "equipas", team);
-            const teamSnap = await getDoc(teamDocRef);
+        const userData = response.data;
+        const name =
+          userData.name || userData.fullName;
+        const image = userData.image || null;
+        const level = userData.level;
+        const teamId = userData.teams_id;
+        
+        setUserId(user.id);
 
-            if (teamSnap.exists()) {
-              const teamData = teamSnap.data();
-              setTeamPoints(teamData.pontos);
-              setTeamMembers(teamData.numparticipantes);
-            } else {
-              console.log("Equipa não encontrada.");
-            }
-          }
+        setUserName(name);
+        setUserLevel(level);
+        setProfileImage(image ? { uri: image } : null);
+        setTeamId(teamId);
 
-          if (image) {
-            setProfileImage({ uri: image });
-          } else {
-            const newProfileImage = getRandomImage(imageUserUrls);
-            setProfileImage({ uri: newProfileImage });
-            await updateDoc(userDocRef, { image: newProfileImage });
-          }
-        } else {
-          console.log("Documento do utilizador não encontrado.");
-        }
+        console.log("✅ Dados processados:", { name, image, level, teamId });
       } catch (error) {
-        console.error("Erro ao verificar o nome", error);
+        console.error("❌ Erro ao buscar dados do utilizador:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Alert.alert(
+          "Erro",
+          error.response?.data?.message ||
+            "Não foi possível carregar os dados do utilizador."
+        );
       }
     };
 
-    Data();
+    fetchUserData();
+  }, [user, accessToken]);
+
+  // Dados da equipa + torneio 
+  useEffect(() => {
+    const teamData = async () => {
+      try {
+        console.log(
+          `🌐 Fazendo requisição para ${baseurl}/teams/${teamId}`
+        );
+        const response = await axios.get(`${baseurl}/teams/${teamId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+
+        console.log("✅ Resposta da API:", response.data);
+
+        const teamData = response.data;
+        const name = teamData.name;
+        const image = teamData.image || null;
+        const capacity = teamData.capacity;
+        const members = teamData.participants.length;
+        const points = teamData.points;
+        const tournament_name = teamData.tournament_name;
+        const tournament_start = teamData.tournament_start_date;
+        const tournament_end = teamData.tournament_end_date;
+
+        setTeamName(name);
+        setTeamImage(image);
+        setTeamMembers(members);
+        setteamCapacity(capacity);
+        setTeamPoints(points);
+        setTournamentName(tournament_name);
+        setTournamentStart(tournament_start);
+        setTournamentEnd(tournament_end);
+
+        console.log("✅ Dados processados:", { name, image, members, capacity, points, tournament_name, tournament_start, tournament_end });
+      } catch (error) {
+        console.error("❌ Erro ao buscar dados da equipa:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Alert.alert(
+          "Erro",
+          error.response?.data?.message ||
+            "Não foi possível carregar os dados da equipa."
+        );
+      }
+    };
+
+    teamData();
+  }, [userId, teamId]);
+
+  useEffect(() => {
+    if (tournamentStart && tournamentEnd) {
+      const day = getCompetitionDay(tournamentStart, tournamentEnd);
+      setCompetitionDay(day);
+      //console.log("dia da competição: ", day);
+    }
+  }, [tournamentStart, tournamentEnd]);
+
+  useEffect(() => {
+    const checkUploadStatus = async () => {
+      try {
+        if (!userId) return;
+
+        const response = await axios.get(`${baseurl}/participants/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+
+        setIsUploadedToday(response.data.upload || 0);
+       
+      } catch (error) {
+        console.error("Erro ao verificar o status de upload:", error);
+      }
+    };
+
+    checkUploadStatus();
   }, [userId]);
 
-  const resetUploadStatus = async () => {
+
+  const resetUploadStatus = async () => { 
     try {
       if (!userId) return;
-      const userDocRef = doc(db, "users", userId);
-      await updateDoc(userDocRef, { upload: false });
-      setIsUploadedToday(false);
+    
+      const updateUpload = {
+        upload: 0,
+      };
+      const response = await axios.put(`${baseurl}/participants/${userId}`, updateUpload, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      setIsUploadedToday(0);
       console.log("Status de upload redefinido.");
+
     } catch (error) {
       console.error("Erro ao redefinir o status de upload:", error);
     }
@@ -151,6 +243,10 @@ export default function Home() {
       0,
       0
     );
+
+  // Definir o horário de reset simulado
+  //const resetTime = new Date("2025-05-06T14:00:00");
+
     return resetTime.getTime() - now.getTime();
   };
 
@@ -173,27 +269,6 @@ export default function Home() {
     };
   }, [userId]);
 
-  useEffect(() => {
-    const checkUploadStatus = async () => {
-      try {
-        if (!userId) return;
-        const userDocRef = doc(db, "users", userId);
-        const docSnap = await getDoc(userDocRef);
-
-        if (docSnap.exists()) {
-          const { upload } = docSnap.data();
-          setIsUploadedToday(upload || false);
-        } else {
-          console.log("Documento do utilizador não encontrado.");
-        }
-      } catch (error) {
-        console.error("Erro ao verificar o status de upload:", error);
-      }
-    };
-
-    checkUploadStatus();
-  }, [userId]);
-
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -204,6 +279,29 @@ export default function Home() {
       .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  const getCompetitionDay = (start_date, end_date) => {
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    const now = new Date();
+  
+    // Se hoje for antes do início da competição
+    if (now < start) {
+      return 0; // competição ainda não começou
+    }
+  
+    // Se hoje for depois do fim da competição
+    if (now > end) {
+      const duration = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      return duration; // último dia da competição
+    }
+  
+    // Se estivermos dentro do intervalo
+    const dayNumber = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
+    return dayNumber;
+
+  }
+
+  
   const handleCirclePress = () => {
     router.push("../components/uploadScreenTime/UploadScreen");
   };
@@ -238,7 +336,8 @@ export default function Home() {
           <Avatar source={profileImage} />
         </TouchableOpacity>
         <ProfileTextContainer>
-          <UserName>{userName}</UserName> <UserLevel> Nível 1 </UserLevel>
+          <UserName>{userName}</UserName> <UserLevel> Nível {userLevel} </UserLevel>
+          {/* FAZER CONDIÇÃO PARA MOSTRAR ESTRELAS DO NÍVEL CORRETO */}
           <StarsContainer>
             <Svg
               accessibilityLabel="estrela nível 1"
@@ -295,26 +394,30 @@ export default function Home() {
           </StarsContainer>
         </ProfileTextContainer>
       </ProfileContainer>
-      <TittleTorneio>Torneio XPTO</TittleTorneio>
+      <TittleTorneio>{tournamentName}</TittleTorneio>
 
       <CardContainer accessible={true}>
         <View accessible={false} accessibilityRole="button">
           <CardContainer
             accessible={false}
-            accessibilityLabel={`Cartão da equipe ${teamId}`}
+            accessibilityLabel={`Cartão da equipe ${teamName}`}
           >
             <Header>
-              <IconContainer accessibilityLabel="Ícone de equipe">
+              {/* <IconContainer accessibilityLabel="Ícone de equipe">
                 <FontAwesome
                   name="plane"
                   size={20}
                   color="#34459E"
                   accessible={false}
                 />
-              </IconContainer>
+              </IconContainer> */}
 
-              <TeamName accessibilityLabel={`Nome da equipe: ${teamId}`}>
-                {teamId}
+<IconContainer accessibilityLabel="Ícone de equipe">
+                <TeamImage source={teamImage} />
+</IconContainer>
+
+              <TeamName accessibilityLabel={`Nome da equipe: ${teamName}`}>
+                {teamName}
               </TeamName>
 
               <Points accessibilityLabel={`Pontos da equipe: ${teamPoints}`}>
@@ -330,7 +433,7 @@ export default function Home() {
 
             <View>
               <Stats accessibilityRole="summary">
-                <StatItem accessible={true} accessibilityLabel={`7 de 30`}>
+                <StatItem accessible={true} >
                   <StatText
                     accessibilityLabel="Dias em competição"
                     accessibilityRole="button"
@@ -338,7 +441,7 @@ export default function Home() {
                     Dias em competição
                   </StatText>
                   <StatValue accessibilityLabel="quantidade de dias">
-                    7/30{" "}
+                    {competitionDay}/30 {" "}
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -348,15 +451,15 @@ export default function Home() {
                   </StatValue>
                 </StatItem>
 
-                <StatItem accessible={true} accessibilityLabel={`7 de 30`}>
+                <StatItem accessible={true} >
                   <StatText
-                    accessibilityLabel="Dias em competição"
+                    accessibilityLabel="Desafios completos"
                     accessibilityRole="button"
                   >
-                    Dias em competição
+                    Desafios completos
                   </StatText>
-                  <StatValue accessibilityLabel="quantidade de dias">
-                    7/30{" "}
+                  <StatValue accessibilityLabel="quantidade de desafios">
+                    7/30{" "} {/* DESAFIOS AQUI!! */}
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -372,13 +475,13 @@ export default function Home() {
               <Footer
                 accessible={true}
                 accessibilityRole="summary"
-                accessibilityLabel={`Membros da equipe: ${teamMembers} de ${teamMembers}`}
+                accessibilityLabel={`Membros da equipe: ${teamMembers} de ${teamCapacity}`}
               >
                 <FooterText
                   accessible={true}
-                  accessibilityLabel={`Membros da equipe: ${teamMembers}/${teamMembers}`}
+                  accessibilityLabel={`Membros da equipe: ${teamMembers}/${teamCapacity}`}
                 >
-                  {teamMembers}/{teamMembers}
+                  {teamMembers}/{teamCapacity}
                 </FooterText>
 
                 <FontAwesome

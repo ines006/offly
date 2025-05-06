@@ -274,6 +274,11 @@ router.post("/", participantsController.createParticipant);
  *                 format: password
  *                 description: The participant's new password (min 8 characters, must include uppercase, lowercase, number, and special character)
  *                 example: NewPass123!
+ *               upload:
+ *                 type: integer
+ *                 enum: [0, 1]
+ *                 description: Indicates whether the participant has uploaded the required document (0 = not uploaded, 1 = uploaded)
+ *                 example: 1
  *     responses:
  *       200:
  *         description: Participant updated successfully

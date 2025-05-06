@@ -26,7 +26,7 @@ exports.getTeamParticipants = async (req, res) => {
         {
           model: Competitions,
           as: "competition",
-          attributes: ["name"],
+          attributes: ["name", "starting_date", "end_date"],
           required: false,
         },
       ],
@@ -40,7 +40,9 @@ exports.getTeamParticipants = async (req, res) => {
       name: team.name,
       points: team.points,
       capacity: team.capacity,
-      name: team.competition ? team.competition.name : null,
+      tournament_name: team.competition ? team.competition.name : null,
+      tournament_start_date: team.competition ? team.competition.starting_date : null,
+      tournament_end_date: team.competition ? team.competition.end_date : null,
       image: team.image,
       participants: team.participants.map((p) => ({
         id: p.id,

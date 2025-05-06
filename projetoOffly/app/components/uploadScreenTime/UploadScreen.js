@@ -1,142 +1,151 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { doc, getDoc, getDocs, setDoc, updateDoc, collection } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebaseApi";
-import { AuthContext } from "../entrar/AuthContext"; 
-import { baseurl } from "../../api-config/apiConfig"; 
-import axios from "axios";
 
 const UploadScreen = () => {
   const router = useRouter();
-
-  const { user, accessToken } = useContext(AuthContext); 
-
   const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
   const [submitVisible, setSubmitVisible] = useState(false); // var de estado que define a visibilidade do botão "Submeter"
   const [modalVisible, setModalVisible] = useState(false); // var de estado que define a visibilidade do modal de sucesso
   const [selectedImage, setSelectedImage] = useState(null); // var de estado que guarda a imagem selecionada
 
 // Verificação de utilizador logado
-useEffect(() => {
-  if (user && user.id) {
-    setUserId(user.id); // assumindo que guardas o id como "id" no objeto user
-    console.log("Utilizador logado via contexto:", user);
-  } else {
-    Alert.alert("Erro", "Nenhum utilizador logado!");
-  }
-}, [user]);
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUserId(currentUser.uid);
+    } else {
+      Alert.alert("Erro", "Nenhum utilizador logado!");
+    }
+  }, []);
 
 
-  // Função para abrir a modal e submeter dados de upload 
+  // Função para abrir a modal e submeter dados de upload para a firebase
   const handleSubmit = async () => {
     setSubmitVisible(false);
     setModalVisible(true);
 
-    try { // Função para verificar e atualizar o upload
+    try { // Função para verificar e atualizar o Firestore
     
-      if (!userId) return;
-    
-      const updateUpload = {
-        upload: 1,
-      };
-      const response = await axios.put(`${baseurl}/participants/${userId}`, updateUpload, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
+      if (userId) {
+      const userDocRef = doc(db, "users", userId); 
 
+      const currentTime = Date.now(); // Timestamp UNIX
+      const today = new Date().toISOString().split("T")[0]; // Data no formato YYYY-MM-DD
+
+      // Verifica se o documento existe
+      const docSnap = await getDoc(userDocRef);
+
+      if (docSnap.exists()) {
+        // Se o documento existir, atualiza os campos
+        await updateDoc(userDocRef, {
+          upload: true,
+          data: today,
+        });
+        console.log("Campos atualizados no Firestore.");
+      } else {
+        // Se o documento não existir, cria o documento com os campos
+        await setDoc(userDocRef, {
+          upload: true,
+          data: today,
+        });
+        console.log("Documento criado no Firestore.");
+      }
+
+      // Atualizar desafios semanais
+      await updateWeeklyChallenge();
+
+    }
     } catch (error) {
       console.error("Erro ao registar upload:", error);
     }
   };
 
-  // const updateWeeklyChallenge = async () => {
-  //   try {
-  //     // Obter a equipa do utilizador
-  //     const userDocRef = doc(db, "users", userId);
-  //     const userDocSnap = await getDoc(userDocRef);
+  const updateWeeklyChallenge = async () => {
+    try {
+      // Obter a equipa do utilizador
+      const userDocRef = doc(db, "users", userId);
+      const userDocSnap = await getDoc(userDocRef);
 
-  //     if (!userDocSnap.exists()) {
-  //       console.error("Utilizador não encontrado.");
-  //       return;
-  //     }
+      if (!userDocSnap.exists()) {
+        console.error("Utilizador não encontrado.");
+        return;
+      }
 
-  //     const userName = userDocSnap.data()?.fullName;
-  //     if (!userName) {
-  //       console.error("Utilizador não tem nome.");
-  //       return;
-  //     }
+      const userName = userDocSnap.data()?.fullName;
+      if (!userName) {
+        console.error("Utilizador não tem nome.");
+        return;
+      }
 
-  //     const teamName = userDocSnap.data()?.team;
-  //     if (!teamName) {
-  //       console.error("Utilizador não pertence a nenhuma equipa.");
-  //       return;
-  //     }
+      const teamName = userDocSnap.data()?.team;
+      if (!teamName) {
+        console.error("Utilizador não pertence a nenhuma equipa.");
+        return;
+      }
 
-  //     // Aceder a carta não validada atual
-  //     const cartasSnapshot = await getDocs(collection(db, "desafioSemanal"));
-  //     const cartas = cartasSnapshot.docs
-  //       .map((doc) => ({ id: doc.id, ...doc.data() }))
-  //       .sort((a, b) => a.id.localeCompare(b.id));
+      // Aceder a carta não validada atual
+      const cartasSnapshot = await getDocs(collection(db, "desafioSemanal"));
+      const cartas = cartasSnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => a.id.localeCompare(b.id));
 
-  //     const currentCarta = cartas.find((carta) => !carta.validada);
-  //     if (!currentCarta) {
-  //       console.error("Nenhuma carta não validada encontrada.");
-  //       return;
-  //     }
+      const currentCarta = cartas.find((carta) => !carta.validada);
+      if (!currentCarta) {
+        console.error("Nenhuma carta não validada encontrada.");
+        return;
+      }
 
-  //     // Obter o timer da carta atual
-  //     const timerDocRef = doc(db, "desafioSemanal", currentCarta.id, "timer", "timerCarta");
-  //     const timerDocSnap = await getDoc(timerDocRef);
+      // Obter o timer da carta atual
+      const timerDocRef = doc(db, "desafioSemanal", currentCarta.id, "timer", "timerCarta");
+      const timerDocSnap = await getDoc(timerDocRef);
 
-  //     if (!timerDocSnap.exists()) {
-  //       console.error("Timer não encontrado.");
-  //       return;
-  //     }
+      if (!timerDocSnap.exists()) {
+        console.error("Timer não encontrado.");
+        return;
+      }
 
-  //     const timerData = timerDocSnap.data();
-  //     const startDate = new Date(timerData.start);
-  //     const endDate = new Date(timerData.end);
-  //     const now = new Date();
+      const timerData = timerDocSnap.data();
+      const startDate = new Date(timerData.start);
+      const endDate = new Date(timerData.end);
+      const now = new Date();
 
-  //     if (now < startDate || now > endDate) {
-  //       console.error("Fora do intervalo do desafio semanal.");
-  //       return;
-  //     }
+      if (now < startDate || now > endDate) {
+        console.error("Fora do intervalo do desafio semanal.");
+        return;
+      }
 
-  //     const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24)) + 1;
+      const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-  //     // Atualizar o campo do dia correspondente no documento do participante
-  //     const participantDocRef = doc(
-  //       db,
-  //       "desafioSemanal",
-  //       currentCarta.id,
-  //       "equipasDesafio",
-  //       teamName,
-  //       "participante1",
-  //       userName
-  //     );
+      // Atualizar o campo do dia correspondente no documento do participante
+      const participantDocRef = doc(
+        db,
+        "desafioSemanal",
+        currentCarta.id,
+        "equipasDesafio",
+        teamName,
+        "participante1",
+        userName
+      );
 
-  //     const participantDocSnap = await getDoc(participantDocRef);
-  //     if (participantDocSnap.exists()) {
-  //       const updateData = {};
-  //       updateData[diffInDays] = true;
+      const participantDocSnap = await getDoc(participantDocRef);
+      if (participantDocSnap.exists()) {
+        const updateData = {};
+        updateData[diffInDays] = true;
 
-  //       await updateDoc(participantDocRef, updateData);
-  //       console.log(`Dia ${diffInDays} atualizado para true.`);
-  //     } else {
-  //       console.error("Documento do participante não encontrado.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Erro ao atualizar desafios semanais:", error);
-  //   }
-  // };
+        await updateDoc(participantDocRef, updateData);
+        console.log(`Dia ${diffInDays} atualizado para true.`);
+      } else {
+        console.error("Documento do participante não encontrado.");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar desafios semanais:", error);
+    }
+  };
 
   // Função para abrir a galeria e selecionar uma imagem
   const handleSelectImage = async () => {

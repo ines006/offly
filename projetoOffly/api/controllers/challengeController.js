@@ -1,6 +1,7 @@
 const Challenge = require("../models/challenges");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const { Op, Sequelize } = require("sequelize");
+const { sequelize } = require("../config/database"); 
 
 exports.getRandomChallenges = async (req, res) => {
   const userId = req.query.userId;
@@ -37,5 +38,30 @@ exports.getRandomChallenges = async (req, res) => {
   } catch (error) {
     console.error("Erro ao buscar desafios:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
+  }
+
+};
+
+exports.getChallengeImage = async (req, res) => {
+  const challengeId = req.params.id;
+
+  try {
+    const [results] = await sequelize.query(
+      "SELECT img FROM challenges WHERE id = ?",
+      {
+        replacements: [challengeId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!results || !results.img) {
+      return res.status(404).json({ error: "Imagem não encontrada." });
+    }
+
+    res.set("Content-Type", "image/jpeg");
+    res.send(results.img); // ou results[0].img se necessário
+  } catch (error) {
+    console.error("Erro ao carregar imagem:", error);
+    res.status(500).json({ error: "Erro ao carregar imagem." });
   }
 };

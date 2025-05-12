@@ -41,10 +41,10 @@ exports.getTeamParticipants = async (req, res) => {
       description: team.description,
       points: team.points,
       capacity: team.capacity,
-      tournament_id: team.competition.id,
-      tournament_name: team.competition ? team.competition.name : null,
-      tournament_start_date: team.competition ? team.competition.starting_date : null,
-      tournament_end_date: team.competition ? team.competition.end_date : null,
+      competition_id: team.competition.id,
+      competition_name: team.competition ? team.competition.name : null,
+      competition_start_date: team.competition ? team.competition.starting_date : null,
+      competition_end_date: team.competition ? team.competition.end_date : null,
       image: team.image,
       participants: team.participants.map((p) => ({
         id: p.id,
@@ -84,7 +84,6 @@ exports.createTeam = async (req, res) => {
       image,
       capacity,
       visibility,
-      competitions_id,
       team_passbooks_id,
     } = req.body;
 
@@ -138,13 +137,6 @@ exports.createTeam = async (req, res) => {
         .json({ message: "A team with this name already exists" });
     }
 
-    if (competitions_id) {
-      const competition = await Competitions.findByPk(competitions_id);
-      if (!competition) {
-        return res.status(404).json({ message: "Competition not found" });
-      }
-    }
-
     // Criar a nova equipa com o utilizador como admin
     const newTeam = await Teams.create({
       name: normalizedName,
@@ -153,7 +145,7 @@ exports.createTeam = async (req, res) => {
       points: 100,
       capacity,
       visibility,
-      competitions_id,
+      competitions_id: null,
       team_passbooks_id,
       team_admin: req.user.id, // Definir o utilizador como admin
     });
@@ -192,6 +184,70 @@ exports.createTeam = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error creating team", error: error.message });
+  }
+};
+
+// Atualização da equipa via ID (alterar competitions_id)
+exports.updateTeam = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const teamId = parseInt(req.params.id, 10);
+    const { competitions_id } = req.body;
+
+    if (!Number.isInteger(teamId)) {
+      return res.status(400).json({ message: "Valid team ID is required" });
+    }
+
+    if (
+      competitions_id === undefined ||
+      !Number.isInteger(competitions_id)
+    ) {
+      return res.status(400).json({
+        message: "Valid competitions_id (integer) is required",
+      });
+    }
+
+    // Verificar se a competição existe
+    const competition = await Competitions.findByPk(competitions_id);
+    if (!competition) {
+      return res.status(404).json({ message: "Competition not found" });
+    }
+
+    // Verificar se o utilizador é admin dessa equipa
+    const team = await Teams.findByPk(teamId);
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    if (team.team_admin !== req.user.id) {
+      return res.status(403).json({ message: "You are not the admin of this team" });
+    }
+
+    // Atualizar equipa
+    const [updatedRows] = await Teams.update(
+      { competitions_id },
+      { where: { id: teamId } }
+    );
+
+    if (updatedRows === 0) {
+      return res.status(500).json({ message: "Team not updated" });
+    }
+
+    res.status(200).json({
+      message: "Team updated successfully",
+      teamId,
+      competitions_id,
+    });
+
+  } catch (error) {
+    console.error("Error updating team:", error.stack);
+    res.status(500).json({
+      message: "Error updating team",
+      error: error.message,
+    });
   }
 };
 

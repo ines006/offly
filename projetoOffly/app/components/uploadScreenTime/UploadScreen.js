@@ -22,7 +22,7 @@ const UploadScreen = () => {
 // Verificação de utilizador logado
 useEffect(() => {
   if (user && user.id) {
-    setUserId(user.id); // assumindo que guardas o id como "id" no objeto user
+    setUserId(user.id); 
     console.log("Utilizador logado via contexto:", user);
   } else {
     Alert.alert("Erro", "Nenhum utilizador logado!");

@@ -482,10 +482,6 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                 enum: [0, 1]
  *                 description: Team visibility (0 for public, 1 for private)
  *                 example: 1
- *               competitions_id:
- *                 type: integer
- *                 description: The ID of the associated competition (optional)
- *                 example: 1
  *               team_passbooks_id:
  *                 type: integer
  *                 description: The ID of the team's passbook (optional)
@@ -530,11 +526,6 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                   type: integer
  *                   description: The team's visibility (0 or 1)
  *                   example: 1
- *                 competitions_id:
- *                   type: integer
- *                   nullable: true
- *                   description: The ID of the associated competition
- *                   example: 1
  *                 team_passbooks_id:
  *                   type: integer
  *                   nullable: true
@@ -577,17 +568,6 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                   type: string
  *                   description: Error message indicating the user is already in a team
  *                   example: You are already a member of a team
- *       404:
- *         description: Competition not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Error message indicating the competition does not exist
- *                   example: Competition not found
  *       409:
  *         description: Team name already exists
  *         content:
@@ -649,6 +629,66 @@ router.get("/:id", teamsController.getTeamParticipants);
  *       bearerFormat: JWT
  */
 router.post("/", authenticateToken, teamsController.createTeam);
+
+/**
+ * @swagger
+ * /teams/{id}:
+ *   put:
+ *     summary: Update team's competition
+ *     description: Allows a team admin to update the competition ID associated with their team. The competition must exist.
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the team to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - competitions_id
+ *             properties:
+ *               competitions_id:
+ *                 type: integer
+ *                 description: The ID of the competition to associate with the team
+ *                 example: 2
+ *     responses:
+ *       200:
+ *         description: Team competition updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Team updated successfully
+ *                 teamId:
+ *                   type: integer
+ *                   example: 1
+ *                 competitions_id:
+ *                   type: integer
+ *                   example: 2
+ *       400:
+ *         description: Invalid or missing competitions_id
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: User is not the admin of the team
+ *       404:
+ *         description: Competition or team not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/:id", authenticateToken, teamsController.updateTeam);
+
 
 /**
  * @swagger

@@ -176,6 +176,8 @@ const teamsController = require("../controllers/teamsController");
  */
 router.get("/", teamsController.getTeams);
 
+
+
 /**
  * @swagger
  * /teams/search:
@@ -440,6 +442,73 @@ router.get("/search", teamsController.searchTeamsByName);
  *                   example: Internal server error
  */
 router.get("/:id", teamsController.getTeamParticipants);
+
+/**
+ * @swagger
+ * /teams/competition/available:
+ *   get:
+ *     summary: List competitions with less than 10 teams
+ *     description: Retrieves all competitions that currently have fewer than 10 registered teams. Returns the competition ID, name, number of teams, and the list of teams in each.
+ *     tags: [Teams]
+ *     responses:
+ *       200:
+ *         description: Competitions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: Competition ID
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     description: Competition name
+ *                     example: "Spring Tournament"
+ *                   team_count:
+ *                     type: integer
+ *                     description: Number of teams currently registered
+ *                     example: 3
+ *                   teams:
+ *                     type: array
+ *                     description: List of registered teams
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 2
+ *                         name:
+ *                           type: string
+ *                           example: "eagles"
+ *       404:
+ *         description: No competitions with fewer than 10 teams found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No competitions with fewer than 10 teams found."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Error fetching competitions"
+ */
+router.get("/competition/available", teamsController.getAvailableCompetitions);
 
 /**
  * @swagger
@@ -1059,6 +1128,7 @@ router.get(
  *                   example: Internal server error
  */
 router.get("/competition/:id", teamsController.getTeamsByCompetition);
+
 
 /**
  * @swagger

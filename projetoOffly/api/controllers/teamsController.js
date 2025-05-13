@@ -11,7 +11,6 @@ const { Op, literal } = require("sequelize");
 const { v4: uuidv4 } = require("uuid"); //gerar os tokens
 
 // Listar informações de uma equipa "x"
-
 exports.getTeamParticipants = async (req, res) => {
   try {
     const team = await Teams.findByPk(req.params.id, {
@@ -298,6 +297,72 @@ exports.getTeamsByCompetition = async (req, res) => {
       .json({ message: "Error listing teams", error: error.message });
   }
 };
+
+
+// Listar competições com menos de 10 equipas
+exports.getAvailableCompetitions = async (req, res) => {
+  try {
+    // 1. Buscar IDs das competições com menos de 10 equipas
+    const competitionsWithCounts = await Competitions.findAll({
+      attributes: [
+        "id",
+        "name",
+        [Sequelize.fn("COUNT", Sequelize.col("teams.id")), "team_count"]
+      ],
+      include: [
+        {
+          model: Teams,
+          as: "teams",
+          attributes: [], // Não buscamos as equipas aqui ainda
+          required: false
+        }
+      ],
+      group: ["Competitions.id"],
+      having: Sequelize.literal("COUNT(teams.id) < 10")
+    });
+
+    if (!competitionsWithCounts.length) {
+      return res.status(404).json({ message: "No competitions with fewer than 10 teams found." });
+    }
+
+    // 2. Obter os IDs
+    const competitionIds = competitionsWithCounts.map(c => c.id);
+
+    // 3. Buscar novamente as competições com as equipas completas
+    const competitionsWithTeams = await Competitions.findAll({
+      where: { id: competitionIds },
+      attributes: ["id", "name"],
+      include: [
+        {
+          model: Teams,
+          as: "teams",
+          attributes: ["id", "name"]
+        }
+      ]
+    });
+
+    // 4. Combinar dados das duas queries
+    const finalResult = competitionsWithTeams.map(comp => {
+      const match = competitionsWithCounts.find(c => c.id === comp.id);
+      return {
+        id: comp.id,
+        name: comp.name,
+        team_count: match.getDataValue("team_count"),
+        teams: comp.teams
+      };
+    });
+
+    return res.status(200).json(finalResult);
+  } catch (error) {
+    console.error("Error fetching competitions:", error.stack);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
+
+
 
 //Desafios diários validados dos participantes de uma equipa
 exports.getTeamChallenges = async (req, res) => {
@@ -611,6 +676,8 @@ exports.getTeams = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+
+
 // Pesquisar equipas por nome na barra de pesquisa
 exports.searchTeamsByName = async (req, res) => {
   try {

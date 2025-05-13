@@ -1093,4 +1093,6 @@ router.put(
   participantsController.completeDailyChallenge
 );
 
+router.get("/:id/stickerbook", authenticateToken, participantsController.getStickerBook);
+
 module.exports = router;

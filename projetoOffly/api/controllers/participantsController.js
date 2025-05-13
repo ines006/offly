@@ -568,4 +568,88 @@ exports.completeDailyChallenge = async (req, res) => {
   }
 };
 
+// GET → Dados da caderneta do participante
+exports.getStickerBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar autenticação
+    if (!req.user || req.user.id !== parseInt(id)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Buscar participante e a sua equipa
+    const participant = await Participants.findByPk(id);
+    if (!participant) {
+      return res.status(404).json({ message: "Participant not found" });
+    }
+
+    const teamId = participant.team_id;
+
+    if (!teamId) {
+      return res.status(422).json({ message: "Participant is not in a team" });
+    }
+
+    // Buscar membros da mesma equipa (incluindo o próprio participante)
+    const teamMembers = await Participants.findAll({
+      where: { team_id: teamId },
+      attributes: ["id"],
+    });
+
+    const memberIds = teamMembers.map((member) => member.id);
+
+    // Gerar datas dos últimos 7 dias (ou outra lógica se preferires)
+    const today = new Date();
+    const days = [...Array(7)].map((_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      d.setHours(0, 0, 0, 0); // normalizar
+      return d;
+    });
+
+    // Buscar desafios concluídos por membros da equipa nos últimos dias
+    const completions = await ParticipantsHasChallenges.findAll({
+      where: {
+        participants_id: memberIds,
+        validated: 1,
+        completed_date: {
+          [Op.between]: [new Date(days[days.length - 1]), today],
+        },
+      },
+      attributes: ["participants_id", "completed_date"],
+    });
+
+    // Montar resposta para cada dia
+    const stickerBook = days.map((day) => {
+      const dayStart = new Date(day);
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const completionsForDay = completions.filter((entry) => {
+        const completedDate = new Date(entry.completed_date);
+        return completedDate >= dayStart && completedDate <= dayEnd;
+      });
+
+      const userCompleted = completionsForDay.some(
+        (entry) => entry.participants_id === parseInt(id)
+      );
+
+      const teammatesCompleted = completionsForDay.some(
+        (entry) => entry.participants_id !== parseInt(id)
+      );
+
+      return {
+        date: dayStart.toISOString().split("T")[0], // YYYY-MM-DD
+        userCompleted,
+        teammatesCompleted,
+      };
+    });
+
+    res.json({ stickerBook });
+  } catch (error) {
+    console.error("Error fetching sticker book:", error.stack);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
 module.exports = exports;

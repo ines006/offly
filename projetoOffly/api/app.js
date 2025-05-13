@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const challengeRoutes = require("./routes/challengeRoutes");
 const participantsHasChallengesRoutes = require("./routes/participantsHasChallengesRoutes");
 const { swaggerUi, specs } = require("./config/swagger");
+const teamPassbooksRoutes = require("./routes/teamsPassbooksRoutes");
 
 require("dotenv").config();
 
@@ -65,6 +66,8 @@ app.use("/participants", participantsRoutes);
 app.use("/teams", teamsRoutes);
 app.use("/api/challenges", challengeRoutes);
 app.use("/api/participants-has-challenges", participantsHasChallengesRoutes);
+app.use("/api/team-passbooks", teamPassbooksRoutes);
+
 
 // Testar conexão e iniciar servidor
 testConnection()

@@ -21,18 +21,10 @@ import {
   Botoes_Pagina_principal_Desativado,
   Texto_Botoes_Pagina_principal_Desativado,
 } from "./styles/styles";
-import {
-  doc,
-  getDoc,
-  collection,
-  getDocs,
-  arrayUnion,
-  updateDoc,
-} from "firebase/firestore";
-import { db, auth } from "./firebase/firebaseApi";
+
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { AuthContext } from "./components/entrar/AuthContext"; 
-import { baseurl } from "./api-config/apiConfig"; 
+import { AuthContext } from "./components/entrar/AuthContext";
+import { baseurl } from "./api-config/apiConfig";
 import axios from "axios";
 
 export default function EquipaCriada() {
@@ -40,11 +32,9 @@ export default function EquipaCriada() {
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
-  const { user, accessToken } = useContext(AuthContext); 
-  
-  const { teamId } = useLocalSearchParams();
-  
-  //const [loading, setLoading] = useState(true);
+  const { user, accessToken } = useContext(AuthContext);
+
+  const { teamId, competitionId } = useLocalSearchParams(); // Adicionando competitionId
 
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState("");
@@ -56,8 +46,6 @@ export default function EquipaCriada() {
 
   const router = useRouter();
 
-
-  // Array de URLs das imagens p/ users
   const imageUrls = [
     "https://celina05.sirv.com/avatares/avatar4.png",
     "https://celina05.sirv.com/avatares/avatar5.png",
@@ -81,13 +69,11 @@ export default function EquipaCriada() {
     "https://celina05.sirv.com/avatares/avatar19.png",
   ];
 
-  // Função para obter uma URL aleatória
   const getRandomImage = () => {
     const randomIndex = Math.floor(Math.random() * imageUrls.length);
     return imageUrls[randomIndex];
   };
 
-  // Utilizador logado + Dados do utilizador
   useEffect(() => {
     const fetchUserData = async () => {
       console.log("🔍 Depurando dados do utilizador...");
@@ -119,7 +105,7 @@ export default function EquipaCriada() {
         const userData = response.data;
         const name = userData.name || userData.fullName;
         const image = userData.image || null;
-        
+
         setUserId(user.id);
         setUserName(name);
         setProfileImage(image ? { uri: image } : null);
@@ -142,10 +128,7 @@ export default function EquipaCriada() {
     fetchUserData();
   }, [user, accessToken]);
 
-
-  // Função para buscar os dados da equipa 
   const teamData = async () => {
-    //setLoading(true);
     try {
       const response = await axios.get(`${baseurl}/teams/${teamId}`, {
         headers: {
@@ -177,18 +160,13 @@ export default function EquipaCriada() {
         error.response?.data?.message ||
           "Não foi possível carregar os dados da equipa."
       );
-    } 
-    // finally {
-    //   setLoading(false);
-    // }
+    }
   };
 
-  // 👇 Carrega os dados da equipa ao entrar
   useEffect(() => {
     teamData();
   }, [userId, teamId]);
 
-  // 🔁 Atualização automática
   useEffect(() => {
     const intervalId = setInterval(() => {
       teamData();
@@ -196,15 +174,6 @@ export default function EquipaCriada() {
 
     return () => clearInterval(intervalId);
   }, [userId, teamId]);
-
-
-  // if (loading) {
-  //   return (
-  //     <View style={styles.loaderContainer}>
-  //       <ActivityIndicator size="large" color="#263A83" />
-  //     </View>
-  //   );
-  // }
 
   if (!teamName && !teamDescription) {
     return (
@@ -216,10 +185,36 @@ export default function EquipaCriada() {
     );
   }
 
-  // Função para entrar no torneio
-  const handleTorneio =  () => {
-      router.push("./components/navbar");
-  };
+  const handleTorneio = async () => {
+  try {
+    const COMPETITION_ID = competitionId || 1;
+
+    // ✅ Cria a caderneta e já atualiza o team_passbooks_id na equipa
+    const passbookResponse = await axios.post(`${baseurl}/api/team-passbooks`, {
+      competitions_id: COMPETITION_ID,
+      team_id: teamId,
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const newPassbookId = passbookResponse.data.team_passbook_id;
+
+    console.log("✅ Caderneta criada com ID:", newPassbookId);
+
+    // ✅ Podes fazer outras ações se quiseres...
+    router.push("./components/navbar");
+
+  } catch (error) {
+    console.error("Erro ao entrar no torneio:", error.response?.data || error.message);
+    Alert.alert(
+      "Erro",
+      error.response?.data?.message || "Erro ao associar caderneta à equipa."
+    );
+  }
+};
 
   return (
     <ScrollView style={{ backgroundColor: "#fff" }}>
@@ -252,9 +247,8 @@ export default function EquipaCriada() {
           {teamDescription}
         </Sub_Titulos_Criar_Equipa>
 
-
         <View style={styles.remainingTeamsContainer}>
-        {Array.from({ length: teamCapacity }).map((_, index) => {
+          {Array.from({ length: teamCapacity }).map((_, index) => {
             const participant = teamMembers[index];
             const isEmptySlot = !participant;
 
@@ -291,6 +285,7 @@ export default function EquipaCriada() {
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   backButton: {

@@ -40,7 +40,7 @@ exports.getTeamParticipants = async (req, res) => {
       description: team.description,
       points: team.points,
       capacity: team.capacity,
-      competition_id: team.competition.id,
+      competition_id: team.competition ? team.competition.id : null,
       competition_name: team.competition ? team.competition.name : null,
       competition_start_date: team.competition ? team.competition.starting_date : null,
       competition_end_date: team.competition ? team.competition.end_date : null,

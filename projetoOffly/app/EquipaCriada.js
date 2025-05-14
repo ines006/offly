@@ -44,7 +44,7 @@ export default function EquipaCriada() {
   
   const { teamId } = useLocalSearchParams();
   
-  //const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState("");
@@ -216,10 +216,70 @@ export default function EquipaCriada() {
     );
   }
 
-  // Função para entrar no torneio
-  const handleTorneio =  () => {
-      router.push("./components/navbar");
-  };
+ // Função para entrar no torneio
+const handleTorneio = async () => {
+  try {
+    // Mostrar animação de loading
+    //setLoading(true);
+
+    // 1. Obter as competições disponíveis
+    const responseCompetitions = await axios.get(`${baseurl}/teams/competition/available`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+
+    console.log("✅ Resposta da API:", responseCompetitions.data);
+
+    const availableCompetitions = responseCompetitions.data;
+    
+     console.log("Length competições disponíveis: ", availableCompetitions.length);
+
+    // 2. Escolher uma competição aleatória
+    
+    if (availableCompetitions.length === 0) {
+      Alert.alert("Erro", "Não há competições disponíveis no momento.");
+      return;
+    }
+
+    const randomCompetition = availableCompetitions[Math.floor(Math.random() * availableCompetitions.length)];
+    console.log("Random id: ", randomCompetition);
+    
+    // 3. Atualizar a equipe com a competição escolhida
+    const updatedTeamData = {
+      competitions_id: randomCompetition.id,  // O ID da competição aleatória
+    };
+
+
+    const responseUpdateTeam = await axios.put(
+      `${baseurl}/teams/${teamId}`,
+      updatedTeamData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      }
+    );
+
+    console.log("✅ Equipa atualizada:", responseUpdateTeam.data);
+
+    // 4. Redirecionar para a navbar após atualização
+    router.push("./components/navbar");
+
+  } catch (error) {
+    console.error("❌ Erro ao entrar no torneio:", error);
+    Alert.alert("Erro", error.response?.data?.message || "Não foi possível entrar no torneio.");
+  } 
+  // finally {
+  //   // 5. Remover animação de loading
+  //   //setLoading(false);
+  // }
+};
 
   return (
     <ScrollView style={{ backgroundColor: "#fff" }}>
@@ -277,7 +337,9 @@ export default function EquipaCriada() {
 
           {teamMembers.length === teamCapacity ? (
             <Botoes_Pagina_principal onPress={handleTorneio}>
+              
               <Texto_Botoes_Pagina_principal>Entrar Torneio</Texto_Botoes_Pagina_principal>
+            
             </Botoes_Pagina_principal>
           ) : (
             <Botoes_Pagina_principal_Desativado>

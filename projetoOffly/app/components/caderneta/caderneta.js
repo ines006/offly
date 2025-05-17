@@ -14,13 +14,13 @@ import { AuthContext } from '../entrar/AuthContext';
 
 const Caderneta = () => {
   const { user } = useContext(AuthContext);
-  const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [completedDaysSet, setCompletedDaysSet] = useState(new Set());
   const [weeklyChallengeCards, setWeeklyChallengeCards] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
     const fetchChallenges = async () => {
-      setDailyCompleted(false); // reseta estado
+      setCompletedDaysSet(new Set());
 
       if (!user || !user.id) {
         console.log('❌ Utilizador não autenticado ou id inválido');
@@ -30,11 +30,8 @@ const Caderneta = () => {
       console.log('✅ ID do utilizador autenticado:', user.id);
 
       try {
-        // 1. Buscar participante com id igual ao user.id
         const respParticipant = await fetch(`${baseurl}/passbook?id=${user.id}`);
         const participantData = await respParticipant.json();
-
-        console.log('📡 Resposta do participante logado:', participantData);
 
         if (!participantData || participantData.length === 0) {
           console.log('❌ Participante não encontrado para user.id:', user.id);
@@ -42,55 +39,41 @@ const Caderneta = () => {
         }
 
         const participant = participantData[0];
-        console.log('👤 Participante logado:', participant);
-
         const teamId = participant.teams_id;
+
         if (!teamId) {
           console.log('❌ Participante não pertence a nenhuma equipa');
           return;
         }
 
-        console.log(`👥 ID da equipa do participante: ${teamId}`);
-
-        // 2. Buscar todos os participantes da mesma equipa
         const respTeamParticipants = await fetch(`${baseurl}/passbook?teams_id=${teamId}`);
         const teamParticipants = await respTeamParticipants.json();
-
-        console.log(`📡 Participantes da equipa ${teamId}:`, teamParticipants);
-
         const participantIds = teamParticipants.map((p) => p.id);
-        console.log(`🔍 IDs dos participantes da equipa:`, participantIds);
 
-        // 3. Verificar desafios completados para cada participante
-        let foundCompleted = false;
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const completedDays = new Set();
 
         for (const pid of participantIds) {
           const respChallenges = await fetch(`${baseurl}/desafios_completos?participants_id=${pid}`);
           const challenges = await respChallenges.json();
 
-          console.log(`📋 Desafios do participante ${pid}:`, challenges);
+          challenges.forEach((challenge) => {
+            if (challenge.completed_date) {
+              const date = new Date(challenge.completed_date);
+              const day = date.getDate();
+              const month = date.getMonth();
+              const year = date.getFullYear();
 
-          const hasCompleted = challenges.some(
-            (challenge) =>
-              challenge.completed_date &&
-              challenge.completed_date !== '' &&
-              challenge.completed_date !== null
-          );
-
-          if (hasCompleted) {
-            console.log(`✅ Participante ${pid} COMPLETOU pelo menos um desafio diário.`);
-            foundCompleted = true;
-            break; // basta um membro ter completado
-          } else {
-            console.log(`⛔ Participante ${pid} NÃO completou desafios diários.`);
-          }
+              if (month === currentMonth && year === currentYear) {
+                completedDays.add(day);
+              }
+            }
+          });
         }
 
-        setDailyCompleted(foundCompleted);
-        if (!foundCompleted) {
-          console.log('ℹ️ Nenhum participante da equipa completou desafios diários.');
-        }
-
+        setCompletedDaysSet(completedDays);
       } catch (error) {
         console.error('❌ Erro ao buscar dados da API:', error);
       }
@@ -99,10 +82,12 @@ const Caderneta = () => {
     fetchChallenges();
   }, [user]);
 
+  const today = new Date();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <View style={styles.container}>
-        {/* Botão de voltar */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
@@ -120,7 +105,6 @@ const Caderneta = () => {
           </Svg>
         </TouchableOpacity>
 
-        {/* Título */}
         <Text style={styles.title}>Caderneta</Text>
 
         <View style={styles.viewcaderneta}>
@@ -159,11 +143,12 @@ const Caderneta = () => {
           <Text style={styles.subtitle}>Consulta os desafios dos teus colegas de equipa</Text>
 
           <View style={styles.cardGrid}>
-            {Array.from({ length: 31 }).map((_, idx) => {
-              const isCompleted = dailyCompleted && idx === 0;
+            {Array.from({ length: daysInMonth }).map((_, idx) => {
+              const dayNumber = idx + 1;
+              const isCompleted = completedDaysSet.has(dayNumber);
               return (
                 <View
-                  key={idx}
+                  key={dayNumber}
                   style={[styles.card, isCompleted ? styles.activeCard : styles.inactiveCard]}
                 >
                   {isCompleted ? (
@@ -175,7 +160,7 @@ const Caderneta = () => {
                   ) : (
                     <View style={styles.cardContentContainer}>
                       <Text style={styles.cardPlaceholder}>?</Text>
-                      <Text style={styles.cardNumber}>{idx + 1}</Text>
+                      <Text style={styles.cardNumber}>{dayNumber}</Text>
                     </View>
                   )}
                 </View>

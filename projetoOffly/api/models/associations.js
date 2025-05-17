@@ -16,6 +16,12 @@ Participants.belongsTo(Teams, {
   targetKey: "id",
   as: "team",
 });
+Teams.belongsTo(Participants, {
+  foreignKey: "team_admin",
+  targetKey: "id",
+  as: "admin",
+});
+
 
 // Relações entre Participants e Answers
 Participants.belongsTo(Answers, {

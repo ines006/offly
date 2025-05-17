@@ -10,11 +10,10 @@ const Invites = require("../models/invites");
 const { Op, literal } = require("sequelize");
 const { v4: uuidv4 } = require("uuid"); //gerar os tokens
 
-// Listar informações de uma equipa "x"
 exports.getTeamParticipants = async (req, res) => {
   try {
     const team = await Teams.findByPk(req.params.id, {
-      attributes: ["name", "description", "points", "capacity", "image"],
+      attributes: ["name", "description", "points", "capacity", "image"],  // não precisa do 'admin' aqui, pois vai incluir o admin completo
       include: [
         {
           model: Participants,
@@ -28,6 +27,12 @@ exports.getTeamParticipants = async (req, res) => {
           attributes: ["id", "name", "starting_date", "end_date"],
           required: false,
         },
+        {
+          model: Participants,
+          as: "admin",
+          attributes: ["id", "name"],  // os dados do admin 
+          required: false,
+        }
       ],
     });
 
@@ -45,6 +50,10 @@ exports.getTeamParticipants = async (req, res) => {
       competition_start_date: team.competition ? team.competition.starting_date : null,
       competition_end_date: team.competition ? team.competition.end_date : null,
       image: team.image,
+      team_admin: team.admin ? {
+        id: team.admin.id,
+        name: team.admin.name,
+      } : null,
       participants: team.participants.map((p) => ({
         id: p.id,
         name: p.name,
@@ -53,11 +62,10 @@ exports.getTeamParticipants = async (req, res) => {
     });
   } catch (error) {
     console.error("Error listing participants:", error.stack);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 
 //Criação de equipa
 exports.createTeam = async (req, res) => {

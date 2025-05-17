@@ -34,18 +34,24 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { AuthContext } from "./components/entrar/AuthContext"; 
 import { baseurl } from "./api-config/apiConfig"; 
 import axios from "axios";
+import { useRef } from "react";
+
 
 export default function EquipaCriada() {
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
+const hasRedirectedRef = useRef(false);
+const intervalIdRef = useRef(null);
+
   const { user, accessToken } = useContext(AuthContext); 
   
   const { teamId } = useLocalSearchParams();
   
   const [loading, setLoading] = useState(true);
-
+  const [teamDataLoaded, setTeamDataLoaded] = useState(false);
+  const [hasCompetition, setHasCompetition] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState("");
   const [profileImage, setProfileImage] = useState(null);
@@ -53,6 +59,7 @@ export default function EquipaCriada() {
   const [teamDescription, setTeamDescription] = useState("");
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamCapacity, setteamCapacity] = useState();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const router = useRouter();
 
@@ -145,57 +152,82 @@ export default function EquipaCriada() {
 
   // Função para buscar os dados da equipa 
   const teamData = async () => {
-    //setLoading(true);
-    try {
-      const response = await axios.get(`${baseurl}/teams/${teamId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
+  try {
+    const response = await axios.get(`${baseurl}/teams/${teamId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
 
-      console.log("✅ Resposta da API:", response.data);
+    console.log("📥 Dados completos da equipa:", response.data); 
 
-      const teamData = response.data;
-      const name = teamData.name;
-      const members = teamData.participants;
-      const capacity = teamData.capacity;
-      const description = teamData.description;
+    const teamData = response.data;
+    setTeamName(teamData.name);
+    setTeamMembers(teamData.participants);
+    setteamCapacity(teamData.capacity);
+    setTeamDescription(teamData.description);
 
-      setTeamName(name);
-      setTeamMembers(members);
-      setteamCapacity(capacity);
-      setTeamDescription(description);
+    // Verifica se o user é o admin da equipa
+    if (teamData.team_admin.id == userId) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
 
-      console.log("✅ Dados processados:", { name, description, capacity, members });
+    // console.log("📌 team admin id:", teamData.team_admin.id);
+    // console.log("🔁 O user é admin da equipa?", isAdmin);
 
-    } catch (error) {
-      Alert.alert(
-        "Erro",
-        error.response?.data?.message ||
-          "Não foi possível carregar os dados da equipa."
-      );
-    } 
-    // finally {
-    //   setLoading(false);
-    // }
-  };
+    setTeamDataLoaded(true);
 
-  // 👇 Carrega os dados da equipa ao entrar
-  useEffect(() => {
-    teamData();
-  }, [userId, teamId]);
+    const hasComp = !!teamData.competition_id;
+    console.log("📌 competitions_id:", teamData.competition_id);
+    console.log("🔁 Deve redirecionar?", hasComp);
 
-  // 🔁 Atualização automática
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      teamData();
-    }, 10000); // 10 segundos
+    setHasCompetition(hasComp);
 
-    return () => clearInterval(intervalId);
-  }, [userId, teamId]);
+    // 🚫 Se já redirecionou, não faz mais nada
+    if (hasRedirectedRef.current) return;
+
+    // ✅ Redireciona e marca que já foi
+    if (hasComp && !isAdmin) {
+      hasRedirectedRef.current = true;
+
+      // ❌ Limpa o setInterval
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+      }
+
+      console.log("🚀 Redirecionando para a navbar...");
+      router.push("./components/navbar");
+    }
+
+
+  } catch (error) {
+    Alert.alert(
+      "Erro",
+      error.response?.data?.message || "Não foi possível carregar os dados da equipa."
+    );
+  }
+};
+
+
+  // Carrega os dados da equipa ao entrar + atualização automática
+useEffect(() => {
+  if (userId && teamId) {
+    teamData(); // chamada inicial
+
+    intervalIdRef.current = setInterval(teamData, 10000); // polling a cada 10s
+
+    return () => {
+      if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+    };
+  }
+}, [userId, teamId]);
+
+
 
 
   // if (loading) {
@@ -205,6 +237,15 @@ export default function EquipaCriada() {
   //     </View>
   //   );
   // }
+
+  if (!teamDataLoaded) {
+  return (
+    <View style={styles.loaderContainer}>
+      <ActivityIndicator size="large" color="#263A83" />
+    </View>
+  );
+}
+
 
   if (!teamName && !teamDescription) {
     return (
@@ -352,17 +393,19 @@ const handleTorneio = async () => {
           })}
 
           {teamMembers.length === teamCapacity ? (
-            <Botoes_Pagina_principal onPress={handleTorneio}>
-              
-              <Texto_Botoes_Pagina_principal>Entrar Torneio</Texto_Botoes_Pagina_principal>
-            
-            </Botoes_Pagina_principal>
+            isAdmin ? (
+              <Botoes_Pagina_principal onPress={handleTorneio}>
+                <Texto_Botoes_Pagina_principal>Entrar Torneio</Texto_Botoes_Pagina_principal>
+              </Botoes_Pagina_principal>
+            ) : null
           ) : (
+            isAdmin ? (
             <Botoes_Pagina_principal_Desativado>
               <Texto_Botoes_Pagina_principal_Desativado>
                 Entrar Torneio
               </Texto_Botoes_Pagina_principal_Desativado>
             </Botoes_Pagina_principal_Desativado>
+            ) : null
           )}
         </View>
       </Container_Pagina_Equipa_Criada>

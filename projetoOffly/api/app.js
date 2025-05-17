@@ -7,6 +7,7 @@ const teamsRoutes = require("./routes/teamsRoutes");
 const authRoutes = require("./routes/authRoutes");
 const challengeRoutes = require("./routes/challengeRoutes");
 const participantsHasChallengesRoutes = require("./routes/participantsHasChallengesRoutes");
+const cadernetaRoutes = require("./routes/passbookRoutes");
 const { swaggerUi, specs } = require("./config/swagger");
 
 require("dotenv").config();
@@ -33,6 +34,9 @@ app.use("/participants", participantsRoutes);
 app.use("/teams", teamsRoutes);
 app.use("/api", challengeRoutes); // ativa /api/desafios
 app.use("/api/participants-has-challenges", participantsHasChallengesRoutes);
+app.use("/passbook", cadernetaRoutes);
+app.use("/", cadernetaRoutes);
+
 
 // Testar a conexão e sincronizar a base de dados
 testConnection()

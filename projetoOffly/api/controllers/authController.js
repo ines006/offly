@@ -150,3 +150,4 @@ const clearExpiredTokens = () => {
 setInterval(clearExpiredTokens, 1000 * 60 * 60);
 
 
+module.exports = exports;

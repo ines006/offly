@@ -1,78 +1,108 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
-} from "react-native";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { auth, db } from "../../firebase/firebaseApi"; 
-import { useRouter } from "expo-router";
-import { Svg, Circle, Path } from "react-native-svg";
+} from 'react-native';
+import { Svg, Circle, Path } from 'react-native-svg';
+import { useRouter } from 'expo-router';
+import { baseurl } from '../../api-config/apiConfig';
+import { AuthContext } from '../entrar/AuthContext';
 
 const Caderneta = () => {
-  const [validatedCards, setValidatedCards] = useState([]);
-  const [weeklyChallengeCards, setWeeklyChallengeCards] = useState([]); // Estado para armazenar cartas do desafio semanal
+  const { user } = useContext(AuthContext);
+  const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [weeklyChallengeCards, setWeeklyChallengeCards] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchValidatedCards = async () => {
+    const fetchChallenges = async () => {
+      setDailyCompleted(false); // reseta estado
+
+      if (!user || !user.id) {
+        console.log('❌ Utilizador não autenticado ou id inválido');
+        return;
+      }
+
+      console.log('✅ ID do utilizador autenticado:', user.id);
+
       try {
-        const user = auth.currentUser; 
-        if (!user) {
-          console.error("Usuário não está autenticado.");
+        // 1. Buscar participante com id igual ao user.id
+        const respParticipant = await fetch(`${baseurl}/passbook?id=${user.id}`);
+        const participantData = await respParticipant.json();
+
+        console.log('📡 Resposta do participante logado:', participantData);
+
+        if (!participantData || participantData.length === 0) {
+          console.log('❌ Participante não encontrado para user.id:', user.id);
           return;
         }
 
-        const userId = user.uid; 
+        const participant = participantData[0];
+        console.log('👤 Participante logado:', participant);
 
-    
-        const cardsRef = collection(db, "users", userId, "cartas");
-        const q = query(cardsRef, where("validada", "==", true));
-        const querySnapshot = await getDocs(q);
+        const teamId = participant.teams_id;
+        if (!teamId) {
+          console.log('❌ Participante não pertence a nenhuma equipa');
+          return;
+        }
 
-        const cards = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        console.log(`👥 ID da equipa do participante: ${teamId}`);
 
-        setValidatedCards(cards); 
+        // 2. Buscar todos os participantes da mesma equipa
+        const respTeamParticipants = await fetch(`${baseurl}/passbook?teams_id=${teamId}`);
+        const teamParticipants = await respTeamParticipants.json();
+
+        console.log(`📡 Participantes da equipa ${teamId}:`, teamParticipants);
+
+        const participantIds = teamParticipants.map((p) => p.id);
+        console.log(`🔍 IDs dos participantes da equipa:`, participantIds);
+
+        // 3. Verificar desafios completados para cada participante
+        let foundCompleted = false;
+
+        for (const pid of participantIds) {
+          const respChallenges = await fetch(`${baseurl}/desafios_completos?participants_id=${pid}`);
+          const challenges = await respChallenges.json();
+
+          console.log(`📋 Desafios do participante ${pid}:`, challenges);
+
+          const hasCompleted = challenges.some(
+            (challenge) =>
+              challenge.completed_date &&
+              challenge.completed_date !== '' &&
+              challenge.completed_date !== null
+          );
+
+          if (hasCompleted) {
+            console.log(`✅ Participante ${pid} COMPLETOU pelo menos um desafio diário.`);
+            foundCompleted = true;
+            break; // basta um membro ter completado
+          } else {
+            console.log(`⛔ Participante ${pid} NÃO completou desafios diários.`);
+          }
+        }
+
+        setDailyCompleted(foundCompleted);
+        if (!foundCompleted) {
+          console.log('ℹ️ Nenhum participante da equipa completou desafios diários.');
+        }
+
       } catch (error) {
-        console.error("Erro ao buscar cartas validadas:", error);
+        console.error('❌ Erro ao buscar dados da API:', error);
       }
     };
 
-    const fetchWeeklyChallengeCards = async () => {
-      try {
-       
-        const desafioRef = collection(db, "desafioSemanal");
-        const q = query(desafioRef, where("validada", "==", true)); // Buscar apenas cartas com "validada" == true
-        const querySnapshot = await getDocs(q);
-
-        const desafioCards = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setWeeklyChallengeCards(desafioCards); 
-      } catch (error) {
-        console.error("Erro ao buscar cartas do desafio semanal:", error);
-      }
-    };
-
-    fetchValidatedCards();
-    fetchWeeklyChallengeCards(); 
-  }, []);
+    fetchChallenges();
+  }, [user]);
 
   return (
-    <ScrollView 
-      contentContainerStyle={styles.scrollViewContent} 
-      keyboardShouldPersistTaps='handled'
-      accessible={false} 
-    >
-      <View style={styles.container} accessible={true} accessibilityLabel="Página da Caderneta">
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <View style={styles.container}>
+        {/* Botão de voltar */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
@@ -80,13 +110,7 @@ const Caderneta = () => {
           accessibilityRole="button"
         >
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
-            <Circle
-              cx="18.1351"
-              cy="17.1713"
-              r="16.0177"
-              stroke="#263A83"
-              strokeWidth={2}
-            />
+            <Circle cx="18.1351" cy="17.1713" r="16.0177" stroke="#263A83" strokeWidth={2} />
             <Path
               d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
               stroke="#263A83"
@@ -95,93 +119,66 @@ const Caderneta = () => {
             />
           </Svg>
         </TouchableOpacity>
-        
-        <Text style={styles.title} accessibilityRole="header" accessibilityLabel="Título: Caderneta">
-          Caderneta
-        </Text>
 
-      
-        <View style={styles.viewcaderneta} accessible={true}>
-          <TouchableOpacity>
-            <Text style={styles.sectionTitle} accessibilityRole="header" accessibilityLabel="Seção: Desafios semanais">
-              Desafios semanais
-            </Text>
-            <Text style={styles.subtitle} accessibilityRole="text" accessibilityLabel="Vê os desafios das semanas passadas">
-              Vê os desafios das semanas passadas
-            </Text>
-          </TouchableOpacity>
-          
-          <View style={styles.cardGrid} accessible={true} accessibilityLabel={`Existem ${weeklyChallengeCards.length} desafios semanais`}>
-            {weeklyChallengeCards.map((card) => (
-              <View
-                key={card.id}
-                style={[styles.card, styles.activeCard2]}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={`Desafio semanal: ${card.titulo || "Sem título"}`}
-              >
-                {card.imagem ? (
+        {/* Título */}
+        <Text style={styles.title}>Caderneta</Text>
+
+        <View style={styles.viewcaderneta}>
+          {/* === Desafios Semanais === */}
+          <Text style={styles.sectionTitle}>Desafios semanais</Text>
+          <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
+          <View style={styles.cardGrid}>
+            {weeklyChallengeCards.length > 0 ? (
+              weeklyChallengeCards.map((card, idx) => (
+                <View key={idx} style={[styles.card, styles.activeCard2]}>
                   <Image
                     source={{ uri: card.imagem }}
                     style={styles.cardImage2}
                     resizeMode="cover"
-                    accessible={true}
-                    accessibilityLabel={`Imagem do desafio ${card.titulo}`}
                   />
-                ) : (
-                  <Text style={styles.cardTitle} accessibilityLabel="Imagem não disponível">Imagem não disponível</Text>
-                )}
-                <Text style={styles.weeklyCardTitle}>{card.titulo || "Sem título"}</Text>
-              </View>
-            ))}
-
-            {Array.from({ length: 4 - weeklyChallengeCards.length }).map((_, index) => (
-              <View
-                key={weeklyChallengeCards.length + index}
-                style={[styles.card, styles.inactiveCard]}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={`Desafio semanal ${weeklyChallengeCards.length + index + 1} ainda não disponível`}
-              >
-                <Text style={styles.cardNumber}>{weeklyChallengeCards.length + index + 1}</Text>
-              </View>
-            ))}
+                  <Text style={styles.weeklyCardTitle}>{card.titulo || "Sem título"}</Text>
+                </View>
+              ))
+            ) : (
+              Array.from({ length: 4 }).map((_, idx) => (
+                <View
+                  key={idx}
+                  style={[styles.card, styles.inactiveCard]}
+                  accessibilityLabel={`Desafio semanal ${idx + 1} ainda não disponível`}
+                >
+                  <Text style={styles.cardNumber}>{idx + 1}</Text>
+                </View>
+              ))
+            )}
           </View>
 
-          <View style={styles.divider} accessible={false} />
-          <TouchableOpacity>
-            <Text style={styles.sectionTitle} accessibilityRole="header" accessibilityLabel="Seção: Desafios diários">
-              Desafios diários
-            </Text>
-            <Text style={styles.subtitle} accessibilityRole="text" accessibilityLabel="Consulta os desafios dos teus colegas de equipa">
-              Consulta os desafios dos teus colegas de equipa
-            </Text>
-          </TouchableOpacity>
-          <View style={styles.cardGrid} accessible={true} accessibilityLabel={`Existem ${validatedCards.length} desafios diários validados`}>
-            {Array.from({ length: 31 }).map((_, index) => {
-              if (index < validatedCards.length) {
-                const card = validatedCards[index];
-                return (
-                  <Card
-                    key={card.id}
-                    number={card.id}
-                    hasIcon={true}
-                    imageUrl={card.imagem} 
-                    accessible={true}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Desafio diário ${card.id} disponível`}
-                  />
-                );
-              }
+          <View style={styles.divider} />
+
+          {/* === Desafios Diários === */}
+          <Text style={styles.sectionTitle}>Desafios diários</Text>
+          <Text style={styles.subtitle}>Consulta os desafios dos teus colegas de equipa</Text>
+
+          <View style={styles.cardGrid}>
+            {Array.from({ length: 31 }).map((_, idx) => {
+              const isCompleted = dailyCompleted && idx === 0;
               return (
-                <Card
-                  key={index}
-                  number={index + 1}
-                  hasIcon={false}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Desafio diário ${index + 1} ainda não disponível`}
-                />
+                <View
+                  key={idx}
+                  style={[styles.card, isCompleted ? styles.activeCard : styles.inactiveCard]}
+                >
+                  {isCompleted ? (
+                    <Image
+                      source={require('../../imagens/desafiodiario.png')}
+                      style={styles.cardImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.cardContentContainer}>
+                      <Text style={styles.cardPlaceholder}>?</Text>
+                      <Text style={styles.cardNumber}>{idx + 1}</Text>
+                    </View>
+                  )}
+                </View>
               );
             })}
           </View>
@@ -190,33 +187,6 @@ const Caderneta = () => {
     </ScrollView>
   );
 };
-
-const Card = ({ number, imageUrl, hasIcon }) => {
-  return (
-    <View
-      style={[styles.card, hasIcon ? styles.activeCard : styles.inactiveCard]}
-      accessible={true}
-      accessibilityRole="button"
-      accessibilityLabel={hasIcon ? `Desafio diário ${number} disponível` : `Desafio diário ${number} ainda não disponível`}
-    >
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.cardImage}
-          resizeMode="cover"
-          accessible={true}
-          accessibilityLabel={`Imagem do desafio ${number}`}
-        />
-      ) : (
-        <View style={styles.cardContentContainer} accessible={true}>
-          <Text style={styles.cardPlaceholder} accessible={true}>?</Text>
-          <Text style={styles.cardNumber} accessible={true}>{number}</Text>
-        </View>
-      )}
-    </View>
-  );
-};
-
 
 const styles = StyleSheet.create({
   scrollViewContent: {
@@ -247,11 +217,6 @@ const styles = StyleSheet.create({
     color: "#263A83",
     marginBottom: 15,
   },
-  cardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
   cardGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -265,24 +230,20 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   activeCard: {
-    backgroundColor: "#D8EAF8", 
+    backgroundColor: "#D8EAF8",
     borderRadius: 8,
     overflow: "hidden",
   },
   activeCard2: {
-    backgroundColor: "#E3FC87", 
+    backgroundColor: "#E3FC87",
     borderRadius: 8,
     overflow: "hidden",
   },
   inactiveCard: {
-    backgroundColor: "#EDEDF1", 
+    backgroundColor: "#EDEDF1",
     borderColor: "#263A83",
     borderWidth: 1,
     borderStyle: "dashed",
-  },
-  cardWithImage: {
-    overflow: "hidden",
-    padding: 0,
   },
   cardImage: {
     width: "100%",
@@ -307,17 +268,6 @@ const styles = StyleSheet.create({
     left: 52,
     top: 92,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFFFFF", 
-    textAlign: "center",
-  },
-  cardContent: {
-    fontSize: 14,
-    color: "#6C6F90",
-    textAlign: "center",
-  },
   divider: {
     height: 3,
     backgroundColor: "#263A83",
@@ -340,15 +290,15 @@ const styles = StyleSheet.create({
   },
   cardImage2: {
     marginTop: 10,
-    width: "100%", 
-    height: "60%", 
-    alignSelf: "center", 
-    borderRadius: 8, 
+    width: "100%",
+    height: "60%",
+    alignSelf: "center",
+    borderRadius: 8,
   },
   weeklyCardTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "black", 
+    color: "black",
     textAlign: "center",
     marginTop: 5,
   },

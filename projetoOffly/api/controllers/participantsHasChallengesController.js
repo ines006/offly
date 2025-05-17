@@ -97,3 +97,5 @@ exports.completeActiveChallenge = async (req, res) => {
       res.status(500).json({ error: "Erro ao completar carta." });
     }
   };
+
+  module.exports = exports;

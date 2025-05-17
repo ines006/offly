@@ -53,69 +53,99 @@ const Login = () => {
   };
 
   const handleSubmit = async () => {
+  try {
+    console.log("🔄 Iniciando login com baseurl:", baseurl);
+    const response = await axios.post(`${baseurl}/auth/login`, {
+      email,
+      password,
+    });
+
+    const { token, refreshToken, user } = response.data;
+
+    console.log("✅ Login efetuado com sucesso!");
+    console.log("🔑 Dados do login:", { token, refreshToken, user });
+
+    if (!user?.id) {
+      console.error("❌ Erro: user.id não encontrado na resposta do login");
+      throw new Error("ID do utilizador não encontrado");
+    }
+
+    await AsyncStorage.setItem("accessToken", token);
+    await AsyncStorage.setItem("refreshToken", refreshToken);
+    await AsyncStorage.setItem("user", JSON.stringify(user));
+
+    setUser(user);
+    setAccessToken(token);
+    setRefreshToken(refreshToken);
+    setLoading(false);
+    console.log("🔍 RefreshToken salvo no AuthContext:", refreshToken);
+
+    const participantUrl = `${baseurl}/participants/${user.id}`;
+    console.log("🔄 Verificando equipa no endpoint:", participantUrl);
+
     try {
-      console.log("🔄 Iniciando login com baseurl:", baseurl);
-      const response = await axios.post(`${baseurl}/auth/login`, {
-        email,
-        password,
+      const participantResponse = await axios.get(participantUrl, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
 
-      const { token, refreshToken, expiresIn, user } = response.data;
+      const teamId = participantResponse.data.teams_id;
+      const hasTeam = teamId !== null;
+      console.log("👥 Utilizador tem equipa?", hasTeam);
 
-      console.log("✅ Login efetuado com sucesso!");
-      console.log("🔑 Dados do login:", { token, refreshToken, user });
-
-      if (!user?.id) {
-        console.error("❌ Erro: user.id não encontrado na resposta do login");
-        throw new Error("ID do utilizador não encontrado");
+      if (!hasTeam) {
+        console.log("🚪 Redirecionando para: /PaginaPrincipal (sem equipa)");
+        router.push("/PaginaPrincipal");
+        return;
       }
 
-      await AsyncStorage.setItem("accessToken", token);
-      await AsyncStorage.setItem("refreshToken", refreshToken);
-      await AsyncStorage.setItem("user", JSON.stringify(user));
-
-      setUser(user);
-      setAccessToken(token);
-      setRefreshToken(refreshToken);
-      setLoading(false);
-      console.log("🔍 RefreshToken salvo no AuthContext:", refreshToken);
-
-      const participantUrl = `${baseurl}/participants/${user.id}`;
-      console.log("🔄 Verificando equipa no endpoint:", participantUrl);
+      // ➕ Nova lógica para verificar competição da equipa
       try {
-        const participantResponse = await axios.get(participantUrl, {
+        const teamResponse = await axios.get(`${baseurl}/teams/${teamId}`, {
           headers: {
-            "ngrok-skip-browser-warning": "true",
             "Content-Type": "application/json",
             Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
           },
         });
 
-        const hasTeam = participantResponse.data.teams_id !== null;
-        console.log("👥 Utilizador tem equipa?", hasTeam);
+        const hasCompetition = teamResponse.data.competitions_id !== null;
+        console.log("🏆 Equipa tem competição?", hasCompetition);
 
-        const targetRoute = hasTeam ? "/components/navbar" : "/PaginaPrincipal";
-        console.log("🚪 Redirecionando para:", targetRoute);
-        router.push(targetRoute);
-      } catch (participantError) {
-        console.error(
-          "❌ Erro ao verificar equipa:",
-          participantError.message,
-          participantError.response?.data || participantError
-        );
-        console.log("🚪 Redirecionando para PaginaPrincipal como fallback");
-        router.push("/PaginaPrincipal");
+        if (hasCompetition) {
+          console.log("🚪 Redirecionando para: /components/navbar");
+          router.push("/components/navbar");
+        } else {
+          console.log("🚪 Redirecionando para: /EquipaCriada (sem competição)");
+          router.push("/EquipaCriada");
+        }
+      } catch (teamError) {
+        console.error("❌ Erro ao buscar dados da equipa:", teamError.message);
+        console.log("🚪 Redirecionando fallback para: /EquipaCriada");
+        router.push("/EquipaCriada");
       }
-    } catch (err) {
+
+    } catch (participantError) {
       console.error(
-        "❌ Erro ao fazer login:",
-        err.response?.data || err.message
+        "❌ Erro ao verificar equipa:",
+        participantError.message,
+        participantError.response?.data || participantError
       );
-      setError(
-        "O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!"
-      );
+      console.log("🚪 Redirecionando para PaginaPrincipal como fallback");
+      router.push("/PaginaPrincipal");
     }
-  };
+  } catch (err) {
+    console.error("❌ Erro ao fazer login:", err.response?.data || err.message);
+    setError(
+      "O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!"
+    );
+  }
+};
+
 
   return (
     <View accessibilityRole="main" style={styles.container}>

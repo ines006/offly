@@ -42,7 +42,7 @@ export default function EquipaCriada() {
 
   const { user, accessToken } = useContext(AuthContext); 
   
-  const { teamId, competitionId } = useLocalSearchParams();
+  const { teamId } = useLocalSearchParams();
   
   const [loading, setLoading] = useState(true);
 
@@ -222,22 +222,6 @@ const handleTorneio = async () => {
     // Mostrar animação de loading
     //setLoading(true);
 
-    const COMPETITION_ID = competitionId || 1;
-
-    // ✅ Cria a caderneta e já atualiza o team_passbooks_id na equipa
-    const passbookResponse = await axios.post(`${baseurl}/api/team-passbooks`, {
-      competitions_id: COMPETITION_ID,
-      team_id: teamId,
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const newPassbookId = passbookResponse.data.team_passbook_id;
-
-    console.log("✅ Caderneta criada com ID:", newPassbookId);
 
     // 1. Obter as competições disponíveis
     const responseCompetitions = await axios.get(`${baseurl}/teams/competition/available`, {
@@ -285,7 +269,22 @@ const handleTorneio = async () => {
 
     console.log("✅ Equipa atualizada:", responseUpdateTeam.data);
 
-    // 4. Redirecionar para a navbar após atualização
+     // 4. Cria a caderneta e já atualiza o team_passbooks_id na equipa
+    const passbookResponse = await axios.post(`${baseurl}/api/team-passbooks`, {
+      competitions_id: randomCompetition.id,
+      team_id: teamId,
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const newPassbookId = passbookResponse.data.team_passbook_id;
+
+    console.log("✅ Caderneta criada com ID:", newPassbookId);
+
+    // 5. Redirecionar para a navbar após atualização
     router.push("./components/navbar");
 
   } catch (error) {

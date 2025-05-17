@@ -58,11 +58,13 @@ export default function DetalhesDia() {
       <ScrollView contentContainerStyle={styles.cardList}>
         {desafios.map((item, index) => (
           <View key={index} style={styles.card}>
-            <Image
-              source={{ uri: `${baseurl}/api/desafios/imagem/${item.challenge.id}` }}
-              style={styles.image}
-              resizeMode="contain"
-            />
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: `${baseurl}/api/desafios/imagem/${item.challenge.id}` }}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </View>
             <View style={styles.cardContent}>
               <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
               <Text style={styles.challengeDescription}>{item.challenge.description}</Text>
@@ -87,7 +89,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAFC",
     paddingTop: 50,
-    paddingHorizontal: 20,
   },
   backButton: {
     position: "absolute",
@@ -101,15 +102,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#CCC",
+    borderColor: "#D1D5DB",
   },
   backText: {
     fontSize: 22,
     color: "#2E3A8C",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 22,
+    fontWeight: "700",
     color: "#2E3A8C",
     alignSelf: "center",
     marginBottom: 10,
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     backgroundColor: "#2E3A8C",
     paddingVertical: 6,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     borderRadius: 12,
     marginBottom: 20,
   },
@@ -128,44 +129,52 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   cardList: {
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 30,
   },
   card: {
+    flexDirection: "row",
     backgroundColor: "#2E3A8C",
-    borderRadius: 20,
-    padding: 10,
+    borderRadius: 10,
+    overflow: "hidden",
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    padding: 10,
+  },
+  imageContainer: {
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 120,
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
   },
   image: {
-    width: "100%",
-    height: 150,
-    borderRadius: 10,
-    backgroundColor: "#E0E0E0",
+    width: 120,
+    height: 120,
   },
   cardContent: {
-    backgroundColor: "#FFF",
-    borderRadius: 15,
-    marginTop: 10,
-    padding: 15,
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
   },
   challengeTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#2E3A8C",
-    marginBottom: 5,
+    marginBottom: 4,
   },
   challengeDescription: {
     fontSize: 14,
-    color: "#333",
-    marginBottom: 10,
+    color: "#374151",
+    marginBottom: 12,
   },
   realizadoPor: {
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
+    color: "#374151",
+    fontSize: 14,
+    marginBottom: 6,
   },
   userRow: {
     flexDirection: "row",
@@ -175,12 +184,12 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
+    backgroundColor: "#D1D5DB",
     marginRight: 8,
-    backgroundColor: "#EEE",
   },
   userName: {
     fontSize: 14,
-    color: "#333",
+    color: "#374151",
   },
   loadingContainer: {
     flex: 1,

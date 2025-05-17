@@ -2,6 +2,7 @@ const Challenge = require("../models/challenges");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const { Op, Sequelize } = require("sequelize");
 const { sequelize } = require("../config/database"); 
+const Participants = require("../models/participants");
 
 exports.getRandomChallenges = async (req, res) => {
   const userId = req.query.userId;
@@ -63,5 +64,51 @@ exports.getChallengeImage = async (req, res) => {
   } catch (error) {
     console.error("Erro ao carregar imagem:", error);
     res.status(500).json({ error: "Erro ao carregar imagem." });
+  }
+};
+
+exports.getDesafiosDoDia = async (req, res) => {
+  const { dia } = req.query;
+
+  if (!dia) {
+    return res.status(400).json({ error: "O parâmetro 'dia' é obrigatório." });
+  }
+
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = hoje.getMonth() + 1;
+
+  const diaFormatado = String(dia).padStart(2, '0');
+  const mesFormatado = String(mes).padStart(2, '0');
+
+  const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00`);
+  const fimDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T23:59:59`);
+
+  try {
+    const resultados = await ParticipantsHasChallenges.findAll({
+      where: {
+        starting_date: {
+          [Op.between]: [inicioDia, fimDia],
+        },
+      },
+      include: [
+        {
+          model: Participants,
+          as: "participant",
+          attributes: ["id", "name", "image"]
+        },
+        {
+          model: Challenge,
+          as: "challenge",
+          attributes: ["id", "title", "description"]
+        }
+      ],
+      order: [["starting_date", "ASC"]]
+    });
+
+    res.status(200).json(resultados);
+  } catch (error) {
+    console.error("Erro ao buscar desafios do dia:", error);
+    res.status(500).json({ error: "Erro ao buscar desafios do dia." });
   }
 };

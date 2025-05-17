@@ -90,5 +90,6 @@ router.get("/desafios/imagem/:id", challengeController.getChallengeImage);
 
 router.get("/desafios", challengeController.getRandomChallenges);
 
+router.get("/desafios-do-dia", challengeController.getDesafiosDoDia);
 
 module.exports = router;

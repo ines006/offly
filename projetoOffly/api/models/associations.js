@@ -1,3 +1,5 @@
+// models/associations.js
+
 const Participants = require("./participants");
 const Teams = require("./teams");
 const Answers = require("./answers");
@@ -5,58 +7,80 @@ const Competitions = require("./competitions");
 const Challenges = require("./challenges");
 const ParticipantsHasChallenges = require("./participantsHasChallenges");
 
-// Relações entre Participants e Teams
+// === Participants ↔ Teams ===
 Teams.hasMany(Participants, {
   foreignKey: "teams_id",
   sourceKey: "id",
   as: "participants",
 });
+
 Participants.belongsTo(Teams, {
   foreignKey: "teams_id",
   targetKey: "id",
   as: "team",
 });
 
-// Relações entre Participants e Answers
-Participants.belongsTo(Answers, {
-  foreignKey: "answers_id",
-  targetKey: "id",
-  as: "answer",
-});
+// === Participants ↔ Answers ===
 Answers.hasOne(Participants, {
   foreignKey: "answers_id",
   sourceKey: "id",
   as: "participant",
 });
 
-// Relações entre Teams e Competitions
+Participants.belongsTo(Answers, {
+  foreignKey: "answers_id",
+  targetKey: "id",
+  as: "answer",
+});
+
+// === Competitions ↔ Teams ===
 Competitions.hasMany(Teams, {
   foreignKey: "competitions_id",
   sourceKey: "id",
   as: "teams",
 });
+
 Teams.belongsTo(Competitions, {
   foreignKey: "competitions_id",
   targetKey: "id",
   as: "competition",
 });
 
-// Relações muitos-para-muitos entre Participants e Challenges
+// === Participants ↔ Challenges (many-to-many) ===
 Participants.belongsToMany(Challenges, {
-  through: "participants_has_challenges",
+  through: ParticipantsHasChallenges,
   foreignKey: "participants_id",
   otherKey: "challenges_id",
-  as: "challenge",
+  as: "challenges",
 });
+
 Challenges.belongsToMany(Participants, {
-  through: "participants_has_challenges",
+  through: ParticipantsHasChallenges,
   foreignKey: "challenges_id",
   otherKey: "participants_id",
   as: "participants",
 });
 
-// Relação direta entre ParticipantsHasChallenges e Challenges (para includes)
+// === ParticipantsHasChallenges ↔ Challenges ===
 ParticipantsHasChallenges.belongsTo(Challenges, {
   foreignKey: "challenges_id",
   as: "challenge",
+});
+
+// === ParticipantsHasChallenges ↔ Participants ===
+ParticipantsHasChallenges.belongsTo(Participants, {
+  foreignKey: "participants_id",
+  as: "participant",
+});
+
+// === Challenges ↔ ParticipantsHasChallenges (hasMany, para includes) ===
+Challenges.hasMany(ParticipantsHasChallenges, {
+  foreignKey: "challenges_id",
+  as: "participantsHasChallenges",
+});
+
+// === Participants ↔ ParticipantsHasChallenges (hasMany, para includes) ===
+Participants.hasMany(ParticipantsHasChallenges, {
+  foreignKey: "participants_id",
+  as: "participantsHasChallenges",
 });

@@ -144,28 +144,37 @@ const Caderneta = () => {
 
           <View style={styles.cardGrid}>
             {Array.from({ length: daysInMonth }).map((_, idx) => {
-              const dayNumber = idx + 1;
-              const isCompleted = completedDaysSet.has(dayNumber);
-              return (
-                <View
-                  key={dayNumber}
-                  style={[styles.card, isCompleted ? styles.activeCard : styles.inactiveCard]}
-                >
-                  {isCompleted ? (
+            const dayNumber = idx + 1;
+            const isCompleted = completedDaysSet.has(dayNumber);
+            return (
+              <View
+                key={dayNumber}
+                style={[styles.card, isCompleted ? styles.activeCard : styles.inactiveCard]}
+              >
+                {isCompleted ? (
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "./detalhesDia",
+                        params: { dia: dayNumber }, // ✅ aqui está corrigido
+                      })
+                    }
+                  >
                     <Image
                       source={require('../../imagens/desafiodiario.png')}
                       style={styles.cardImage}
                       resizeMode="cover"
                     />
-                  ) : (
-                    <View style={styles.cardContentContainer}>
-                      <Text style={styles.cardPlaceholder}>?</Text>
-                      <Text style={styles.cardNumber}>{dayNumber}</Text>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.cardContentContainer}>
+                    <Text style={styles.cardPlaceholder}>?</Text>
+                    <Text style={styles.cardNumber}>{dayNumber}</Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
           </View>
         </View>
       </View>

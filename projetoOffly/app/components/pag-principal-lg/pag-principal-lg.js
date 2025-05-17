@@ -145,9 +145,9 @@ export default function Home() {
         const capacity = teamData.capacity;
         const members = teamData.participants.length;
         const points = teamData.points;
-        const tournament_name = teamData.tournament_name;
-        const tournament_start = teamData.tournament_start_date;
-        const tournament_end = teamData.tournament_end_date;
+        const tournament_name = teamData.competition_name;
+        const tournament_start = teamData.competition_start_date;
+        const tournament_end = teamData.competition_end_date;
 
         setTeamName(name);
         setTeamImage(image);

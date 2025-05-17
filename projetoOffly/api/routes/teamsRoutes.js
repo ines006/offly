@@ -176,6 +176,8 @@ const teamsController = require("../controllers/teamsController");
  */
 router.get("/", teamsController.getTeams);
 
+
+
 /**
  * @swagger
  * /teams/search:
@@ -443,6 +445,73 @@ router.get("/:id", teamsController.getTeamParticipants);
 
 /**
  * @swagger
+ * /teams/competition/available:
+ *   get:
+ *     summary: List competitions with less than 10 teams
+ *     description: Retrieves all competitions that currently have fewer than 10 registered teams. Returns the competition ID, name, number of teams, and the list of teams in each.
+ *     tags: [Teams]
+ *     responses:
+ *       200:
+ *         description: Competitions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: Competition ID
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     description: Competition name
+ *                     example: "Spring Tournament"
+ *                   team_count:
+ *                     type: integer
+ *                     description: Number of teams currently registered
+ *                     example: 3
+ *                   teams:
+ *                     type: array
+ *                     description: List of registered teams
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 2
+ *                         name:
+ *                           type: string
+ *                           example: "eagles"
+ *       404:
+ *         description: No competitions with fewer than 10 teams found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No competitions with fewer than 10 teams found."
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Error fetching competitions"
+ */
+router.get("/competition/available", teamsController.getAvailableCompetitions);
+
+/**
+ * @swagger
  * /teams:
  *   post:
  *     summary: Create a new team
@@ -481,10 +550,6 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                 type: integer
  *                 enum: [0, 1]
  *                 description: Team visibility (0 for public, 1 for private)
- *                 example: 1
- *               competitions_id:
- *                 type: integer
- *                 description: The ID of the associated competition (optional)
  *                 example: 1
  *               team_passbooks_id:
  *                 type: integer
@@ -530,11 +595,6 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                   type: integer
  *                   description: The team's visibility (0 or 1)
  *                   example: 1
- *                 competitions_id:
- *                   type: integer
- *                   nullable: true
- *                   description: The ID of the associated competition
- *                   example: 1
  *                 team_passbooks_id:
  *                   type: integer
  *                   nullable: true
@@ -577,17 +637,6 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                   type: string
  *                   description: Error message indicating the user is already in a team
  *                   example: You are already a member of a team
- *       404:
- *         description: Competition not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Error message indicating the competition does not exist
- *                   example: Competition not found
  *       409:
  *         description: Team name already exists
  *         content:
@@ -649,6 +698,66 @@ router.get("/:id", teamsController.getTeamParticipants);
  *       bearerFormat: JWT
  */
 router.post("/", authenticateToken, teamsController.createTeam);
+
+/**
+ * @swagger
+ * /teams/{id}:
+ *   put:
+ *     summary: Update team's competition
+ *     description: Allows a team admin to update the competition ID associated with their team. The competition must exist.
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the team to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - competitions_id
+ *             properties:
+ *               competitions_id:
+ *                 type: integer
+ *                 description: The ID of the competition to associate with the team
+ *                 example: 2
+ *     responses:
+ *       200:
+ *         description: Team competition updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Team updated successfully
+ *                 teamId:
+ *                   type: integer
+ *                   example: 1
+ *                 competitions_id:
+ *                   type: integer
+ *                   example: 2
+ *       400:
+ *         description: Invalid or missing competitions_id
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: User is not the admin of the team
+ *       404:
+ *         description: Competition or team not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/:id", authenticateToken, teamsController.updateTeam);
+
 
 /**
  * @swagger
@@ -1019,6 +1128,7 @@ router.get(
  *                   example: Internal server error
  */
 router.get("/competition/:id", teamsController.getTeamsByCompetition);
+
 
 /**
  * @swagger

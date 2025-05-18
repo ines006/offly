@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import styled from "styled-components/native";
-import { Alert, TouchableOpacity, View, ScrollView } from "react-native";
+import { Alert, TouchableOpacity, View, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
@@ -60,121 +60,103 @@ export default function Home() {
   const [tournamentEnd, setTournamentEnd] = useState(null);
   const [competitionDay, setCompetitionDay] = useState(null);
 
-  // Utilizador logado + Dados do utilizador
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    const fetchUserData = async () => {
-      console.log("🔍 Depurando dados do utilizador...");
-      console.log("👤 User:", user);
-      console.log("🔑 AccessToken:", accessToken);
+  const fetchUserData = async () => {
+    if (!user?.id || !accessToken) {
+      Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
+      router.push("./login");
+      return;
+    }
 
-      if (!user?.id || !accessToken) {
-        console.error("❌ user.id ou accessToken estão indefinidos");
-        Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
-        router.push("./login");
-        return;
-      }
+    try {
+      const response = await axios.get(`${baseurl}/participants/${user.id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
 
-      try {
-        console.log(
-          `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
-        );
-        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
+      const userData = response.data;
+      const name = userData.name || userData.fullName;
+      const image = userData.image || null;
+      const level = userData.level;
+      const teamId = userData.teams_id;
 
-        console.log("✅ Resposta da API:", response.data);
+      setUserId(user.id);
+      setUserName(name);
+      setUserLevel(level);
+      setProfileImage(image ? { uri: image } : null);
+      setTeamId(teamId);
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível carregar os dados do utilizador.");
+    }
+  };
 
-        const userData = response.data;
-        const name =
-          userData.name || userData.fullName;
-        const image = userData.image || null;
-        const level = userData.level;
-        const teamId = userData.teams_id;
-        
-        setUserId(user.id);
+  fetchUserData();
+}, [user, accessToken]);
 
-        setUserName(name);
-        setUserLevel(level);
-        setProfileImage(image ? { uri: image } : null);
-        setTeamId(teamId);
+useEffect(() => {
+  // Só tentar buscar dados da equipa se já tiver teamId e userId
+  if (!teamId || !userId) return;
 
-        console.log("✅ Dados processados:", { name, image, level, teamId });
-      } catch (error) {
-        console.error("❌ Erro ao buscar dados do utilizador:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        Alert.alert(
-          "Erro",
-          error.response?.data?.message ||
-            "Não foi possível carregar os dados do utilizador."
-        );
-      }
-    };
+  const fetchTeamData = async () => {
+    try {
+      const response = await axios.get(`${baseurl}/teams/${teamId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
 
-    fetchUserData();
-  }, [user, accessToken]);
+      const teamData = response.data;
+      setTeamName(teamData.name);
+      setTeamImage(teamData.image || null);
+      setTeamMembers(teamData.participants.length);
+      setteamCapacity(teamData.capacity);
+      setTeamPoints(teamData.points);
+      setTournamentName(teamData.competition_name);
+      setTournamentStart(teamData.competition_start_date);
+      setTournamentEnd(teamData.competition_end_date);
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível carregar os dados da equipa.");
+    }
+  };
 
-  // Dados da equipa + torneio 
-  useEffect(() => {
-    const teamData = async () => {
-      try {
-        console.log(
-          `🌐 Fazendo requisição para ${baseurl}/teams/${teamId}`
-        );
-        const response = await axios.get(`${baseurl}/teams/${teamId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
+  fetchTeamData();
+}, [teamId, userId]);
 
-        console.log("✅ Resposta da API:", response.data);
-
-        const teamData = response.data;
-        const name = teamData.name;
-        const image = teamData.image || null;
-        const capacity = teamData.capacity;
-        const members = teamData.participants.length;
-        const points = teamData.points;
-        const tournament_name = teamData.competition_name;
-        const tournament_start = teamData.competition_start_date;
-        const tournament_end = teamData.competition_end_date;
-
-        setTeamName(name);
-        setTeamImage(image);
-        setTeamMembers(members);
-        setteamCapacity(capacity);
-        setTeamPoints(points);
-        setTournamentName(tournament_name);
-        setTournamentStart(tournament_start);
-        setTournamentEnd(tournament_end);
-
-        console.log("✅ Dados processados:", { name, image, members, capacity, points, tournament_name, tournament_start, tournament_end });
-      } catch (error) {
-        console.error("❌ Erro ao buscar dados da equipa:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        Alert.alert(
-          "Erro",
-          error.response?.data?.message ||
-            "Não foi possível carregar os dados da equipa."
-        );
-      }
-    };
-
-    teamData();
-  }, [userId, teamId]);
+// Monitorar carregamento completo e desligar o loading
+useEffect(() => {
+  // Condição para considerar que os dados essenciais estão carregados
+  if (
+    userId !== null &&
+    userName !== "" &&
+    userLevel !== undefined &&
+    teamId !== "" &&
+    teamName !== "" &&
+    teamPoints !== undefined &&
+    teamMembers !== undefined &&
+    teamCapacity !== undefined
+  ) {
+    setIsLoading(false);
+  } else {
+    setIsLoading(true);
+  }
+}, [
+  userId,
+  userName,
+  userLevel,
+  teamId,
+  teamName,
+  teamPoints,
+  teamMembers,
+  teamCapacity,
+]);
 
   useEffect(() => {
     if (tournamentStart && tournamentEnd) {
@@ -245,29 +227,39 @@ export default function Home() {
     );
 
   // Definir o horário de reset simulado
-  //const resetTime = new Date("2025-05-06T14:00:00");
+  //const resetTime = new Date("2025-05-18T01:08:00");
 
     return resetTime.getTime() - now.getTime();
   };
 
-  useEffect(() => {
+useEffect(() => {
+  if (!userId) return;
+
+  let timer;
+  let interval;
+
+  const scheduleReset = () => {
     const timeUntilReset = calculateNextReset();
     setTimeRemaining(timeUntilReset);
 
-    const timer = setTimeout(() => {
+    timer = setTimeout(() => {
       resetUploadStatus();
-      setTimeRemaining(calculateNextReset());
+      scheduleReset(); // Reagenda o próximo reset
     }, timeUntilReset);
+  };
 
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => Math.max(prev - 1000, 0));
-    }, 1000);
+  scheduleReset();
 
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
-  }, [userId]);
+  interval = setInterval(() => {
+    setTimeRemaining((prev) => Math.max(prev - 1000, 0));
+  }, 1000);
+
+  return () => {
+    clearTimeout(timer);
+    clearInterval(interval);
+  };
+}, [userId]);
+
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -320,7 +312,14 @@ export default function Home() {
 
  return (
     <>
-      <View
+    
+    {isLoading ? (
+      <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#263A83" />
+      </View>
+    ) : (
+      <>
+       <View
         accessible={true}
         accessibilityRole="header"
         accessibilityLabel="Título: Home Page"
@@ -563,6 +562,9 @@ export default function Home() {
           <DesafioText>Desafio Semanal</DesafioText>
         </DesafioCard>
       </DesafioContainer>
+      </>
+    )}
+  
     </>
   );
 }
@@ -599,3 +601,11 @@ const TittleHomePage = styled.View`
   margin-bottom: -20px;
   font-weight: 600;
 `;
+
+const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

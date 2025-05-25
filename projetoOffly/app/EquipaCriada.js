@@ -170,6 +170,8 @@ const intervalIdRef = useRef(null);
     setteamCapacity(teamData.capacity);
     setTeamDescription(teamData.description);
 
+    const isUserAdmin = teamData.team_admin.id === user?.id;
+
     // Verifica se o user é o admin da equipa
     if (teamData.team_admin.id == userId) {
       setIsAdmin(true);
@@ -188,20 +190,17 @@ const intervalIdRef = useRef(null);
 
     setHasCompetition(hasComp);
 
-    // 🚫 Se já redirecionou, não faz mais nada
-    if (hasRedirectedRef.current) return;
-
-    // ✅ Redireciona e marca que já foi
-    if (hasComp && !isAdmin) {
+    // ✅ Usa a variável local isUserAdmin em vez do estado `isAdmin`
+    if (!isUserAdmin && hasComp && !hasRedirectedRef.current) {
       hasRedirectedRef.current = true;
 
-      // ❌ Limpa o setInterval
       if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
+        clearInterval(intervalIdRef.current); // ✅ Garante parar o intervalo
+        console.log("⛔ Intervalo parado!");
       }
 
-      console.log("🚀 Redirecionando para a navbar...");
-      router.push("./components/navbar");
+      console.log("🚀 Redirecionando para /components/navbar");
+      router.push("/components/navbar");
     }
 
 
@@ -263,9 +262,14 @@ const handleTorneio = async () => {
     // Mostrar animação de loading
     //setLoading(true);
 
+    const capacity = parseInt(teamCapacity);
+    console.log("capacidade da equipa: ", capacity);
 
     // 1. Obter as competições disponíveis
     const responseCompetitions = await axios.get(`${baseurl}/teams/competition/available`, {
+      params: {
+        players: capacity  
+      },
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

@@ -1,142 +1,50 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Image,
+  Alert,
+  Platform,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Circle, Path } from "react-native-svg";
 import { useRouter } from "expo-router";
-import { doc, getDoc, getDocs, setDoc, updateDoc, collection } from "firebase/firestore";
-import { auth, db } from "../../firebase/firebaseApi";
-import { AuthContext } from "../entrar/AuthContext"; 
-import { baseurl } from "../../api-config/apiConfig"; 
+import { AuthContext } from "../entrar/AuthContext";
+import { baseurl } from "../../api-config/apiConfig";
 import axios from "axios";
 
 const UploadScreen = () => {
+  console.log("UploadScreen renderizado");
   const router = useRouter();
+  const { user, accessToken } = useContext(AuthContext);
+  const [userId, setUserId] = useState(null);
+  const [submitVisible, setSubmitVisible] = useState(false);
+  const [processingModalVisible, setProcessingModalVisible] = useState(false);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [points, setPoints] = useState(null);
 
-  const { user, accessToken } = useContext(AuthContext); 
-
-  const [userId, setUserId] = useState(null); //var de estado que guarda o id do user logado
-  const [submitVisible, setSubmitVisible] = useState(false); // var de estado que define a visibilidade do botão "Submeter"
-  const [modalVisible, setModalVisible] = useState(false); // var de estado que define a visibilidade do modal de sucesso
-  const [selectedImage, setSelectedImage] = useState(null); // var de estado que guarda a imagem selecionada
-
-// Verificação de utilizador logado
-useEffect(() => {
-  if (user && user.id) {
-    setUserId(user.id); 
-    console.log("Utilizador logado via contexto:", user);
-  } else {
-    Alert.alert("Erro", "Nenhum utilizador logado!");
-  }
-}, [user]);
-
-
-  // Função para abrir a modal e submeter dados de upload 
-  const handleSubmit = async () => {
-    setSubmitVisible(false);
-    setModalVisible(true);
-
-    try { // Função para verificar e atualizar o upload
-    
-      if (!userId) return;
-    
-      const updateUpload = {
-        upload: 1,
-      };
-      const response = await axios.put(`${baseurl}/participants/${userId}`, updateUpload, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-
-    } catch (error) {
-      console.error("Erro ao registar upload:", error);
+  // Verificação de utilizador logado
+  useEffect(() => {
+    console.log(
+      "useEffect disparado com user:",
+      user,
+      "userId:",
+      user?.id,
+      "render count:",
+      Date.now()
+    );
+    if (user?.id) {
+      setUserId(user.id.toString());
+    } else {
+      Alert.alert("Erro", "Nenhum utilizador logado!");
     }
-  };
-
-  // const updateWeeklyChallenge = async () => {
-  //   try {
-  //     // Obter a equipa do utilizador
-  //     const userDocRef = doc(db, "users", userId);
-  //     const userDocSnap = await getDoc(userDocRef);
-
-  //     if (!userDocSnap.exists()) {
-  //       console.error("Utilizador não encontrado.");
-  //       return;
-  //     }
-
-  //     const userName = userDocSnap.data()?.fullName;
-  //     if (!userName) {
-  //       console.error("Utilizador não tem nome.");
-  //       return;
-  //     }
-
-  //     const teamName = userDocSnap.data()?.team;
-  //     if (!teamName) {
-  //       console.error("Utilizador não pertence a nenhuma equipa.");
-  //       return;
-  //     }
-
-  //     // Aceder a carta não validada atual
-  //     const cartasSnapshot = await getDocs(collection(db, "desafioSemanal"));
-  //     const cartas = cartasSnapshot.docs
-  //       .map((doc) => ({ id: doc.id, ...doc.data() }))
-  //       .sort((a, b) => a.id.localeCompare(b.id));
-
-  //     const currentCarta = cartas.find((carta) => !carta.validada);
-  //     if (!currentCarta) {
-  //       console.error("Nenhuma carta não validada encontrada.");
-  //       return;
-  //     }
-
-  //     // Obter o timer da carta atual
-  //     const timerDocRef = doc(db, "desafioSemanal", currentCarta.id, "timer", "timerCarta");
-  //     const timerDocSnap = await getDoc(timerDocRef);
-
-  //     if (!timerDocSnap.exists()) {
-  //       console.error("Timer não encontrado.");
-  //       return;
-  //     }
-
-  //     const timerData = timerDocSnap.data();
-  //     const startDate = new Date(timerData.start);
-  //     const endDate = new Date(timerData.end);
-  //     const now = new Date();
-
-  //     if (now < startDate || now > endDate) {
-  //       console.error("Fora do intervalo do desafio semanal.");
-  //       return;
-  //     }
-
-  //     const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24)) + 1;
-
-  //     // Atualizar o campo do dia correspondente no documento do participante
-  //     const participantDocRef = doc(
-  //       db,
-  //       "desafioSemanal",
-  //       currentCarta.id,
-  //       "equipasDesafio",
-  //       teamName,
-  //       "participante1",
-  //       userName
-  //     );
-
-  //     const participantDocSnap = await getDoc(participantDocRef);
-  //     if (participantDocSnap.exists()) {
-  //       const updateData = {};
-  //       updateData[diffInDays] = true;
-
-  //       await updateDoc(participantDocRef, updateData);
-  //       console.log(`Dia ${diffInDays} atualizado para true.`);
-  //     } else {
-  //       console.error("Documento do participante não encontrado.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Erro ao atualizar desafios semanais:", error);
-  //   }
-  // };
+  }, [user?.id]);
 
   // Função para abrir a galeria e selecionar uma imagem
   const handleSelectImage = async () => {
@@ -153,14 +61,111 @@ useEffect(() => {
     });
 
     if (!result.canceled) {
+      console.log("Imagem selecionada:", result.assets[0].uri);
       setSelectedImage(result.assets[0].uri);
       setSubmitVisible(true);
+      console.log(
+        "Estado após seleção: selectedImage:",
+        result.assets[0].uri,
+        "submitVisible: true"
+      );
+    } else {
+      Alert.alert("Erro", "Nenhuma imagem selecionada.");
     }
   };
 
-  // Função para abrir o botão de submeter
-  const handleButton = () => {
-    setSubmitVisible(true);
+  // Função para determinar a mensagem motivacional com base nos pontos
+  const getPointsMessage = (points) => {
+    if (points === null) {
+      return "Pontuação processada.";
+    } else if (points <= 9) {
+      return "Parabéns! Estás muito próximo do equilíbrio.";
+    } else if (points <= 20) {
+      return "Estás no caminho certo, mas ainda podes reduzir o tempo de ecrã!";
+    } else {
+      return "O teu tempo de ecrã está elevado! Tenta reduzir para melhorar o teu bem-estar digital.";
+    }
+  };
+
+  // Função para submeter a imagem
+  const handleSubmit = async () => {
+    if (!userId || !selectedImage) {
+      Alert.alert(
+        "Erro",
+        "Nenhuma imagem selecionada ou utilizador não logado!"
+      );
+      return;
+    }
+
+    console.log(
+      "Iniciando handleSubmit com userId:",
+      userId,
+      "e imagem:",
+      selectedImage
+    );
+    setSubmitVisible(false);
+    setProcessingModalVisible(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("userId", userId);
+
+      // Tratamento da imagem por plataforma
+      if (Platform.OS === "web") {
+        const response = await fetch(selectedImage);
+        const blob = await response.blob();
+        formData.append("image", blob, "screen-time.jpg");
+        console.log("Imagem convertida para blob no web:", blob);
+      } else {
+        formData.append("image", {
+          uri: selectedImage,
+          name: "screen-time.jpg",
+          type: "image/jpeg",
+        });
+      }
+
+      console.log("FormData preparado:", formData);
+
+      const response = await axios.post(
+        `${baseurl}/Uploads/analyze`,
+        formData,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      console.log("Upload processado com sucesso:", response.data);
+      setPoints(response.data.points);
+      setProcessingModalVisible(false);
+      setSuccessModalVisible(true);
+      Alert.alert(
+        "Sucesso",
+        `Imagem analisada! ${response.data.points} pontos foram subtraídos da sua equipe.`
+      );
+    } catch (error) {
+      console.error("Erro ao processar upload:", error.response?.data || error);
+      setProcessingModalVisible(false);
+      const errorMsg =
+        error.response?.data?.error ||
+        "Falha ao processar o upload. Verifique a conexão ou tente novamente.";
+      if (
+        errorMsg.includes("Imagem não é um print válido") ||
+        errorMsg.includes("A imagem deve ser do dia anterior") ||
+        errorMsg.includes("Não foi possível extrair")
+      ) {
+        setErrorMessage(errorMsg);
+        setErrorModalVisible(true);
+        setSelectedImage(null); // Reset image
+        setSubmitVisible(false); // Hide submit button
+      } else {
+        Alert.alert("Erro", errorMsg);
+      }
+    }
   };
 
   // Função para remover a imagem
@@ -169,17 +174,28 @@ useEffect(() => {
     setSubmitVisible(false);
   };
 
-  // Função para fechar a modal
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    router.push("../../components/navbar");
+  // Função para fechar a modal de sucesso e redirecionar
+  const handleCloseSuccessModal = () => {
+    setSuccessModalVisible(false);
+    setPoints(null);
+    router.push("/components/navbar");
+  };
+
+  // Função para fechar a modal de erro
+  const handleCloseErrorModal = () => {
+    console.log("Fechando modal de erro");
+    setErrorModalVisible(false);
+    setErrorMessage("");
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-      {/* Botão de Voltar atrás */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Botão voltar atrás">
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityLabel="Botão voltar atrás"
+        >
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle
               cx="18.1351"
@@ -196,93 +212,156 @@ useEffect(() => {
             />
           </Svg>
         </TouchableOpacity>
-        {/* Título */}
         <Text style={styles.title}>Upload do tempo de ecrã</Text>
       </View>
 
       <View style={styles.dashedBox}>
-        {/* Mostra a imagem selecionada ou o ícone de upload */}
         {selectedImage ? (
-          <Image accessibilityLabel="Imagem selecionada" source={{ uri: selectedImage }} style={styles.imagePreview} />
+          <Image
+            accessibilityLabel="Imagem selecionada"
+            source={{ uri: selectedImage }}
+            style={styles.imagePreview}
+            resizeMode="cover"
+          />
         ) : (
-          <>
-          <TouchableOpacity onPress={handleSelectImage} accessibilityLabel="Faz upload do print do tempo de ecrã.">
-            <Svg width={49} height={49} viewBox="0 0 49 49" fill="none">
-            <Path
-              d="M0.125 8.25C0.125 3.7627 3.7627 0.125 8.25 0.125H40.75C45.2374 0.125 48.875 3.7627 48.875 8.25V24.559C47.2351 23.509 45.4094 22.7236 43.4583 22.2626V8.25C43.4583 6.75424 42.2458 5.54167 40.75 5.54167H8.25C6.75424 5.54167 5.54167 6.75424 5.54167 8.25V40.75C5.54167 42.2458 6.75424 43.4583 8.25 43.4583H22.2626C22.7236 45.4094 23.509 47.2351 24.559 48.875H8.25C3.7627 48.875 0.125 45.2374 0.125 40.75V8.25Z"
-              fill="#263A83"
-            />
-          </Svg>
-          <Svg
-            width={31}
-            height={31}
-            viewBox="0 0 31 31"
-            fill="none"
-            style={styles.plusIcon}
-          >
-            <Path
-              d="M30.2917 15.3958C30.2917 7.169 23.6227 0.5 15.3958 0.5C7.169 0.5 0.5 7.169 0.5 15.3958C0.5 23.6227 7.169 30.2917 15.3958 30.2917C23.6227 30.2917 30.2917 23.6227 30.2917 15.3958ZM16.7516 16.75L16.753 23.5303C16.753 24.2784 16.1469 24.8845 15.3988 24.8845C14.651 24.8845 14.0446 24.2784 14.0446 23.5303L14.0433 16.75H7.26027C6.5125 16.75 5.9061 16.1439 5.9061 15.3958C5.9061 14.6481 6.5125 14.0417 7.26027 14.0417H14.043L14.0417 7.26894C14.0417 6.5209 14.6481 5.91477 15.3958 5.91477C16.1436 5.91477 16.75 6.5209 16.75 7.26894L16.7514 14.0417H23.529C24.277 14.0417 24.8831 14.6481 24.8831 15.3958C24.8831 16.1439 24.277 16.75 23.529 16.75H16.7516Z"
-              fill="#263A83"
-            />
-          </Svg>
-          </TouchableOpacity>
-          <Text style={styles.description}>Faz upload do print do tempo de ecrã</Text>
-          </>
-        )}
-        
-        {/* Botão "Remover" */}
-        {selectedImage && (
-          <TouchableOpacity style={styles.removeButton} onPress={handleRemoveImage}>
-            <Text style={styles.removeText}>Remover</Text>
-          </TouchableOpacity>
+          <View style={styles.uploadContainer}>
+            <TouchableOpacity
+              onPress={handleSelectImage}
+              accessibilityLabel="Faz upload do print do tempo de ecrã."
+            >
+              <Svg width={49} height={49} viewBox="0 0 49 49" fill="none">
+                <Path
+                  d="M0.125 8.25C0.125 3.7627 3.7627 0.125 8.25 0.125H40.75C45.2374 0.125 48.875 3.7627 48.875 8.25V24.559C47.2351 23.509 45.4094 22.7236 43.4583 22.2626V8.25C43.4583 6.75424 42.2458 5.54167 40.75 5.54167H8.25C6.75424 5.54167 5.54167 6.75424 5.54167 8.25V40.75C5.54167 42.2458 6.75424 43.4583 8.25 43.4583H22.2626C22.7236 45.4094 23.509 47.2351 24.559 48.875H8.25C3.7627 48.875 0.125 45.2374 0.125 40.75V8.25Z"
+                  fill="#263A83"
+                />
+              </Svg>
+              <Svg
+                width={31}
+                height={31}
+                viewBox="0 0 31 31"
+                fill="none"
+                style={styles.plusIcon}
+              >
+                <Path
+                  d="M30.2917 15.3958C30.2917 7.169 23.6227 0.5 15.3958 0.5C7.169 0.5 0.5 7.169 0.5 15.3958C0.5 23.6227 7.169 30.2917 15.3958 30.2917C23.6227 30.2917 30.2917 23.6227 30.2917 15.3958ZM16.7516 16.75L16.753 23.5303C16.753 24.2784 16.1469 24.8845 15.3988 24.8845C14.651 24.8845 14.0446 24.2784 14.0446 23.5303L14.0433 16.75H7.26027C6.5125 16.75 5.9061 16.1439 5.9061 15.3958C5.9061 14.6481 6.5125 14.0417 7.26027 14.0417H14.043L14.0417 7.26894C14.0417 6.5209 14.6481 5.91477 15.3958 5.91477C16.1436 5.91477 16.75 6.5209 16.75 7.26894L16.7514 14.0417H23.529C24.277 14.0417 24.8831 14.6481 24.8831 15.3958C24.8831 16.1439 24.277 16.75 23.529 16.75H16.7516Z"
+                  fill="#263A83"
+                />
+              </Svg>
+            </TouchableOpacity>
+            <Text style={styles.description}>
+              Faz upload do print do tempo de ecrã
+            </Text>
+          </View>
         )}
       </View>
 
-      {/* Botão "Submeter" */}
-      {submitVisible && (
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitText}>Submeter</Text>
-        </TouchableOpacity>
-      )}
+      <View style={styles.buttonContainer}>
+        {submitVisible && selectedImage ? (
+          <>
+            {console.log("Renderizando botões Submeter e Remover")}
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleSubmit}
+            >
+              <Text style={styles.submitText}>Submeter</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={handleRemoveImage}
+            >
+              <Text style={styles.removeText}>Remover</Text>
+            </TouchableOpacity>
+          </>
+        ) : null}
+      </View>
 
-      {/* Modal de sucesso */}
+      {/* Modal de Processamento */}
       <Modal
-        visible={modalVisible}
-        animationType="none" 
+        visible={processingModalVisible}
+        animationType="none"
         transparent={true}
-        onRequestClose={handleCloseModal}
-        >
+      >
         <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-            {/* Círculo com o ícone no topo */}
-            <View style={styles.circleWrapper}>
-            <Svg width={80} height={80} viewBox="0 0 80 80" fill="none">
-            <Circle cx="40" cy="40" r="40" fill="#BFE0FF" />
-            <Path
-                d="M33.6 51.2L24 41.6C23.1 40.7 23.1 39.1 24 38.2C24.9 37.3 26.5 37.3 27.4 38.2L34.8 45.6L52.6 27.8C53.5 26.9 55.1 26.9 56 27.8C56.9 28.7 56.9 30.3 56 31.2L36 51.2C35.1 52.1 33.9 52.1 33.6 51.2Z"
-                fill="#263A83"
-            />
-            </Svg>
-            </View>
-
-            {/* Conteúdo da modal */}
-            <Text style={styles.modalTitle}>Print do tempo de ecrã submetido com sucesso</Text>
-            <Text style={styles.modalMessage}>
-                Poderás perder um máximo de 25 pontos.
+          <View style={styles.processingModalContainer}>
+            <Text style={styles.modalTitle}>
+              Estamos a analisar o teu tempo de ecrã...
             </Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Sucesso */}
+      <Modal
+        visible={successModalVisible}
+        animationType="none"
+        transparent={true}
+        onRequestClose={handleCloseSuccessModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.circleWrapper}>
+              <Svg width={80} height={80} viewBox="0 0 80 80" fill="none">
+                <Circle cx="40" cy="40" r="40" fill="#BFE0FF" />
+                <Path
+                  d="M33.6 51.2L24 41.6C23.1 40.7 23.1 39.1 24 38.2C24.9 37.3 26.5 37.3 27.4 38.2L34.8 45.6L52.6 27.8C53.5 26.9 55.1 26.9 56 27.8C56.9 28.7 56.9 30.3 56 31.2L36 51.2C35.1 52.1 33.9 52.1 33.6 51.2Z"
+                  fill="#263A83"
+                />
+              </Svg>
+            </View>
+            <Text style={styles.modalTitle}>
+              {points !== null
+                ? `Foram subtraídos ${points} pontos da tua equipa`
+                : "Pontuação processada."}
+            </Text>
+            <Text style={styles.modalMessage}>{getPointsMessage(points)}</Text>
             <Text style={styles.modalMessage2}>
-                Amanhã será possível realizar outra submissão!
+              Amanhã poderás fazer uma nova submissão!
             </Text>
             <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleCloseModal}
-                
+              style={styles.modalButton}
+              onPress={handleCloseSuccessModal}
             >
-                <Text style={styles.modalButtonText}>Fechar</Text>
+              <Text style={styles.modalButtonText}>Fechar</Text>
             </TouchableOpacity>
-            </View>
+          </View>
         </View>
-        </Modal>
+      </Modal>
+
+      {/* Modal de Erro */}
+      <Modal
+        visible={errorModalVisible}
+        animationType="none"
+        transparent={true}
+        onRequestClose={handleCloseErrorModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.circleWrapper}>
+              <Svg width={80} height={80} viewBox="0 0 80 80" fill="none">
+                <Circle cx="40" cy="40" r="40" fill="#FFEBEE" />
+                <Path
+                  d="M40 25V45M40 55H40.01M70 40C70 56.5685 56.5685 70 40 70C23.4315 70 10 56.5685 10 40C10 23.4315 23.4315 10 40 10C56.5685 10 70 23.4315 70 40Z"
+                  stroke="#F44336"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
+            <Text style={styles.modalTitle}>Imagem Inválida</Text>
+            <Text style={styles.modalMessage}>{errorMessage}</Text>
+            <Text style={styles.modalMessage2}>
+              Por favor, tente novamente com um print válido.
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={handleCloseErrorModal}
+            >
+              <Text style={styles.modalButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -324,16 +403,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 60,
+    overflow: "hidden",
   },
-  imagePreview: { 
-    width: 200, 
-    height: 200, 
-    resizeMode: "contain" 
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
   },
-  iconWrapper: {
-    position: "relative",
-    width: 49,
-    height: 49,
+  uploadContainer: {
     justifyContent: "center",
     alignItems: "center",
   },
@@ -352,28 +429,71 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 20,
   },
-  submitButton: {
-    display: "flex",
-    paddingVertical: 10,
-    paddingHorizontal: 47,
-    flexDirection: "column",
+  buttonContainer: {
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 10,
+    marginTop: 30,
+    gap: 20,
+  },
+  submitButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 47,
     borderRadius: 10,
     backgroundColor: "#263A83",
-    marginTop: 30,
+    justifyContent: "center",
+    alignItems: "center",
   },
   submitText: {
     color: "#FFF",
-    textAlign: "justify",
+    textAlign: "center",
     fontFamily: "Poppins",
     fontSize: 15,
     fontWeight: "600",
   },
+  removeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 47,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#FF3B30",
+    backgroundColor: "#FFE6E6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeText: {
+    color: "#FF3B30",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  processingModalContainer: {
+    width: 300,
+    height: 150,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    padding: 25,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalContainer: {
+    width: 300,
+    height: 395,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    padding: 25,
+    alignItems: "center",
+  },
   circleWrapper: {
     position: "absolute",
-    top: -30, 
+    top: -30,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFF",
@@ -384,50 +504,20 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5, 
-  },
-  modalContainer: {
-    width: 300,
-    backgroundColor: "#FFF",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-    paddingTop: 50, 
-    position: "relative",
-  },
-  removeButton: { 
-    marginTop: 10, 
-    padding: 10 
-  },
-  removeText: { 
-    color: "#FF3B30", 
-    fontSize: 15 
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: 300,
-    height: 395,
-    backgroundColor: "#FFF",
-    borderRadius: 10,
-    padding: 25,
-    alignItems: "center",
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#263A83",
     marginTop: 30,
-    marginBottom: 30,
+    marginBottom: 20,
     textAlign: "center",
   },
   modalMessage: {
     width: 180,
     fontSize: 14,
+    fontWeight: "400",
     color: "#263A83",
     textAlign: "center",
     marginBottom: 20,
@@ -435,6 +525,7 @@ const styles = StyleSheet.create({
   modalMessage2: {
     width: 180,
     fontSize: 14,
+    fontWeight: "400",
     color: "#263A83",
     textAlign: "center",
     marginBottom: 80,

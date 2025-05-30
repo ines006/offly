@@ -15,71 +15,49 @@ import { AuthContext } from '../entrar/AuthContext';
 const Caderneta = () => {
   const { user } = useContext(AuthContext);
   const [completedDaysSet, setCompletedDaysSet] = useState(new Set());
-  const [weeklyChallengeCards, setWeeklyChallengeCards] = useState([]);
+  const [participantIds, setParticipantIds] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchChallenges = async () => {
-      setCompletedDaysSet(new Set());
-
-      if (!user || !user.id) {
+    const fetchPassbookData = async () => {
+      if (!user?.id) {
         console.log('❌ Utilizador não autenticado ou id inválido');
         return;
       }
 
-      console.log('✅ ID do utilizador autenticado:', user.id);
-
       try {
-        const respParticipant = await fetch(`${baseurl}/passbook?id=${user.id}`);
-        const participantData = await respParticipant.json();
+        const response = await fetch(`${baseurl}/passbook?id=${user.id}`);
+        const data = await response.json();
 
-        if (!participantData || participantData.length === 0) {
-          console.log('❌ Participante não encontrado para user.id:', user.id);
+        if (!data.teamParticipants?.length) {
+          console.log('❌ Participantes da equipa não encontrados');
           return;
         }
 
-        const participant = participantData[0];
-        const teamId = participant.teams_id;
-
-        if (!teamId) {
-          console.log('❌ Participante não pertence a nenhuma equipa');
-          return;
-        }
-
-        const respTeamParticipants = await fetch(`${baseurl}/passbook?teams_id=${teamId}`);
-        const teamParticipants = await respTeamParticipants.json();
-        const participantIds = teamParticipants.map((p) => p.id);
+        const ids = data.teamParticipants.map(p => p.id);
+        setParticipantIds(ids);
 
         const today = new Date();
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
         const completedDays = new Set();
 
-        for (const pid of participantIds) {
-          const respChallenges = await fetch(`${baseurl}/desafios_completos?participants_id=${pid}`);
-          const challenges = await respChallenges.json();
-
-          challenges.forEach((challenge) => {
-            if (challenge.completed_date) {
-              const date = new Date(challenge.completed_date);
-              const day = date.getDate();
-              const month = date.getMonth();
-              const year = date.getFullYear();
-
-              if (month === currentMonth && year === currentYear) {
-                completedDays.add(day);
-              }
+        data.challenges.forEach(challenge => {
+          if (challenge.completed_date) {
+            const date = new Date(challenge.completed_date);
+            if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+              completedDays.add(date.getDate());
             }
-          });
-        }
+          }
+        });
 
         setCompletedDaysSet(completedDays);
       } catch (error) {
-        console.error('❌ Erro ao buscar dados da API:', error);
+        console.error('❌ Erro ao buscar dados do passbook:', error);
       }
     };
 
-    fetchChallenges();
+    fetchPassbookData();
   }, [user]);
 
   const today = new Date();
@@ -108,32 +86,19 @@ const Caderneta = () => {
         <Text style={styles.title}>Caderneta</Text>
 
         <View style={styles.viewcaderneta}>
-          {/* === Desafios Semanais === */}
+          {/* === Desafios Semanais (inativos) === */}
           <Text style={styles.sectionTitle}>Desafios semanais</Text>
           <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
           <View style={styles.cardGrid}>
-            {weeklyChallengeCards.length > 0 ? (
-              weeklyChallengeCards.map((card, idx) => (
-                <View key={idx} style={[styles.card, styles.activeCard2]}>
-                  <Image
-                    source={{ uri: card.imagem }}
-                    style={styles.cardImage2}
-                    resizeMode="cover"
-                  />
-                  <Text style={styles.weeklyCardTitle}>{card.titulo || "Sem título"}</Text>
-                </View>
-              ))
-            ) : (
-              Array.from({ length: 4 }).map((_, idx) => (
-                <View
-                  key={idx}
-                  style={[styles.card, styles.inactiveCard]}
-                  accessibilityLabel={`Desafio semanal ${idx + 1} ainda não disponível`}
-                >
-                  <Text style={styles.cardNumber}>{idx + 1}</Text>
-                </View>
-              ))
-            )}
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <View
+                key={idx}
+                style={[styles.card, styles.inactiveCard]}
+                accessibilityLabel={`Desafio semanal ${idx + 1} ainda não disponível`}
+              >
+                <Text style={styles.cardNumber}>{idx + 1}</Text>
+              </View>
+            ))}
           </View>
 
           <View style={styles.divider} />
@@ -144,37 +109,40 @@ const Caderneta = () => {
 
           <View style={styles.cardGrid}>
             {Array.from({ length: daysInMonth }).map((_, idx) => {
-            const dayNumber = idx + 1;
-            const isCompleted = completedDaysSet.has(dayNumber);
-            return (
-              <View
-                key={dayNumber}
-                style={[styles.card, isCompleted ? styles.activeCard : styles.inactiveCard]}
-              >
-                {isCompleted ? (
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "./detalhesDia",
-                        params: { dia: dayNumber }, // ✅ aqui está corrigido
-                      })
-                    }
-                  >
-                    <Image
-                      source={require('../../imagens/desafiodiario.png')}
-                      style={styles.cardImage}
-                      resizeMode="cover"
-                    />
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.cardContentContainer}>
-                    <Text style={styles.cardPlaceholder}>?</Text>
-                    <Text style={styles.cardNumber}>{dayNumber}</Text>
-                  </View>
-                )}
-              </View>
-            );
-          })}
+              const dayNumber = idx + 1;
+              const isCompleted = completedDaysSet.has(dayNumber);
+              return (
+                <View
+                  key={dayNumber}
+                  style={[styles.card, isCompleted ? styles.activeCard : styles.inactiveCard]}
+                >
+                  {isCompleted ? (
+                    <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "./detalhesDia",
+                          params: {
+                            dia: dayNumber,
+                            participantIds: JSON.stringify([...participantIds]),
+                          },
+                        })
+                      }
+                    >
+                      <Image
+                        source={require('../../imagens/desafiodiario.png')}
+                        style={styles.cardImage}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.cardContentContainer}>
+                      <Text style={styles.cardPlaceholder}>?</Text>
+                      <Text style={styles.cardNumber}>{dayNumber}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
         </View>
       </View>
@@ -228,11 +196,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
   },
-  activeCard2: {
-    backgroundColor: "#E3FC87",
-    borderRadius: 8,
-    overflow: "hidden",
-  },
   inactiveCard: {
     backgroundColor: "#EDEDF1",
     borderColor: "#263A83",
@@ -281,20 +244,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 999,
-  },
-  cardImage2: {
-    marginTop: 10,
-    width: "100%",
-    height: "60%",
-    alignSelf: "center",
-    borderRadius: 8,
-  },
-  weeklyCardTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "black",
-    textAlign: "center",
-    marginTop: 5,
   },
 });
 

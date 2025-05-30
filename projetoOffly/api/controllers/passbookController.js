@@ -2,53 +2,50 @@ const Participants = require("../models/participants");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const { Op } = require("sequelize");
 
+const getPassbookData = async (req, res) => {
+  const { id } = req.query;
 
-exports.getParticipants = async (req, res) => {
-  const { id, teams_id } = req.query;
+  if (!id) {
+    return res.status(400).json({ error: "É necessário fornecer o id do utilizador." });
+  }
 
   try {
-    console.log("Query recebida:", req.query);
-    let whereClause = {};
+    const participant = await Participants.findOne({ where: { id } });
 
-    if (id && !isNaN(id)) {
-      whereClause.id = parseInt(id, 10);
+    if (!participant) {
+      return res.status(404).json({ error: "Participante não encontrado." });
     }
 
-    if (teams_id && !isNaN(teams_id)) {
-      whereClause.teams_id = parseInt(teams_id, 10);
+    const teamId = participant.teams_id;
+
+    if (!teamId) {
+      return res.status(404).json({ error: "Participante não pertence a nenhuma equipa." });
     }
 
-    console.log("Cláusula WHERE gerada:", whereClause);
-
-    const participants = await Participants.findAll({
-      where: whereClause,
+    const teamParticipants = await Participants.findAll({
+      where: { teams_id: teamId },
     });
 
-    res.status(200).json(participants);
-  } catch (error) {
-    console.error("Erro ao buscar participantes:", error);
-    res.status(500).json({ error: "Erro ao buscar participantes." });
-  }
-};
+    const participantIds = teamParticipants.map(p => p.id);
 
-// GET /participants_has_challenges?participants_id=xx
-exports.getParticipantsHasChallenges = async (req, res) => {
-  const { participants_id } = req.query;
-
-  if (!participants_id) {
-    return res.status(400).json({ error: "É necessário fornecer participants_id." });
-  }
-
-  try {
     const challenges = await ParticipantsHasChallenges.findAll({
-      where: { participants_id },
+      where: {
+        participants_id: {
+          [Op.in]: participantIds,
+        },
+      },
     });
 
-    res.status(200).json(challenges);
+    res.status(200).json({
+      teamParticipants,
+      challenges,
+    });
   } catch (error) {
-    console.error("Erro ao buscar desafios do participante:", error);
-    res.status(500).json({ error: "Erro ao buscar desafios." });
+    console.error("❌ Erro ao buscar dados da caderneta:", error);
+    res.status(500).json({ error: "Erro ao buscar dados da caderneta." });
   }
 };
 
-module.exports = exports;
+module.exports = {
+  getPassbookData,
+};

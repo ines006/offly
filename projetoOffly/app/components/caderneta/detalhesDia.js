@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   View,
   Text,
@@ -12,19 +12,21 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import axios from "axios";
 import { baseurl } from "../../api-config/apiConfig";
+import { AuthContext } from "../entrar/AuthContext"; 
 
 const { width } = Dimensions.get("window");
 
 export default function DetalhesDia() {
   const { dia } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useContext(AuthContext); 
   const [desafios, setDesafios] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchDesafiosDoDia() {
       try {
-        const response = await axios.get(`${baseurl}/api/desafios-do-dia?dia=${dia}`);
+        const response = await axios.get(`${baseurl}/api/desafios-do-dia?dia=${dia}&participanteId=${user.id}`);
         setDesafios(response.data);
       } catch (error) {
         console.error("Erro ao buscar desafios do dia:", error);
@@ -33,8 +35,10 @@ export default function DetalhesDia() {
       }
     }
 
-    fetchDesafiosDoDia();
-  }, [dia]);
+    if (user?.id) {
+      fetchDesafiosDoDia();
+    }
+  }, [dia, user]);
 
   if (loading) {
     return (

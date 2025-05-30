@@ -3,6 +3,7 @@ const ParticipantsHasChallenges = require("../models/participantsHasChallenges")
 const { Op, Sequelize } = require("sequelize");
 const { sequelize } = require("../config/database"); 
 const Participants = require("../models/participants");
+const Team = require("../models/teams");
 
 exports.getRandomChallenges = async (req, res) => {
   const userId = req.query.userId;
@@ -68,24 +69,29 @@ exports.getChallengeImage = async (req, res) => {
 };
 
 exports.getDesafiosDoDia = async (req, res) => {
-  const { dia } = req.query;
+  const { dia, participanteId } = req.query;
 
-  if (!dia) {
-    return res.status(400).json({ error: "O parâmetro 'dia' é obrigatório." });
+  if (!dia || !participanteId) {
+    return res.status(400).json({ error: "Os parâmetros 'dia' e 'participanteId' são obrigatórios." });
   }
 
-  const hoje = new Date();
-  const ano = hoje.getFullYear();
-  const mes = hoje.getMonth() + 1;
-
-  const diaFormatado = String(dia).padStart(2, '0');
-  const mesFormatado = String(mes).padStart(2, '0');
-
-  const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00`);
-  const fimDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T23:59:59`);
-
   try {
-    const resultados = await ParticipantsHasChallenges.findAll({
+    const participante = await Participants.findByPk(participanteId);
+    if (!participante) {
+      return res.status(404).json({ error: "Participante não encontrado." });
+    }
+
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = hoje.getMonth() + 1;
+
+    const diaFormatado = String(dia).padStart(2, '0');
+    const mesFormatado = String(mes).padStart(2, '0');
+
+    const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00`);
+    const fimDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T23:59:59`);
+
+    const desafios = await ParticipantsHasChallenges.findAll({
       where: {
         starting_date: {
           [Op.between]: [inicioDia, fimDia],
@@ -95,18 +101,22 @@ exports.getDesafiosDoDia = async (req, res) => {
         {
           model: Participants,
           as: "participant",
-          attributes: ["id", "name", "image"]
+          attributes: ["id", "name", "image"],
+          required: true,
+          where: {
+            teams_id: participante.teams_id,
+          },
         },
         {
           model: Challenge,
           as: "challenge",
-          attributes: ["id", "title", "description"]
-        }
+          attributes: ["id", "title", "description"],
+        },
       ],
-      order: [["starting_date", "ASC"]]
+      order: [["starting_date", "ASC"]],
     });
 
-    res.status(200).json(resultados);
+    res.status(200).json(desafios);
   } catch (error) {
     console.error("Erro ao buscar desafios do dia:", error);
     res.status(500).json({ error: "Erro ao buscar desafios do dia." });

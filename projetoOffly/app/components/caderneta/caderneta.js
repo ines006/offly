@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { Svg, Circle, Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
@@ -18,22 +19,17 @@ const Caderneta = () => {
   const [participantIds, setParticipantIds] = useState([]);
   const [teamChallenges, setTeamChallenges] = useState([]);
   const router = useRouter();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const fetchPassbookData = async () => {
-      if (!user?.id) {
-        console.log('❌ Utilizador não autenticado ou id inválido');
-        return;
-      }
+      if (!user?.id) return;
 
       try {
         const response = await fetch(`${baseurl}/passbook?id=${user.id}`);
         const data = await response.json();
 
-        if (!data.teamParticipants?.length) {
-          console.log('❌ Participantes da equipa não encontrados');
-          return;
-        }
+        if (!data.teamParticipants?.length) return;
 
         const ids = data.teamParticipants.map(p => p.id);
         setParticipantIds(ids);
@@ -62,7 +58,25 @@ const Caderneta = () => {
     fetchPassbookData();
   }, [user]);
 
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.08,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
   const today = new Date();
+  const currentDay = today.getDate();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 
   return (
@@ -111,18 +125,24 @@ const Caderneta = () => {
             {Array.from({ length: daysInMonth }).map((_, idx) => {
               const dayNumber = idx + 1;
               const isCompleted = completedDaysSet.has(dayNumber);
+              const isToday = dayNumber === currentDay;
+              const AnimatedWrapper = isToday ? Animated.View : View;
 
               if (!isCompleted) {
                 return (
-                  <View
+                  <AnimatedWrapper
                     key={dayNumber}
-                    style={[styles.card, styles.inactiveCard]}
+                    style={[
+                      styles.card,
+                      styles.inactiveCard,
+                      isToday && { transform: [{ scale: scaleAnim }] },
+                    ]}
                   >
                     <View style={styles.cardContentContainer}>
                       <Text style={styles.cardPlaceholder}>?</Text>
-                      <Text style={styles.cardNumber}>{dayNumber}</Text>
+                      <Text style={styles.inactiveDayNumberOverlay}> {dayNumber} </Text>
                     </View>
-                  </View>
+                  </AnimatedWrapper>
                 );
               }
 
@@ -152,7 +172,14 @@ const Caderneta = () => {
               }
 
               return (
-                <View key={dayNumber} style={[styles.card, styles.activeCard]}>
+                <AnimatedWrapper
+                  key={dayNumber}
+                  style={[
+                    styles.card,
+                    styles.activeCard,
+                    isToday && { transform: [{ scale: scaleAnim }] },
+                  ]}
+                >
                   <TouchableOpacity
                     onPress={() =>
                       router.push({
@@ -175,11 +202,13 @@ const Caderneta = () => {
                       </Text>
                     </View>
                   </TouchableOpacity>
-                </View>
+                </AnimatedWrapper>
               );
             })}
           </View>
         </View>
+
+        <View style={{ height: 60 }} />
       </View>
     </ScrollView>
   );
@@ -225,6 +254,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 15,
     elevation: 5,
+    position: 'relative',
   },
   activeCard: {
     backgroundColor: '#D8EAF8',
@@ -236,6 +266,8 @@ const styles = StyleSheet.create({
     borderColor: '#263A83',
     borderWidth: 1,
     borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardImage: {
     width: '100%',
@@ -247,6 +279,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    position: 'relative',
   },
   cardPlaceholder: {
     fontSize: 32,
@@ -254,22 +287,13 @@ const styles = StyleSheet.create({
     color: '#C5C6D0',
     textAlign: 'center',
   },
-  cardNumber: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2D2F45',
-    position: 'absolute',
-    left: 52,
-    top: 92,
-  },
   dayNumberOverlay: {
     position: 'absolute',
     bottom: 6,
     right: 6,
     fontSize: 14,
     fontWeight: 'bold',
-    paddingHorizontal: 4,
-    borderRadius: 4,
+    color: '#2D2F45',
   },
   divider: {
     height: 3,
@@ -290,6 +314,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
+  },
+  cardNumber: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2D2F45',
+    position: 'absolute',
+    left: 52,
+    top: 92,
+  },
+  inactiveDayNumberOverlay: {
+    position: 'absolute',
+    bottom: 6,
+    left: 20, 
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2D2F45',
   },
 });
 

@@ -75,7 +75,7 @@ export default function DetalhesDia() {
               <Text style={styles.realizadoPor}>Realizado por</Text>
               <View style={styles.userRow}>
                 <Image
-                  source={{ uri: item.participant.avatar || "https://placehold.co/48x48" }}
+                  source={{ uri: item.participant.image || "https://placehold.co/48x48" }}
                   style={styles.avatar}
                 />
                 <Text style={styles.userName}>{item.participant.name}</Text>

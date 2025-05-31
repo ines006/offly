@@ -22,6 +22,10 @@ export default function DetalhesDia() {
   const { user } = useContext(AuthContext);
   const [participantesComDesafios, setParticipantesComDesafios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [flysAtivos, setFlysAtivos] = useState({}); // {receiverId: true/false}
+
+  const currentDay = new Date().getDate(); // Dia atual
+  const isToday = parseInt(dia) === currentDay;
 
   const getValidImageUrl = (url) => {
     return url && url !== "undefined" ? url : "https://placehold.co/100x100";
@@ -34,7 +38,7 @@ export default function DetalhesDia() {
           params: { dia, participanteId: user.id },
         });
 
-        const { teamMembers, completedChallenges } = response.data;
+        const { teamMembers, completedChallenges, flys } = response.data;
 
         const desafiosPorParticipante = {};
         completedChallenges.forEach(({ participant, challenge }) => {
@@ -49,14 +53,24 @@ export default function DetalhesDia() {
           desafios: desafiosPorParticipante[membro.id] || [],
         }));
 
-        // Ordenar: realizados primeiro
         resultado.sort((a, b) => {
           const aTemDesafio = a.desafios.length > 0;
           const bTemDesafio = b.desafios.length > 0;
           return aTemDesafio === bTemDesafio ? 0 : aTemDesafio ? -1 : 1;
         });
 
+        // Novo: carregar flys ativos
+        const flyStatusMap = {};
+        if (flys && Array.isArray(flys)) {
+          flys.forEach((fly) => {
+            if (fly.receiver_id && fly.active === 1) {
+              flyStatusMap[fly.receiver_id] = true;
+            }
+          });
+        }
+
         setParticipantesComDesafios(resultado);
+        setFlysAtivos(flyStatusMap);
       } catch (error) {
         console.error("Erro ao buscar detalhes do dia:", error);
       } finally {
@@ -68,6 +82,22 @@ export default function DetalhesDia() {
       fetchDetalhesDoDia();
     }
   }, [dia, user]);
+
+  const handleFly = async (receiverId) => {
+    try {
+      const res = await axios.post(`${baseurl}/api/touchs`, {
+        sender_id: user.id,
+        receiver_id: receiverId,
+        active: 1,
+      });
+
+      if (res.status === 201 || res.status === 200) {
+        setFlysAtivos((prev) => ({ ...prev, [receiverId]: true }));
+      }
+    } catch (err) {
+      console.error("Erro ao mandar fly:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -124,8 +154,22 @@ export default function DetalhesDia() {
                   <Text style={styles.plus}>+</Text>
                 </View>
                 <View style={styles.placeholderRight}>
-                  <TouchableOpacity style={styles.flyButton}>
-                    <Text style={styles.flyButtonText}>Mandar um fly</Text>
+                  <TouchableOpacity
+                    disabled={!isToday || flysAtivos[membro.id]}
+                    onPress={() => handleFly(membro.id)}
+                    style={[
+                      styles.flyButton,
+                      (!isToday || flysAtivos[membro.id]) && styles.flyButtonDisabled,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.flyButtonText,
+                        (!isToday || flysAtivos[membro.id]) && styles.flyButtonTextDisabled,
+                      ]}
+                    >
+                      Mandar um fly
+                    </Text>
                   </TouchableOpacity>
                   <View style={styles.authorRow2}>
                     <Image
@@ -253,7 +297,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#000000",
   },
-
   authorName2: {
     fontSize: 13,
     color: "#fff",
@@ -289,9 +332,15 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignSelf: "flex-start",
   },
+  flyButtonDisabled: {
+    backgroundColor: "#9CA3AF",
+  },
   flyButtonText: {
     color: "#2E3A8C",
     fontWeight: "bold",
+  },
+  flyButtonTextDisabled: {
+    color: "#E5E7EB",
   },
   loadingContainer: {
     flex: 1,

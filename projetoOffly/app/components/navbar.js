@@ -153,13 +153,13 @@ export default function Navbar() {
   }, [loading, user]);
 
   const handleConfirm = async () => {
-    try {
-      await axios.patch(`${baseurl}/touchs/${touchId}/deactivate`);
-      setShowPopup(false);
-    } catch (err) {
-      console.error("Erro ao atualizar fly:", err);
-    }
-  };
+  try {
+    await axios.put(`${baseurl}/api/touchs/${touchId}/desativar`);
+    setShowPopup(false);
+  } catch (err) {
+    console.error("Erro ao atualizar fly:", err);
+  }
+};
 
   return (
     <>

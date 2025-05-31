@@ -71,27 +71,41 @@ exports.getChallengeImage = async (req, res) => {
 exports.getDesafiosDoDia = async (req, res) => {
   const { dia, participanteId } = req.query;
 
+  // Verificação de parâmetros obrigatórios
   if (!dia || !participanteId) {
     return res.status(400).json({ error: "Os parâmetros 'dia' e 'participanteId' são obrigatórios." });
   }
 
   try {
+    // Verifica se o participante existe
     const participante = await Participants.findByPk(participanteId);
     if (!participante) {
       return res.status(404).json({ error: "Participante não encontrado." });
     }
 
+    // Obtem data atual para usar o mês e o ano
     const hoje = new Date();
     const ano = hoje.getFullYear();
-    const mes = hoje.getMonth() + 1;
+    const mes = hoje.getMonth() + 1; // Janeiro = 0
 
+    // Formata dia e mês para garantir 2 dígitos
     const diaFormatado = String(dia).padStart(2, '0');
     const mesFormatado = String(mes).padStart(2, '0');
 
+    // Define o intervalo de tempo para o dia selecionado
     const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00`);
     const fimDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T23:59:59`);
 
-    const desafios = await ParticipantsHasChallenges.findAll({
+    // Busca todos os membros da equipa do participante autenticado
+    const teamMembers = await Participants.findAll({
+      where: {
+        teams_id: participante.teams_id,
+      },
+      attributes: ["id", "name", "image"],
+    });
+
+    // Busca os desafios realizados nesse dia por membros da mesma equipa
+    const completedChallenges = await ParticipantsHasChallenges.findAll({
       where: {
         starting_date: {
           [Op.between]: [inicioDia, fimDia],
@@ -116,7 +130,11 @@ exports.getDesafiosDoDia = async (req, res) => {
       order: [["starting_date", "ASC"]],
     });
 
-    res.status(200).json(desafios);
+    // Envia os dados para o frontend
+    res.status(200).json({
+      teamMembers,
+      completedChallenges,
+    });
   } catch (error) {
     console.error("Erro ao buscar desafios do dia:", error);
     res.status(500).json({ error: "Erro ao buscar desafios do dia." });

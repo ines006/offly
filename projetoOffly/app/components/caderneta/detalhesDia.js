@@ -12,31 +12,60 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import axios from "axios";
 import { baseurl } from "../../api-config/apiConfig";
-import { AuthContext } from "../entrar/AuthContext"; 
+import { AuthContext } from "../entrar/AuthContext";
 
 const { width } = Dimensions.get("window");
 
 export default function DetalhesDia() {
   const { dia } = useLocalSearchParams();
   const router = useRouter();
-  const { user } = useContext(AuthContext); 
-  const [desafios, setDesafios] = useState([]);
+  const { user } = useContext(AuthContext);
+  const [participantesComDesafios, setParticipantesComDesafios] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getValidImageUrl = (url) => {
+    return url && url !== "undefined" ? url : "https://placehold.co/100x100";
+  };
+
   useEffect(() => {
-    async function fetchDesafiosDoDia() {
+    async function fetchDetalhesDoDia() {
       try {
-        const response = await axios.get(`${baseurl}/api/desafios-do-dia?dia=${dia}&participanteId=${user.id}`);
-        setDesafios(response.data);
+        const response = await axios.get(`${baseurl}/api/desafios-do-dia`, {
+          params: { dia, participanteId: user.id },
+        });
+
+        const { teamMembers, completedChallenges } = response.data;
+
+        const desafiosPorParticipante = {};
+        completedChallenges.forEach(({ participant, challenge }) => {
+          if (!desafiosPorParticipante[participant.id]) {
+            desafiosPorParticipante[participant.id] = [];
+          }
+          desafiosPorParticipante[participant.id].push({ challenge, participant });
+        });
+
+        const resultado = teamMembers.map((membro) => ({
+          ...membro,
+          desafios: desafiosPorParticipante[membro.id] || [],
+        }));
+
+        // Ordenar: realizados primeiro
+        resultado.sort((a, b) => {
+          const aTemDesafio = a.desafios.length > 0;
+          const bTemDesafio = b.desafios.length > 0;
+          return aTemDesafio === bTemDesafio ? 0 : aTemDesafio ? -1 : 1;
+        });
+
+        setParticipantesComDesafios(resultado);
       } catch (error) {
-        console.error("Erro ao buscar desafios do dia:", error);
+        console.error("Erro ao buscar detalhes do dia:", error);
       } finally {
         setLoading(false);
       }
     }
 
     if (user?.id) {
-      fetchDesafiosDoDia();
+      fetchDetalhesDoDia();
     }
   }, [dia, user]);
 
@@ -55,32 +84,59 @@ export default function DetalhesDia() {
       </TouchableOpacity>
 
       <Text style={styles.title}>Desafios diários</Text>
+
       <View style={styles.dayContainer}>
         <Text style={styles.dayText}>Dia {dia}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.cardList}>
-        {desafios.map((item, index) => (
-          <View key={index} style={styles.card}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={{ uri: `${baseurl}/api/desafios/imagem/${item.challenge.id}` }}
-                style={styles.image}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
-              <Text style={styles.challengeDescription}>{item.challenge.description}</Text>
-              <Text style={styles.realizadoPor}>Realizado por</Text>
-              <View style={styles.userRow}>
-                <Image
-                  source={{ uri: item.participant.image || "https://placehold.co/48x48" }}
-                  style={styles.avatar}
-                />
-                <Text style={styles.userName}>{item.participant.name}</Text>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        {participantesComDesafios.map((membro) => (
+          <View key={membro.id} style={styles.card}>
+            {membro.desafios.length > 0 ? (
+              membro.desafios.map((item, index) => (
+                <View key={index} style={styles.challengeCard}>
+                  <View style={styles.challengeHeader}>
+                    <Image
+                      source={{ uri: `${baseurl}/api/desafios/imagem/${item.challenge.id}` }}
+                      style={styles.challengeImage}
+                      resizeMode="contain"
+                    />
+                    <View style={styles.challengeInfo}>
+                      <Text style={styles.challengeTitle}>{item.challenge.title}</Text>
+                      <Text style={styles.challengeDescription}>
+                        {item.challenge.description}
+                      </Text>
+                      <Text style={styles.realizadoPor}>Realizado por</Text>
+                      <View style={styles.authorRow}>
+                        <Image
+                          source={{ uri: getValidImageUrl(membro.image) }}
+                          style={styles.authorImage}
+                        />
+                        <Text style={styles.authorName}>{membro.name}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyCard}>
+                <View style={styles.placeholderLeft}>
+                  <Text style={styles.plus}>+</Text>
+                </View>
+                <View style={styles.placeholderRight}>
+                  <TouchableOpacity style={styles.flyButton}>
+                    <Text style={styles.flyButtonText}>Mandar um fly</Text>
+                  </TouchableOpacity>
+                  <View style={styles.authorRow2}>
+                    <Image
+                      source={{ uri: getValidImageUrl(membro.image) }}
+                      style={styles.authorImage}
+                    />
+                    <Text style={styles.authorName2}>{membro.name}</Text>
+                  </View>
+                </View>
               </View>
-            </View>
+            )}
           </View>
         ))}
       </ScrollView>
@@ -117,7 +173,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#2E3A8C",
     alignSelf: "center",
-    marginBottom: 10,
   },
   dayContainer: {
     alignSelf: "center",
@@ -125,75 +180,118 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 24,
     borderRadius: 12,
-    marginBottom: 20,
+    marginVertical: 16,
   },
   dayText: {
     color: "white",
     fontWeight: "bold",
     fontSize: 18,
   },
-  cardList: {
-    paddingHorizontal: 16,
+  scroll: {
+    paddingHorizontal: 20,
     paddingBottom: 30,
   },
   card: {
-    flexDirection: "row",
+    marginBottom: 24,
+  },
+  challengeCard: {
     backgroundColor: "#2E3A8C",
-    borderRadius: 10,
+    borderRadius: 16,
+    padding: 12,
+  },
+  challengeHeader: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 20,
-    padding: 10,
   },
-  imageContainer: {
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    width: 120,
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+  challengeImage: {
+    width: 100,
+    height: 100,
+    margin: 12,
+    borderRadius: 12,
+    backgroundColor: "#E5E7EB",
   },
-  image: {
-    width: 120,
-    height: 120,
-  },
-  cardContent: {
+  challengeInfo: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
+    padding: 12,
+    justifyContent: "center",
   },
   challengeTitle: {
-    fontSize: 15,
     fontWeight: "bold",
-    color: "#2E3A8C",
-    marginBottom: 4,
+    fontSize: 16,
+    color: "#111827",
   },
   challengeDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#374151",
-    marginBottom: 12,
+    marginVertical: 6,
   },
   realizadoPor: {
+    fontSize: 13,
     fontWeight: "bold",
-    color: "#374151",
-    fontSize: 14,
-    marginBottom: 6,
+    color: "#4B5563",
+    marginTop: 8,
   },
-  userRow: {
+  authorRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 4,
   },
-  avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#D1D5DB",
-    marginRight: 8,
+  authorRow2: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
   },
-  userName: {
-    fontSize: 14,
-    color: "#374151",
+  authorImage: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 6,
+  },
+  authorName: {
+    fontSize: 13,
+    color: "#000000",
+  },
+
+  authorName2: {
+    fontSize: 13,
+    color: "#fff",
+  },
+  emptyCard: {
+    flexDirection: "row",
+    backgroundColor: "#2E3A8C",
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  placeholderLeft: {
+    width: "35%",
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 32,
+  },
+  plus: {
+    fontSize: 48,
+    color: "#2E3A8C",
+    fontWeight: "bold",
+  },
+  placeholderRight: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 16,
+    backgroundColor: "#2E3A8C",
+  },
+  flyButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    alignSelf: "flex-start",
+  },
+  flyButtonText: {
+    color: "#2E3A8C",
+    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,

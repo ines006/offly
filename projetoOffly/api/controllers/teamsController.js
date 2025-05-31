@@ -13,7 +13,7 @@ const { v4: uuidv4 } = require("uuid"); //gerar os tokens
 exports.getTeamParticipants = async (req, res) => {
   try {
     const team = await Teams.findByPk(req.params.id, {
-      attributes: ["name", "description", "points", "capacity", "image"],  // não precisa do 'admin' aqui, pois vai incluir o admin completo
+      attributes: ["name", "description", "points", "capacity", "image"], // não precisa do 'admin' aqui, pois vai incluir o admin completo
       include: [
         {
           model: Participants,
@@ -30,9 +30,9 @@ exports.getTeamParticipants = async (req, res) => {
         {
           model: Participants,
           as: "admin",
-          attributes: ["id", "name"],  // os dados do admin 
+          attributes: ["id", "name"], // os dados do admin
           required: false,
-        }
+        },
       ],
     });
 
@@ -47,13 +47,17 @@ exports.getTeamParticipants = async (req, res) => {
       capacity: team.capacity,
       competition_id: team.competition ? team.competition.id : null,
       competition_name: team.competition ? team.competition.name : null,
-      competition_start_date: team.competition ? team.competition.starting_date : null,
+      competition_start_date: team.competition
+        ? team.competition.starting_date
+        : null,
       competition_end_date: team.competition ? team.competition.end_date : null,
       image: team.image,
-      team_admin: team.admin ? {
-        id: team.admin.id,
-        name: team.admin.name,
-      } : null,
+      team_admin: team.admin
+        ? {
+            id: team.admin.id,
+            name: team.admin.name,
+          }
+        : null,
       participants: team.participants.map((p) => ({
         id: p.id,
         name: p.name,
@@ -62,10 +66,11 @@ exports.getTeamParticipants = async (req, res) => {
     });
   } catch (error) {
     console.error("Error listing participants:", error.stack);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
-
 
 //Criação de equipa
 exports.createTeam = async (req, res) => {
@@ -208,10 +213,7 @@ exports.updateTeam = async (req, res) => {
       return res.status(400).json({ message: "Valid team ID is required" });
     }
 
-    if (
-      competitions_id === undefined ||
-      !Number.isInteger(competitions_id)
-    ) {
+    if (competitions_id === undefined || !Number.isInteger(competitions_id)) {
       return res.status(400).json({
         message: "Valid competitions_id (integer) is required",
       });
@@ -230,7 +232,9 @@ exports.updateTeam = async (req, res) => {
     }
 
     if (team.team_admin !== req.user.id) {
-      return res.status(403).json({ message: "You are not the admin of this team" });
+      return res
+        .status(403)
+        .json({ message: "You are not the admin of this team" });
     }
 
     // Atualizar equipa
@@ -248,7 +252,6 @@ exports.updateTeam = async (req, res) => {
       teamId,
       competitions_id,
     });
-
   } catch (error) {
     console.error("Error updating team:", error.stack);
     res.status(500).json({
@@ -280,7 +283,7 @@ exports.getTeamsByCompetition = async (req, res) => {
       where: {
         competitions_id: competitionId,
       },
-      attributes: ["name", "points", "image"],
+      attributes: ["name", "points", "image", "last_variation"],
       order, // Aplica ordenação se sort=ranking, senão retorna sem ordenação específica
     });
 
@@ -296,6 +299,7 @@ exports.getTeamsByCompetition = async (req, res) => {
         name: team.name,
         points: team.points,
         image: team.image,
+        last_variation: team.last_variation,
       })),
     });
   } catch (error) {
@@ -306,7 +310,6 @@ exports.getTeamsByCompetition = async (req, res) => {
   }
 };
 
-
 // Listar competições com menos de 10 equipas
 exports.getAvailableCompetitions = async (req, res) => {
   try {
@@ -315,26 +318,28 @@ exports.getAvailableCompetitions = async (req, res) => {
       attributes: [
         "id",
         "name",
-        [Sequelize.fn("COUNT", Sequelize.col("teams.id")), "team_count"]
+        [Sequelize.fn("COUNT", Sequelize.col("teams.id")), "team_count"],
       ],
       include: [
         {
           model: Teams,
           as: "teams",
           attributes: [], // Não buscamos as equipas aqui ainda
-          required: false
-        }
+          required: false,
+        },
       ],
       group: ["Competitions.id"],
-      having: Sequelize.literal("COUNT(teams.id) < 10")
+      having: Sequelize.literal("COUNT(teams.id) < 10"),
     });
 
     if (!competitionsWithCounts.length) {
-      return res.status(404).json({ message: "No competitions with fewer than 10 teams found." });
+      return res
+        .status(404)
+        .json({ message: "No competitions with fewer than 10 teams found." });
     }
 
     // 2. Obter os IDs
-    const competitionIds = competitionsWithCounts.map(c => c.id);
+    const competitionIds = competitionsWithCounts.map((c) => c.id);
 
     // 3. Buscar novamente as competições com as equipas completas
     const competitionsWithTeams = await Competitions.findAll({
@@ -344,19 +349,19 @@ exports.getAvailableCompetitions = async (req, res) => {
         {
           model: Teams,
           as: "teams",
-          attributes: ["id", "name"]
-        }
-      ]
+          attributes: ["id", "name"],
+        },
+      ],
     });
 
     // 4. Combinar dados das duas queries
-    const finalResult = competitionsWithTeams.map(comp => {
-      const match = competitionsWithCounts.find(c => c.id === comp.id);
+    const finalResult = competitionsWithTeams.map((comp) => {
+      const match = competitionsWithCounts.find((c) => c.id === comp.id);
       return {
         id: comp.id,
         name: comp.name,
         team_count: match.getDataValue("team_count"),
-        teams: comp.teams
+        teams: comp.teams,
       };
     });
 
@@ -365,12 +370,10 @@ exports.getAvailableCompetitions = async (req, res) => {
     console.error("Error fetching competitions:", error.stack);
     return res.status(500).json({
       message: "Internal server error",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
-
 
 //Desafios diários validados dos participantes de uma equipa
 exports.getTeamChallenges = async (req, res) => {
@@ -684,7 +687,6 @@ exports.getTeams = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
-
 
 // Pesquisar equipas por nome na barra de pesquisa
 exports.searchTeamsByName = async (req, res) => {

@@ -36,7 +36,7 @@ const upload = multer({ storage });
  *                 description: Screen time image
  *     responses:
  *       200:
- *         description: Image analysed and score recorded
+ *         description: Image analysed, score and variation recorded successfully
  *         content:
  *           application/json:
  *             schema:

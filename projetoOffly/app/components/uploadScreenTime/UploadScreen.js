@@ -21,6 +21,7 @@ const UploadScreen = () => {
   const router = useRouter();
   const { user, accessToken } = useContext(AuthContext);
   const [userId, setUserId] = useState(null);
+  const [teamsId, setTeamsId] = useState(null);
   const [submitVisible, setSubmitVisible] = useState(false);
   const [processingModalVisible, setProcessingModalVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
@@ -29,7 +30,6 @@ const UploadScreen = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [points, setPoints] = useState(null);
 
-  // Verificação de utilizador logado
   useEffect(() => {
     console.log(
       "useEffect disparado com user:",
@@ -41,12 +41,32 @@ const UploadScreen = () => {
     );
     if (user?.id) {
       setUserId(user.id.toString());
+      const fetchTeamsId = async () => {
+        try {
+          const config = {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          };
+          const response = await axios.get(
+            `${baseurl}/participants/${user.id}`,
+            config
+          );
+          const fetchedTeamsId = response.data.teams_id;
+          setTeamsId(fetchedTeamsId);
+          console.log("teams_id obtido:", fetchedTeamsId);
+        } catch (error) {
+          console.error("Erro ao buscar teams_id:", error.response || error);
+          Alert.alert("Erro", "Não foi possível obter a equipa do utilizador.");
+        }
+      };
+      fetchTeamsId();
     } else {
       Alert.alert("Erro", "Nenhum utilizador logado!");
     }
-  }, [user?.id]);
+  }, [user?.id, accessToken]);
 
-  // Função para abrir a galeria e selecionar uma imagem
   const handleSelectImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -74,7 +94,6 @@ const UploadScreen = () => {
     }
   };
 
-  // Função para determinar a mensagem motivacional com base nos pontos
   const getPointsMessage = (points) => {
     if (points === null) {
       return "Pontuação processada.";
@@ -87,19 +106,21 @@ const UploadScreen = () => {
     }
   };
 
-  // Função para submeter a imagem
   const handleSubmit = async () => {
-    if (!userId || !selectedImage) {
+    if (!userId || !selectedImage || !teamsId) {
       Alert.alert(
         "Erro",
-        "Nenhuma imagem selecionada ou utilizador não logado!"
+        "Nenhuma imagem selecionada, utilizador não logado ou equipa não encontrada!"
       );
       return;
     }
 
+    console.log("accessToken antes da requisição:", accessToken);
     console.log(
       "Iniciando handleSubmit com userId:",
       userId,
+      "teamsId:",
+      teamsId,
       "e imagem:",
       selectedImage
     );
@@ -110,7 +131,6 @@ const UploadScreen = () => {
       const formData = new FormData();
       formData.append("userId", userId);
 
-      // Tratamento da imagem por plataforma
       if (Platform.OS === "web") {
         const response = await fetch(selectedImage);
         const blob = await response.blob();
@@ -160,28 +180,26 @@ const UploadScreen = () => {
       ) {
         setErrorMessage(errorMsg);
         setErrorModalVisible(true);
-        setSelectedImage(null); // Reset image
-        setSubmitVisible(false); // Hide submit button
+        setSelectedImage(null);
+        setSubmitVisible(false);
       } else {
         Alert.alert("Erro", errorMsg);
       }
     }
   };
 
-  // Função para remover a imagem
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setSubmitVisible(false);
   };
 
-  // Função para fechar a modal de sucesso e redirecionar
   const handleCloseSuccessModal = () => {
     setSuccessModalVisible(false);
     setPoints(null);
+    console.log("Navegando para a navbar");
     router.push("/components/navbar");
   };
 
-  // Função para fechar a modal de erro
   const handleCloseErrorModal = () => {
     console.log("Fechando modal de erro");
     setErrorModalVisible(false);
@@ -275,7 +293,6 @@ const UploadScreen = () => {
         ) : null}
       </View>
 
-      {/* Modal de Processamento */}
       <Modal
         visible={processingModalVisible}
         animationType="none"
@@ -290,7 +307,6 @@ const UploadScreen = () => {
         </View>
       </Modal>
 
-      {/* Modal de Sucesso */}
       <Modal
         visible={successModalVisible}
         animationType="none"
@@ -327,7 +343,6 @@ const UploadScreen = () => {
         </View>
       </Modal>
 
-      {/* Modal de Erro */}
       <Modal
         visible={errorModalVisible}
         animationType="none"

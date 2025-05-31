@@ -176,8 +176,6 @@ const teamsController = require("../controllers/teamsController");
  */
 router.get("/", teamsController.getTeams);
 
-
-
 /**
  * @swagger
  * /teams/search:
@@ -758,7 +756,6 @@ router.post("/", authenticateToken, teamsController.createTeam);
  */
 router.put("/:id", authenticateToken, teamsController.updateTeam);
 
-
 /**
  * @swagger
  * /teams/{id}/daily-challenges:
@@ -1025,7 +1022,7 @@ router.get(
  * /teams/competition/{id}:
  *   get:
  *     summary: List teams for a specific competition
- *     description: Retrieves all teams associated with a competition identified by its ID. Optionally sorts teams by ranking (points in descending order) using the `sort` query parameter. Returns the competition name and a list of teams with their names and points.
+ *     description: Retrieves all teams associated with a competition identified by its ID. Optionally sorts teams by ranking (points in descending order) using the `sort` query parameter. Returns the competition name and a list of teams with their names, points, and last variation.
  *     tags: [Teams]
  *     parameters:
  *       - in: path
@@ -1068,6 +1065,10 @@ router.get(
  *                         type: integer
  *                         description: The team's points
  *                         example: 150
+ *                       last_variation:
+ *                         type: integer
+ *                         description: The last variation in points for the team (negative for deduction, positive for addition)
+ *                         example: -30
  *                   description: List of teams in the competition, sorted by points if `sort=ranking`, otherwise in database-dependent order
  *             examples:
  *               sortedByRanking:
@@ -1077,10 +1078,13 @@ router.get(
  *                   teams:
  *                     - name: eagles
  *                       points: 150
+ *                       last_variation: -10
  *                     - name: falcons
  *                       points: 100
+ *                       last_variation: -20
  *                     - name: hawks
  *                       points: 50
+ *                       last_variation: -30
  *               unsorted:
  *                 summary: Teams without specific sorting
  *                 value:
@@ -1088,10 +1092,13 @@ router.get(
  *                   teams:
  *                     - name: falcons
  *                       points: 100
+ *                       last_variation: -20
  *                     - name: eagles
  *                       points: 150
+ *                       last_variation: -10
  *                     - name: hawks
  *                       points: 50
+ *                       last_variation: -30
  *       404:
  *         description: Competition or teams not found
  *         content:
@@ -1128,7 +1135,6 @@ router.get(
  *                   example: Internal server error
  */
 router.get("/competition/:id", teamsController.getTeamsByCompetition);
-
 
 /**
  * @swagger

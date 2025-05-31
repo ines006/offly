@@ -91,7 +91,7 @@ Do not return any other text or format.
   }
 };
 
-// Controller para processar o upload (unchanged)
+// Controller para processar o upload
 exports.analyzeUpload = async (req, res) => {
   console.log("Requisição recebida em analyzeUpload:", {
     headers: req.headers,
@@ -149,9 +149,15 @@ exports.analyzeUpload = async (req, res) => {
 
     // Iniciar transação para garantir consistência
     await sequelize.transaction(async (t) => {
-      // Atualizar a pontuação da equipe (subtrair pontos)
+      // Calcular a variação (negativa, pois os pontos estão sendo subtraídos)
+      const variation = -points;
+
+      // Atualizar a pontuação da equipe e o campo last_variation
       await Teams.update(
-        { points: sequelize.literal(`points - ${points}`) },
+        {
+          points: sequelize.literal(`points - ${points}`),
+          last_variation: variation, // Usar last_variation com underscore
+        },
         { where: { id: participant.teams_id }, transaction: t }
       );
 

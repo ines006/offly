@@ -59,6 +59,11 @@ const Teams = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    last_variation: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      allowNull: false,
+    },
   },
   {
     tableName: "teams",

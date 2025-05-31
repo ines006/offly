@@ -15,40 +15,29 @@ import {
   Container_Pagina_Equipa_Criada,
   Sub_Titulos_Criar_Equipa,
   Titulos_Equipa_Criada,
-  Caixa_Equipa_Criada,
   Botoes_Pagina_principal,
   Texto_Botoes_Pagina_principal,
   Botoes_Pagina_principal_Desativado,
   Texto_Botoes_Pagina_principal_Desativado,
 } from "./styles/styles";
-import {
-  doc,
-  getDoc,
-  collection,
-  getDocs,
-  arrayUnion,
-  updateDoc,
-} from "firebase/firestore";
-import { db, auth } from "./firebase/firebaseApi";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { AuthContext } from "./components/entrar/AuthContext"; 
-import { baseurl } from "./api-config/apiConfig"; 
+import { AuthContext } from "./components/entrar/AuthContext";
+import { baseurl } from "./api-config/apiConfig";
 import axios from "axios";
 import { useRef } from "react";
-
 
 export default function EquipaCriada() {
   const [fontsLoaded] = useFonts({
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
-const hasRedirectedRef = useRef(false);
-const intervalIdRef = useRef(null);
+  const hasRedirectedRef = useRef(false);
+  const intervalIdRef = useRef(null);
 
-  const { user, accessToken } = useContext(AuthContext); 
-  
+  const { user, accessToken } = useContext(AuthContext);
+
   const { teamId } = useLocalSearchParams();
-  
+
   const [loading, setLoading] = useState(true);
   const [teamDataLoaded, setTeamDataLoaded] = useState(false);
   const [hasCompetition, setHasCompetition] = useState(false);
@@ -62,7 +51,6 @@ const intervalIdRef = useRef(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const router = useRouter();
-
 
   // Array de URLs das imagens p/ users
   const imageUrls = [
@@ -126,7 +114,7 @@ const intervalIdRef = useRef(null);
         const userData = response.data;
         const name = userData.name || userData.fullName;
         const image = userData.image || null;
-        
+
         setUserId(user.id);
         setUserName(name);
         setProfileImage(image ? { uri: image } : null);
@@ -149,86 +137,80 @@ const intervalIdRef = useRef(null);
     fetchUserData();
   }, [user, accessToken]);
 
-
-  // Função para buscar os dados da equipa 
+  // Função para buscar os dados da equipa
   const teamData = async () => {
-  try {
-    const response = await axios.get(`${baseurl}/teams/${teamId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    try {
+      const response = await axios.get(`${baseurl}/teams/${teamId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
 
-    console.log("📥 Dados completos da equipa:", response.data); 
+      console.log("📥 Dados completos da equipa:", response.data);
 
-    const teamData = response.data;
-    setTeamName(teamData.name);
-    setTeamMembers(teamData.participants);
-    setteamCapacity(teamData.capacity);
-    setTeamDescription(teamData.description);
+      const teamData = response.data;
+      setTeamName(teamData.name);
+      setTeamMembers(teamData.participants);
+      setteamCapacity(teamData.capacity);
+      setTeamDescription(teamData.description);
 
-    // Verifica se o user é o admin da equipa
-    if (teamData.team_admin.id == userId) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
-
-    // console.log("📌 team admin id:", teamData.team_admin.id);
-    // console.log("🔁 O user é admin da equipa?", isAdmin);
-
-    setTeamDataLoaded(true);
-
-    const hasComp = !!teamData.competition_id;
-    console.log("📌 competitions_id:", teamData.competition_id);
-    console.log("🔁 Deve redirecionar?", hasComp);
-
-    setHasCompetition(hasComp);
-
-    // 🚫 Se já redirecionou, não faz mais nada
-    if (hasRedirectedRef.current) return;
-
-    // ✅ Redireciona e marca que já foi
-    if (hasComp && !isAdmin) {
-      hasRedirectedRef.current = true;
-
-      // ❌ Limpa o setInterval
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
+      // Verifica se o user é o admin da equipa
+      if (teamData.team_admin.id == userId) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
       }
 
-      console.log("🚀 Redirecionando para a navbar...");
-      router.push("./components/navbar");
+      // console.log("📌 team admin id:", teamData.team_admin.id);
+      // console.log("🔁 O user é admin da equipa?", isAdmin);
+
+      setTeamDataLoaded(true);
+
+      const hasComp = !!teamData.competition_id;
+      console.log("📌 competitions_id:", teamData.competition_id);
+      console.log("🔁 Deve redirecionar?", hasComp);
+
+      setHasCompetition(hasComp);
+
+      // 🚫 Se já redirecionou, não faz mais nada
+      if (hasRedirectedRef.current) return;
+
+      // ✅ Redireciona e marca que já foi
+      if (hasComp && !isAdmin) {
+        hasRedirectedRef.current = true;
+
+        // ❌ Limpa o setInterval
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+        }
+
+        console.log("🚀 Redirecionando para a navbar...");
+        router.push("./components/navbar");
+      }
+    } catch (error) {
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message ||
+          "Não foi possível carregar os dados da equipa."
+      );
     }
-
-
-  } catch (error) {
-    Alert.alert(
-      "Erro",
-      error.response?.data?.message || "Não foi possível carregar os dados da equipa."
-    );
-  }
-};
-
+  };
 
   // Carrega os dados da equipa ao entrar + atualização automática
-useEffect(() => {
-  if (userId && teamId) {
-    teamData(); // chamada inicial
+  useEffect(() => {
+    if (userId && teamId) {
+      teamData(); // chamada inicial
 
-    intervalIdRef.current = setInterval(teamData, 10000); // polling a cada 10s
+      intervalIdRef.current = setInterval(teamData, 10000); // polling a cada 10s
 
-    return () => {
-      if (intervalIdRef.current) clearInterval(intervalIdRef.current);
-    };
-  }
-}, [userId, teamId]);
-
-
-
+      return () => {
+        if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+      };
+    }
+  }, [userId, teamId]);
 
   // if (loading) {
   //   return (
@@ -239,13 +221,12 @@ useEffect(() => {
   // }
 
   if (!teamDataLoaded) {
-  return (
-    <View style={styles.loaderContainer}>
-      <ActivityIndicator size="large" color="#263A83" />
-    </View>
-  );
-}
-
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#263A83" />
+      </View>
+    );
+  }
 
   if (!teamName && !teamDescription) {
     return (
@@ -257,86 +238,99 @@ useEffect(() => {
     );
   }
 
- // Função para entrar no torneio
-const handleTorneio = async () => {
-  try {
-    // Mostrar animação de loading
-    //setLoading(true);
+  // Função para entrar no torneio
+  const handleTorneio = async () => {
+    try {
+      // Mostrar animação de loading
+      //setLoading(true);
 
+      // 1. Obter as competições disponíveis
+      const responseCompetitions = await axios.get(
+        `${baseurl}/teams/competition/available`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
 
-    // 1. Obter as competições disponíveis
-    const responseCompetitions = await axios.get(`${baseurl}/teams/competition/available`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+      console.log("✅ Resposta da API:", responseCompetitions.data);
 
-    console.log("✅ Resposta da API:", responseCompetitions.data);
+      const availableCompetitions = responseCompetitions.data;
 
-    const availableCompetitions = responseCompetitions.data;
-    
-     console.log("Length competições disponíveis: ", availableCompetitions.length);
+      console.log(
+        "Length competições disponíveis: ",
+        availableCompetitions.length
+      );
 
-    // 2. Escolher uma competição aleatória
-    
-    if (availableCompetitions.length === 0) {
-      Alert.alert("Erro", "Não há competições disponíveis no momento.");
-      return;
-    }
+      // 2. Escolher uma competição aleatória
 
-    const randomCompetition = availableCompetitions[Math.floor(Math.random() * availableCompetitions.length)];
-    console.log("Random id: ", randomCompetition);
-    
-    // 3. Atualizar a equipe com a competição escolhida
-    const updatedTeamData = {
-      competitions_id: randomCompetition.id,  // O ID da competição aleatória
-    };
-
-
-    const responseUpdateTeam = await axios.put(
-      `${baseurl}/teams/${teamId}`,
-      updatedTeamData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "ngrok-skip-browser-warning": "true",
-        },
+      if (availableCompetitions.length === 0) {
+        Alert.alert("Erro", "Não há competições disponíveis no momento.");
+        return;
       }
-    );
 
-    console.log("✅ Equipa atualizada:", responseUpdateTeam.data);
+      const randomCompetition =
+        availableCompetitions[
+          Math.floor(Math.random() * availableCompetitions.length)
+        ];
+      console.log("Random id: ", randomCompetition);
 
-     // 4. Cria a caderneta e já atualiza o team_passbooks_id na equipa
-    const passbookResponse = await axios.post(`${baseurl}/api/team-passbooks`, {
-      competitions_id: randomCompetition.id,
-      team_id: teamId,
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+      // 3. Atualizar a equipe com a competição escolhida
+      const updatedTeamData = {
+        competitions_id: randomCompetition.id, // O ID da competição aleatória
+      };
 
-    const newPassbookId = passbookResponse.data.team_passbook_id;
+      const responseUpdateTeam = await axios.put(
+        `${baseurl}/teams/${teamId}`,
+        updatedTeamData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
 
-    console.log("✅ Caderneta criada com ID:", newPassbookId);
+      console.log("✅ Equipa atualizada:", responseUpdateTeam.data);
 
-    // 5. Redirecionar para a navbar após atualização
-    router.push("./components/navbar");
+      // 4. Cria a caderneta e já atualiza o team_passbooks_id na equipa
+      const passbookResponse = await axios.post(
+        `${baseurl}/api/team-passbooks`,
+        {
+          competitions_id: randomCompetition.id,
+          team_id: teamId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-  } catch (error) {
-    console.error("❌ Erro ao entrar no torneio:", error);
-    Alert.alert("Erro", error.response?.data?.message || "Não foi possível entrar no torneio.");
-  } 
-  // finally {
-  //   // 5. Remover animação de loading
-  //   //setLoading(false);
-  // }
-};
+      const newPassbookId = passbookResponse.data.team_passbook_id;
+
+      console.log("✅ Caderneta criada com ID:", newPassbookId);
+
+      // 5. Redirecionar para a navbar após atualização
+      router.push("./components/navbar");
+    } catch (error) {
+      console.error("❌ Erro ao entrar no torneio:", error);
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message || "Não foi possível entrar no torneio."
+      );
+    }
+    // finally {
+    //   // 5. Remover animação de loading
+    //   //setLoading(false);
+    // }
+  };
 
   return (
     <ScrollView style={{ backgroundColor: "#fff" }}>
@@ -362,21 +356,29 @@ const handleTorneio = async () => {
             />
           </Svg>
         </TouchableOpacity>
-        <Titulos_Equipa_Criada accessibilityRole="text" accessibilityLabel={teamName}>
+        <Titulos_Equipa_Criada
+          accessibilityRole="text"
+          accessibilityLabel={teamName}
+        >
           {teamName}
         </Titulos_Equipa_Criada>
-        <Sub_Titulos_Criar_Equipa accessibilityRole="text" accessibilityLabel={teamDescription}>
+        <Sub_Titulos_Criar_Equipa
+          accessibilityRole="text"
+          accessibilityLabel={teamDescription}
+        >
           {teamDescription}
         </Sub_Titulos_Criar_Equipa>
 
-
         <View style={styles.remainingTeamsContainer}>
-        {Array.from({ length: teamCapacity }).map((_, index) => {
+          {Array.from({ length: teamCapacity }).map((_, index) => {
             const participant = teamMembers[index];
             const isEmptySlot = !participant;
 
             return (
-              <View key={index} style={[styles.card, isEmptySlot && styles.cardVazio]}>
+              <View
+                key={index}
+                style={[styles.card, isEmptySlot && styles.cardVazio]}
+              >
                 <Image
                   source={{
                     uri: isEmptySlot
@@ -385,7 +387,12 @@ const handleTorneio = async () => {
                   }}
                   style={styles.peopleImage}
                 />
-                <Text style={[styles.participantText, isEmptySlot && styles.participantTextVazio]}>
+                <Text
+                  style={[
+                    styles.participantText,
+                    isEmptySlot && styles.participantTextVazio,
+                  ]}
+                >
                   {isEmptySlot ? ". . ." : participant.name}
                 </Text>
               </View>
@@ -395,18 +402,18 @@ const handleTorneio = async () => {
           {teamMembers.length === teamCapacity ? (
             isAdmin ? (
               <Botoes_Pagina_principal onPress={handleTorneio}>
-                <Texto_Botoes_Pagina_principal>Entrar Torneio</Texto_Botoes_Pagina_principal>
+                <Texto_Botoes_Pagina_principal>
+                  Entrar Torneio
+                </Texto_Botoes_Pagina_principal>
               </Botoes_Pagina_principal>
             ) : null
-          ) : (
-            isAdmin ? (
+          ) : isAdmin ? (
             <Botoes_Pagina_principal_Desativado>
               <Texto_Botoes_Pagina_principal_Desativado>
                 Entrar Torneio
               </Texto_Botoes_Pagina_principal_Desativado>
             </Botoes_Pagina_principal_Desativado>
-            ) : null
-          )}
+          ) : null}
         </View>
       </Container_Pagina_Equipa_Criada>
     </ScrollView>

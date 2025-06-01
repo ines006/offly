@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     height: height * 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    zIndex: 1,
+  
   },
   podiumImage: {
     resizeMode: "contain",
@@ -572,6 +572,7 @@ const styles = StyleSheet.create({
     width: width * 0.95,
     alignSelf: "center",
     marginTop: height * -0.17,
+    paddingHorizontal: 10,
   },
   card: {
     flexDirection: "row",

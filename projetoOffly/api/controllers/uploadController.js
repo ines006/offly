@@ -4,7 +4,7 @@ const Teams = require("../models/teams");
 const { sequelize } = require("../config/database");
 
 // Configuração do OpenAI
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 // Função para analisar a imagem com ChatGPT
 const analyzeScreenTime = async (imageBuffer) => {

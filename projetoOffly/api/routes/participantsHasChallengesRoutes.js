@@ -83,7 +83,4 @@ router.get("/active/:participants_id", participantsHasChallengesController.getAc
 
 router.put("/complete/:participants_id", controller.completeActiveChallenge);
 
-router.get("/:participants_id/stickerbook", controller.getStickerBook);
-
-
 module.exports = router;

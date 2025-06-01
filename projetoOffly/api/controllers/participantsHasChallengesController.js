@@ -176,3 +176,6 @@ exports.completeActiveChallenge = async (req, res) => {
     res.status(500).json({ error: "Erro ao gerar caderneta." });
   }
 };
+
+  module.exports = exports;
+

@@ -7,6 +7,8 @@ const teamsRoutes = require("./routes/teamsRoutes");
 const authRoutes = require("./routes/authRoutes");
 const challengeRoutes = require("./routes/challengeRoutes");
 const participantsHasChallengesRoutes = require("./routes/participantsHasChallengesRoutes");
+const cadernetaRoutes = require("./routes/passbookRoutes");
+const touchRoutes = require("./routes/touchsRoutes");
 const { swaggerUi, specs } = require("./config/swagger");
 const teamPassbooksRoutes = require("./routes/teamsPassbooksRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
@@ -69,6 +71,11 @@ app.use("/api/challenges", challengeRoutes);
 app.use("/api/participants-has-challenges", participantsHasChallengesRoutes);
 app.use("/api/team-passbooks", teamPassbooksRoutes);
 app.use("/uploads", uploadRoutes);
+app.use("/passbook", cadernetaRoutes);
+app.use("/", cadernetaRoutes);
+app.use("/api", touchRoutes);
+app.use("/touchs", touchRoutes);
+
 
 // Testar conexão e iniciar servidor
 testConnection()

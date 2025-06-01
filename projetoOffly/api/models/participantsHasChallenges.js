@@ -1,8 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 
-
-
 const ParticipantsHasChallenges = sequelize.define(
   "ParticipantsHasChallenges",
   {
@@ -47,6 +45,5 @@ const ParticipantsHasChallenges = sequelize.define(
     tableName: "participants_has_challenges",
   }
 );
-
 
 module.exports = ParticipantsHasChallenges;

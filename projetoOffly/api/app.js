@@ -67,15 +67,14 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/auth", authRoutes);
 app.use("/participants", participantsRoutes);
 app.use("/teams", teamsRoutes);
-app.use("/api/challenges", challengeRoutes);
 app.use("/api/participants-has-challenges", participantsHasChallengesRoutes);
 app.use("/api/team-passbooks", teamPassbooksRoutes);
 app.use("/uploads", uploadRoutes);
 app.use("/passbook", cadernetaRoutes);
 app.use("/", cadernetaRoutes);
 app.use("/api", touchRoutes);
+app.use("/api", challengeRoutes); 
 app.use("/touchs", touchRoutes);
-
 
 // Testar conexão e iniciar servidor
 testConnection()

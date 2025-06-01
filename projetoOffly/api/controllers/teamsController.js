@@ -334,7 +334,7 @@ exports.getTeamsByCompetition = async (req, res) => {
       where: {
         competitions_id: competitionId,
       },
-      attributes: ["name", "points", "image", "last_variation"],
+      attributes: ["id", "name", "points", "image", "last_variation"],
       order, // Aplica ordenação se sort=ranking, senão retorna sem ordenação específica
     });
 
@@ -347,6 +347,7 @@ exports.getTeamsByCompetition = async (req, res) => {
     res.json({
       competition_name: competition.name,
       teams: teams.map((team) => ({
+        id: team.id,
         name: team.name,
         points: team.points,
         image: team.image,

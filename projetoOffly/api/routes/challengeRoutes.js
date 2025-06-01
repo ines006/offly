@@ -92,4 +92,9 @@ router.get("/desafios", challengeController.getRandomChallenges);
 
 router.get("/desafios-do-dia", challengeController.getDesafiosDoDia);
 
+router.get("/verificar/:id", challengeController.verificarDesafioRealizado);
+
+router.post("/discover-weekly-challenge", challengeController.discoverWeeklyChallenge);
+
+
 module.exports = router;

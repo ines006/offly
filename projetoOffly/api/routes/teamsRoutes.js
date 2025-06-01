@@ -445,9 +445,19 @@ router.get("/:id", teamsController.getTeamParticipants);
  * @swagger
  * /teams/competition/available:
  *   get:
- *     summary: List competitions with less than 10 teams
- *     description: Retrieves all competitions that currently have fewer than 10 registered teams. Returns the competition ID, name, number of teams, and the list of teams in each.
+ *     summary: List competitions with fewer than 10 teams and a specific number of players per team
+ *     description: |
+ *       Retrieves all competitions that currently have fewer than 10 registered teams
+ *       and match the specified number of players per team (only 3, 4, or 5 allowed).
  *     tags: [Teams]
+ *     parameters:
+ *       - in: query
+ *         name: players
+ *         schema:
+ *           type: integer
+ *           enum: [3, 4, 5]
+ *         required: true
+ *         description: Number of players per team in the competition (must be 3, 4, or 5)
  *     responses:
  *       200:
  *         description: Competitions retrieved successfully
@@ -466,6 +476,10 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                     type: string
  *                     description: Competition name
  *                     example: "Spring Tournament"
+ *                   players:
+ *                     type: integer
+ *                     description: Required number of players per team
+ *                     example: 5
  *                   team_count:
  *                     type: integer
  *                     description: Number of teams currently registered
@@ -483,7 +497,7 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                           type: string
  *                           example: "eagles"
  *       404:
- *         description: No competitions with fewer than 10 teams found
+ *         description: No competitions matching the criteria were found
  *         content:
  *           application/json:
  *             schema:
@@ -491,7 +505,17 @@ router.get("/:id", teamsController.getTeamParticipants);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "No competitions with fewer than 10 teams found."
+ *                   example: "No competitions found with fewer than 10 teams and players = 5."
+ *       422:
+ *         description: Invalid or missing query parameter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Parameter 'players' must be 3, 4 or 5."
  *       500:
  *         description: Internal server error
  *         content:

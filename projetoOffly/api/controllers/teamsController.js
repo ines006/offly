@@ -312,58 +312,123 @@ exports.getTeamsByCompetition = async (req, res) => {
   }
 };
 
-// Listar competições com menos de 10 equipas
+// Listar equipas de uma competição com ordenação opcional por ranking
+exports.getTeamsByCompetition = async (req, res) => {
+  try {
+    const competitionId = req.params.id; // ID da competição
+    const { sort } = req.query; // Pega o query param 'sort'
+
+    // Pesquisar pelo nome da competição
+    const competition = await Competitions.findByPk(competitionId, {
+      attributes: ["name"],
+    });
+    if (!competition) {
+      return res.status(404).json({ message: "Competition not found" });
+    }
+
+    // Configurar opções de ordenação com base no query param
+    const order = sort === "ranking" ? [["points", "DESC"]] : [];
+
+    // Listar todas as equipas da competição
+    const teams = await Teams.findAll({
+      where: {
+        competitions_id: competitionId,
+      },
+      attributes: ["name", "points", "image", "last_variation"],
+      order, // Aplica ordenação se sort=ranking, senão retorna sem ordenação específica
+    });
+
+    if (!teams.length) {
+      return res
+        .status(404)
+        .json({ message: "No teams found for this competition" });
+    }
+
+    res.json({
+      competition_name: competition.name,
+      teams: teams.map((team) => ({
+        name: team.name,
+        points: team.points,
+        image: team.image,
+        last_variation: team.last_variation,
+      })),
+    });
+  } catch (error) {
+    console.error("Error listing teams:", error.stack);
+    res
+      .status(500)
+      .json({ message: "Error listing teams", error: error.message });
+  }
+};
+
+// Listar competições com menos de 10 equipas 
 exports.getAvailableCompetitions = async (req, res) => {
   try {
-    // 1. Buscar IDs das competições com menos de 10 equipas
+    const { players } = req.query;
+
+    // Validação do parâmetro 'players'
+    const validPlayers = [3, 4, 5];
+    if (!players || isNaN(players) || !validPlayers.includes(parseInt(players))) {
+      return res.status(422).json({
+        message: "Parameter 'players' must be 3, 4 or 5.",
+      });
+    }
+
+    const parsedPlayers = parseInt(players);
+
+    // 1. Buscar competições com menos de 10 equipas e players = X
     const competitionsWithCounts = await Competitions.findAll({
+      where: {
+        players: parsedPlayers, // verifica o campo players da competição
+      },
       attributes: [
         "id",
         "name",
-        [Sequelize.fn("COUNT", Sequelize.col("teams.id")), "team_count"],
+        "players",
+        [Sequelize.fn("COUNT", Sequelize.col("teams.id")), "team_count"]
       ],
       include: [
         {
           model: Teams,
           as: "teams",
-          attributes: [], // Não buscamos as equipas aqui ainda
-          required: false,
-        },
+          attributes: [],
+          required: false
+        }
       ],
       group: ["Competitions.id"],
-      having: Sequelize.literal("COUNT(teams.id) < 10"),
+      having: Sequelize.literal("COUNT(teams.id) < 10")
     });
 
     if (!competitionsWithCounts.length) {
-      return res
-        .status(404)
-        .json({ message: "No competitions with fewer than 10 teams found." });
+      return res.status(404).json({
+        message: `No competitions found with fewer than 10 teams and players = ${parsedPlayers}.`,
+      });
     }
 
-    // 2. Obter os IDs
-    const competitionIds = competitionsWithCounts.map((c) => c.id);
+    const competitionIds = competitionsWithCounts.map(c => c.id);
 
-    // 3. Buscar novamente as competições com as equipas completas
+    // 2. Buscar essas competições com suas equipas
     const competitionsWithTeams = await Competitions.findAll({
       where: { id: competitionIds },
-      attributes: ["id", "name"],
+      attributes: ["id", "name", "players"],
       include: [
         {
           model: Teams,
           as: "teams",
-          attributes: ["id", "name"],
-        },
-      ],
+          attributes: ["id", "name"]
+        }
+      ]
     });
 
-    // 4. Combinar dados das duas queries
-    const finalResult = competitionsWithTeams.map((comp) => {
-      const match = competitionsWithCounts.find((c) => c.id === comp.id);
+    // 3. Combinar dados
+    const finalResult = competitionsWithTeams.map(comp => {
+      const match = competitionsWithCounts.find(c => c.id === comp.id);
       return {
         id: comp.id,
         name: comp.name,
+        players: comp.players,
         team_count: match.getDataValue("team_count"),
-        teams: comp.teams,
+        teams: comp.teams
       };
     });
 
@@ -372,10 +437,11 @@ exports.getAvailableCompetitions = async (req, res) => {
     console.error("Error fetching competitions:", error.stack);
     return res.status(500).json({
       message: "Internal server error",
-      error: error.message,
+      error: error.message
     });
   }
 };
+
 
 //Desafios diários validados dos participantes de uma equipa
 exports.getTeamChallenges = async (req, res) => {

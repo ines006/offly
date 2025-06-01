@@ -13,7 +13,7 @@ const { v4: uuidv4 } = require("uuid"); //gerar os tokens
 exports.getTeamParticipants = async (req, res) => {
   try {
     const team = await Teams.findByPk(req.params.id, {
-      attributes: ["name", "description", "points", "capacity", "image"], // não precisa do 'admin' aqui, pois vai incluir o admin completo
+      attributes: ["id", "name", "description", "points", "capacity", "image"], // não precisa do 'admin' aqui, pois vai incluir o admin completo
       include: [
         {
           model: Participants,
@@ -41,6 +41,7 @@ exports.getTeamParticipants = async (req, res) => {
     }
 
     res.json({
+      id: team.id,
       name: team.name,
       description: team.description,
       points: team.points,
@@ -283,7 +284,7 @@ exports.getTeamsByCompetition = async (req, res) => {
       where: {
         competitions_id: competitionId,
       },
-      attributes: ["name", "points", "image", "last_variation"],
+      attributes: ["id", "name", "points", "image", "last_variation"],
       order, // Aplica ordenação se sort=ranking, senão retorna sem ordenação específica
     });
 
@@ -296,6 +297,7 @@ exports.getTeamsByCompetition = async (req, res) => {
     res.json({
       competition_name: competition.name,
       teams: teams.map((team) => ({
+        id: team.id,
         name: team.name,
         points: team.points,
         image: team.image,

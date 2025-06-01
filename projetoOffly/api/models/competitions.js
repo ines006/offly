@@ -13,6 +13,11 @@ const Competitions = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    players: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 3,
+    },
     starting_date: {
       type: DataTypes.DATE,
       allowNull: false,

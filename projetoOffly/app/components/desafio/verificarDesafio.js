@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../components/entrar/AuthContext";
@@ -8,6 +8,7 @@ import { baseurl } from "../../api-config/apiConfig";
 const VerificacaoDesafios = () => {
   const { user } = useContext(AuthContext);
   const router = useRouter();
+  const [teamId, setTeamId] = useState(null);
 
   useEffect(() => {
     const verificarDesafios = async () => {
@@ -18,20 +19,24 @@ const VerificacaoDesafios = () => {
           return;
         }
 
-        console.log("ID do utilizador autenticado:", user.id);
-
         const response = await axios.get(`${baseurl}/api/verificar/${user.id}`);
-        const { shakeFeito } = response.data;
+        const { shakeFeito, teamId } = response.data;
+
+        console.log("🏷️ teamId:", teamId);
+        setTeamId(teamId); // se quiseres guardar em estado
 
         if (shakeFeito) {
-          router.push("/components/desafio/desafioSemanal");
+          router.push(`/components/desafio/desafioSemanal?teamId=${teamId}`);
         } else {
-          router.push("/components/desafio/descobrirDesafio");
+          router.push(`/components/desafio/descobrirDesafio?teamId=${teamId}`);
         }
 
       } catch (error) {
         console.error("Erro ao verificar desafios:", error);
-        router.push("/components/desafio/descobrirDesafio");
+        router.push({
+          pathname: "/components/desafio/descobrirDesafio",
+          params: { teamId: "none" },
+        });
       }
     };
 

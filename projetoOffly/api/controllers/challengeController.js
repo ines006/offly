@@ -1,9 +1,10 @@
 const Challenge = require("../models/challenges");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
-const { Op, Sequelize } = require("sequelize");
+const { Op, Sequelize, QueryTypes} = require("sequelize");
 const { sequelize } = require("../config/database"); 
 const Participants = require("../models/participants");
 const Team = require("../models/teams");
+
 
 exports.getRandomChallenges = async (req, res) => {
   const userId = req.query.userId;
@@ -141,6 +142,7 @@ exports.getDesafiosDoDia = async (req, res) => {
   }
 };
 
+// Controller atualizado para devolver também o teams_id
 exports.verificarDesafioRealizado = async (req, res) => {
   const participanteId = req.params.id;
 
@@ -149,7 +151,6 @@ exports.verificarDesafioRealizado = async (req, res) => {
   }
 
   try {
-    // Buscar participante e respetiva equipa
     const participante = await Participants.findByPk(participanteId);
 
     if (!participante || !participante.teams_id) {
@@ -158,7 +159,6 @@ exports.verificarDesafioRealizado = async (req, res) => {
 
     const teamsId = participante.teams_id;
 
-    // Verificar se existe pelo menos um desafio associado à equipa (challenge_has_teams)
     const resultado = await sequelize.query(
       `
       SELECT challenges_id
@@ -172,11 +172,10 @@ exports.verificarDesafioRealizado = async (req, res) => {
       }
     );
 
-    if (resultado && resultado.length > 0) {
-      return res.json({ shakeFeito: true });
-    } else {
-      return res.json({ shakeFeito: false });
-    }
+    return res.json({
+      shakeFeito: resultado.length > 0,
+      teamId: teamsId, 
+    });
 
   } catch (error) {
     console.error("Erro ao verificar desafio semanal:", error);
@@ -193,7 +192,7 @@ exports.discoverWeeklyChallenge = async (req, res) => {
       return res.status(400).json({ success: false, message: "userId é obrigatório" });
     }
 
-    // Usa sequelize.query em vez de db.query
+  
     const [participant] = await sequelize.query(
       "SELECT teams_id FROM participants WHERE id = ?",
       {
@@ -233,5 +232,58 @@ exports.discoverWeeklyChallenge = async (req, res) => {
   } catch (err) {
     console.error("Erro interno no controller discoverWeeklyChallenge:", err);
     return res.status(500).json({ success: false, message: "Erro interno do servidor." });
+  }
+};
+
+
+exports.getChallengeForTeam = async (req, res) => {
+  try {
+    const teamsId = req.params.teamsId; 
+
+    if (!teamsId) {
+      return res.status(400).json({ error: 'Parâmetro teamId é obrigatório' });
+    }
+
+    console.log("teamsId =>", teamsId);
+
+    // 1. Buscar o challenge_id associado ao team_id
+    const [challengeTeam] = await sequelize.query(`
+      SELECT challenges_id FROM challenges_has_teams
+      WHERE teams_id = ? AND validated = 0
+      LIMIT 1
+    `, {
+      replacements: [teamsId],
+      type: QueryTypes.SELECT,
+    });
+
+    if (!challengeTeam) {
+      return res.status(404).json({ message: 'Não foi encontrado nenhum desafio para este time.' });
+    }
+
+    const challengeId = challengeTeam.challenges_id;
+
+    // 2. Buscar os dados do desafio na tabela challenges
+    const [challenge] = await sequelize.query(`
+      SELECT id, title, description FROM challenges
+      WHERE id = ?
+      LIMIT 1
+    `, {
+      replacements: [challengeId],
+      type: QueryTypes.SELECT,
+    });
+
+    if (!challenge) {
+      return res.status(404).json({ message: 'Desafio não encontrado na tabela challenges.' });
+    }
+
+    return res.status(200).json({
+      challenges_id: challenge.id,
+      title: challenge.title,
+      description: challenge.description
+    });
+
+  } catch (error) {
+    console.error('Erro ao buscar desafio:', error);
+    return res.status(500).json({ error: 'Erro interno ao buscar desafio' });
   }
 };

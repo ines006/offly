@@ -96,5 +96,6 @@ router.get("/verificar/:id", challengeController.verificarDesafioRealizado);
 
 router.post("/discover-weekly-challenge", challengeController.discoverWeeklyChallenge);
 
+router.get("/:teamsId", challengeController.getChallengeForTeam);
 
 module.exports = router;

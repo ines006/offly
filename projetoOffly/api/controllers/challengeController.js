@@ -287,3 +287,59 @@ exports.getChallengeForTeam = async (req, res) => {
     return res.status(500).json({ error: 'Erro interno ao buscar desafio' });
   }
 };
+
+
+exports.getChallengeDates = async (req, res) => {
+  const { teamId } = req.params;
+  try {
+    const [result] = await sequelize.query(
+      `SELECT starting_date, end_date, validated 
+      FROM challenges_has_teams 
+      WHERE teams_id = :teamId 
+      LIMIT 1`,
+      {
+        replacements: { teamId },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: 'Desafio não encontrado para esse time.' });
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('Erro ao buscar datas do desafio:', error);
+    res.status(500).json({ message: 'Erro interno do servidor.' });
+  }
+};
+
+exports.validateChallenge = async (req, res) => {
+  const { teamId } = req.params;
+  try {
+    await sequelize.query(
+      `UPDATE challenges_has_teams SET validated = 1 WHERE teams_id = ?`,
+      [teamId]
+    );
+    res.json({ message: 'Desafio validado com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao validar desafio:', error);
+    res.status(500).json({ message: 'Erro interno do servidor.' });
+  }
+};
+
+exports.getParticipantsByTeam = async (req, res) => {
+  const { teamId } = req.params;
+  try {
+    const participants = await sequelize.query(
+      `SELECT username, image FROM participants WHERE teams_id = :teamId`,
+      {
+        replacements: { teamId },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+    res.json(participants);
+  } catch (error) {
+    console.error('Erro ao buscar participantes:', error);
+    res.status(500).json({ message: 'Erro interno do servidor.' });
+  }
+};

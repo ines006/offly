@@ -98,4 +98,9 @@ router.post("/discover-weekly-challenge", challengeController.discoverWeeklyChal
 
 router.get("/:teamsId", challengeController.getChallengeForTeam);
 
+router.get('/challenges/dates/:teamId', challengeController.getChallengeDates);
+router.post('/challenges/validate/:teamId', challengeController.validateChallenge);
+router.get('/participants/:teamId', challengeController.getParticipantsByTeam);
+
+
 module.exports = router;

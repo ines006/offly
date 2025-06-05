@@ -39,34 +39,40 @@ const DesafioSemanal = () => {
       }
 
       try {
-        const response = await fetch(`${baseurl}/api/${teamId}`);
-        if (!response.ok) throw new Error("Erro ao buscar desafio");
-
-        const data = await response.json();
+        // Buscar dados do desafio original
+        const responseDesafio = await fetch(`${baseurl}/api/${teamId}`);
+        if (!responseDesafio.ok) throw new Error("Erro ao buscar desafio");
+        const data = await responseDesafio.json();
         const imagemUrl = `${baseurl}/api/desafios/imagem/${data.challenges_id}`;
+
+        // Buscar datas específicas do desafio para o timer
+        const responseDatas = await fetch(`${baseurl}/api/challenges/dates/${teamId}`);
+        if (!responseDatas.ok) throw new Error("Erro ao buscar datas");
+        const datas = await responseDatas.json();
 
         setDesafio({
           id: data.challenges_id,
           title: data.title,
           description: data.description,
           imagem: imagemUrl,
-          start: data.start,
-          end: data.end,
+          start: datas.starting_date,
+          end: datas.end_date,
         });
 
-        // Simulação de participantes com status para visualização
-        setParticipantes([
-          {
-            name: "João",
-            status: [true, true, false, null, true, false, null],
-          },
-          {
-            name: "Maria",
-            status: [true, null, null, false, false, true, true],
-          },
-        ]);
+        // Buscar participantes reais
+        const responseParticipantes = await fetch(`${baseurl}/api/participants/${teamId}`);
+        if (!responseParticipantes.ok) throw new Error("Erro ao buscar participantes");
+        const participantesData = await responseParticipantes.json();
+
+        const formatted = participantesData.map((user) => ({
+          name: user.username,
+          image: user.image,
+          status: [true, false, null, null, false, true, true], // Simulação de status
+        }));
+
+        setParticipantes(formatted);
       } catch (error) {
-        console.error("Erro ao carregar desafio:", error);
+        console.error("Erro ao carregar dados:", error);
       } finally {
         setLoading(false);
       }
@@ -78,24 +84,28 @@ const DesafioSemanal = () => {
   useEffect(() => {
     if (!desafio || !desafio.start || !desafio.end) return;
 
-    const startTime = new Date(desafio.start);
     const endTime = new Date(desafio.end);
 
-    const updateTimer = () => {
+    const updateTimer = async () => {
       const now = new Date();
       const timeRemaining = endTime - now;
 
       if (timeRemaining <= 0) {
         setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
         clearInterval(intervaloRef.current);
+
+        // Valida o desafio ao final
+        try {
+          await fetch(`${baseurl}/api/challenges/validate/${teamId}`, {
+            method: "POST",
+          });
+        } catch (error) {
+          console.error("Erro ao validar desafio:", error);
+        }
       } else {
         const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-        const hours = Math.floor(
-          (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        );
-        const minutes = Math.floor(
-          (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
-        );
+        const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
         setTimer({ days, hours, minutes, seconds });
@@ -183,7 +193,7 @@ const DesafioSemanal = () => {
             {participantes.map((p, index) => (
               <View key={index} style={styles.card}>
                 <Image
-                  source={require("../../imagens/2.png")}
+                  source={{ uri: p.image }}
                   style={styles.peopleImage}
                 />
                 <Text style={styles.participantText}>{p.name}</Text>
@@ -225,25 +235,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     paddingTop: 50,
   },
-  backButton: {
-    position: "absolute",
-    top: 65,
-    left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "transparent",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#263A83",
-    textAlign: "center",
-    marginVertical: 20,
-  },
   timerContainer: {
     alignItems: "center",
     marginBottom: 20,
@@ -259,6 +250,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#263A83",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#263A83",
+    textAlign: "center",
+    marginVertical: 20,
   },
   cardContainer: {
     alignItems: "center",
@@ -279,13 +277,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 5,
-  },
-  cardImage: {
-    width: "100%",
-    height: 150,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    marginTop: 50,
   },
   mainDescription: {
     color: "black",
@@ -368,6 +359,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
+    backgroundColor: "#263A83",
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 2,
@@ -380,8 +372,28 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: "#263A83",
-    textAlign: "center",
+  },
+  backButton: {
+    position: "absolute",
+    top: 65,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    borderColor: "#263A83",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+  cardImage: {
+    width: "100%",
+    height: 150,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    marginTop: 50,
   },
 });
+
 
 export default DesafioSemanal;

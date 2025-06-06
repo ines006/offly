@@ -150,7 +150,7 @@ const Login = () => {
   return (
     <View accessibilityRole="main" style={styles.container}>
       <View style={styles.wrapLogin}>
-        <Text style={styles.h1} accessibilityRole="header">
+        <Text style={styles.text} accessibilityRole="header">
           Bem-vindo!
         </Text>
         <Text style={styles.h4} accessibilityRole="text">
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  h1: {
+  text: {
     fontSize: 35,
     fontWeight: "bold",
     color: "#E3FC87",

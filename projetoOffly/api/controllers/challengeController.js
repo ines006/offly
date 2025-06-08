@@ -329,17 +329,54 @@ exports.validateChallenge = async (req, res) => {
 
 exports.getParticipantsByTeam = async (req, res) => {
   const { teamId } = req.params;
+
   try {
-    const participants = await sequelize.query(
-      `SELECT username, image FROM participants WHERE teams_id = :teamId`,
+    // 1. Buscar challenge atual da equipa (não validado)
+    const [challengeData] = await sequelize.query(
+      `
+      SELECT challenges_id 
+      FROM challenges_has_teams 
+      WHERE teams_id = :teamId AND validated = 0
+      LIMIT 1
+      `,
       {
         replacements: { teamId },
         type: sequelize.QueryTypes.SELECT,
       }
     );
-    res.json(participants);
+
+    if (!challengeData) {
+      return res.status(404).json({ message: 'Desafio ativo não encontrado para esta equipa.' });
+    }
+
+    const challengeId = challengeData.challenges_id;
+
+    // 2. Buscar participantes e streaks APENAS para esse desafio
+    const participants = await sequelize.query(
+      `
+      SELECT 
+        p.username, 
+        p.image, 
+        phc.streak
+      FROM participants p
+      JOIN participants_has_challenges phc 
+        ON p.id = phc.participants_id
+      WHERE p.teams_id = :teamId
+        AND phc.challenges_id = :challengeId
+      `,
+      {
+        replacements: { teamId, challengeId },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    return res.json(participants);
+
   } catch (error) {
-    console.error('Erro ao buscar participantes:', error);
-    res.status(500).json({ message: 'Erro interno do servidor.' });
+    console.error('Erro ao buscar participantes com streaks filtrados:', error);
+    return res.status(500).json({ 
+      message: 'Erro interno do servidor.',
+      error: error.message,
+    });
   }
 };

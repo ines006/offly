@@ -39,13 +39,11 @@ const DesafioSemanal = () => {
       }
 
       try {
-        // Buscar dados do desafio original
         const responseDesafio = await fetch(`${baseurl}/api/${teamId}`);
         if (!responseDesafio.ok) throw new Error("Erro ao buscar desafio");
         const data = await responseDesafio.json();
         const imagemUrl = `${baseurl}/api/desafios/imagem/${data.challenges_id}`;
 
-        // Buscar datas específicas do desafio para o timer
         const responseDatas = await fetch(`${baseurl}/api/challenges/dates/${teamId}`);
         if (!responseDatas.ok) throw new Error("Erro ao buscar datas");
         const datas = await responseDatas.json();
@@ -59,16 +57,25 @@ const DesafioSemanal = () => {
           end: datas.end_date,
         });
 
-        // Buscar participantes reais
         const responseParticipantes = await fetch(`${baseurl}/api/participants/${teamId}`);
         if (!responseParticipantes.ok) throw new Error("Erro ao buscar participantes");
         const participantesData = await responseParticipantes.json();
 
-        const formatted = participantesData.map((user) => ({
-          name: user.username,
-          image: user.image,
-          status: [true, false, null, null, false, true, true], // Simulação de status
-        }));
+        const formatted = participantesData.map((user) => {
+          let parsedStreak = [];
+          try {
+            parsedStreak = JSON.parse(user.streak).map((val) => val === "1");
+          } catch (e) {
+            console.warn("Erro ao converter streak:", user.streak);
+            parsedStreak = Array(7).fill(false);
+          }
+
+          return {
+            name: user.username,
+            image: user.image,
+            status: parsedStreak,
+          };
+        });
 
         setParticipantes(formatted);
       } catch (error) {
@@ -82,7 +89,7 @@ const DesafioSemanal = () => {
   }, [teamId]);
 
   useEffect(() => {
-    if (!desafio || !desafio.start || !desafio.end) return;
+    if (!desafio || !desafio.end) return;
 
     const endTime = new Date(desafio.end);
 
@@ -94,7 +101,6 @@ const DesafioSemanal = () => {
         setTimer({ days: 0, hours: 0, minutes: 0, seconds: 0 });
         clearInterval(intervaloRef.current);
 
-        // Valida o desafio ao final
         try {
           await fetch(`${baseurl}/api/challenges/validate/${teamId}`, {
             method: "POST",
@@ -120,16 +126,11 @@ const DesafioSemanal = () => {
     };
   }, [desafio]);
 
-  const valorPorBolinha = participantes.length
-    ? 100 / (7 * participantes.length)
-    : 0;
+  const valorPorBolinha = participantes.length ? 100 / (7 * participantes.length) : 0;
   const bolinhasAzuis = participantes.reduce((total, p) => {
     return total + p.status.filter((s) => s === true).length;
   }, 0);
-  const progresso = Math.max(
-    0,
-    Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2))
-  );
+  const progresso = Math.max(0, Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2)));
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -192,10 +193,7 @@ const DesafioSemanal = () => {
             <Text style={styles.participantsTitle}>Participantes</Text>
             {participantes.map((p, index) => (
               <View key={index} style={styles.card}>
-                <Image
-                  source={{ uri: p.image }}
-                  style={styles.peopleImage}
-                />
+                <Image source={{ uri: p.image }} style={styles.peopleImage} />
                 <Text style={styles.participantText}>{p.name}</Text>
                 <View style={styles.circlesWrapperSingleRow}>
                   {p.status.map((status, idx) => (
@@ -206,10 +204,10 @@ const DesafioSemanal = () => {
                         {
                           backgroundColor:
                             status === true
-                              ? "#263A83"
+                              ? "#263A83" // azul
                               : status === false
-                              ? "#A9A9A9"
-                              : "#D3D3D3",
+                              ? "#A9A9A9" // cinzento escuro
+                              : "#D3D3D3", // cinzento claro
                         },
                       ]}
                     >

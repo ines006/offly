@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components/native";
 import { useRouter } from "expo-router";
+import { Text } from "react-native";
 
 import {
   Svg,
@@ -24,6 +25,61 @@ import {
 } from "react-native-svg";
 
 // Styled Components
+const DarkBackground = styled.View`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 99;
+`;
+
+const CookieOverlay = styled.View`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.95);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  padding: 24px 16px 16px 16px;
+  align-items: center;
+  z-index: 100;
+`;
+
+const CookieIcon = styled.View`
+  margin-bottom: 8px;
+`;
+
+const CookieText = styled.Text`
+  color: #263a83;
+  text-align: center;
+  margin-bottom: 16px;
+`;
+
+const CookieButtons = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+`;
+
+const CookieButton = styled.TouchableOpacity`
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  background: ${({ primary }) => (primary ? "#263a83" : "transparent")};
+  border-width: ${({ primary }) => (primary ? "0px" : "1px")};
+  border-color: #263a83;
+  margin: 0 4px;
+`;
+
+const CookieButtonText = styled.Text`
+  color: ${({ primary }) => (primary ? "#fff" : "#263a83")};
+  text-align: center;
+  font-weight: bold;
+`;
+
 const Container = styled.View`
   flex: 1;
   background-color: #263a83;
@@ -2019,6 +2075,8 @@ const router = useRouter();
 
 // App Component
 const App = () => {
+  const [showCookieBanner, setShowCookieBanner] = useState(true);
+
   const [currentScreen, setCurrentScreen] = useState(0);
 
   const nextScreen = () => {
@@ -2159,6 +2217,27 @@ const App = () => {
           </Button>
         </ButtonsContainer>
       </Footer>
+      {showCookieBanner && (
+  <>
+    <DarkBackground />
+    <CookieOverlay>
+      <CookieIcon>
+        <Text style={{ fontSize: 32 }}>🍪</Text>
+      </CookieIcon>
+      <CookieText>
+        Preocupamo-nos com os seus dados e gostaríamos de utilizar cookies para melhorar a sua experiência.
+      </CookieText>
+      <CookieButtons>
+        <CookieButton onPress={() => setShowCookieBanner(false)}>
+          <CookieButtonText>Aceitar obrigatórios</CookieButtonText>
+        </CookieButton>
+        <CookieButton primary onPress={() => setShowCookieBanner(false)}>
+          <CookieButtonText primary>Aceitar todos</CookieButtonText>
+        </CookieButton>
+      </CookieButtons>
+    </CookieOverlay>
+  </>
+)}
     </Container>
   );
 };

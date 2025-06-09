@@ -347,12 +347,16 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   circlesWrapperSingleRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: "auto",
-    marginTop: 4,
-  },
+  flexDirection: "row",
+  flexWrap: "wrap",
+  justifyContent: "center", 
+  alignItems: "center",
+  maxWidth: 110, 
+  rowGap: 4,
+  columnGap: 4,
+  marginTop: 4,
+  marginLeft: "auto", 
+},
   circle: {
     width: 20,
     height: 20,
@@ -393,5 +397,5 @@ const styles = StyleSheet.create({
   },
 });
 
-
 export default DesafioSemanal;
+

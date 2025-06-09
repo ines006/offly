@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useContext } from "react";
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Image, Alert
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  Dimensions,
+  Image,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -8,6 +15,12 @@ import { AuthContext } from "../entrar/AuthContext";
 import { baseurl } from "../../api-config/apiConfig";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
+
+const cardImages = {
+  1: require("../../imagens/desafiodiario1.png"),
+  2: require("../../imagens/desafiodiario2.png"),
+  3: require("../../imagens/desafiodiario3.png"),
+};
 
 export default function Cards() {
   const [cards, setCards] = useState([]);
@@ -18,26 +31,37 @@ export default function Cards() {
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchCards() {
+    async function fetchGeneratedCards() {
       try {
-        const response = await axios.get(`${baseurl}/api/desafios?userId=${user.id}`);
-        const fetchedCards = response.data;
+        if (!user || !user.id) {
+          Alert.alert("Erro", "Utilizador não autenticado.");
+          return;
+        }
 
-        const shuffledCards = fetchedCards
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 3);
+        const response = await axios.post(`${baseurl}/api/shake/generate-challenges`, {
+          userId: user.id,
+        });
 
-        setCards(shuffledCards);
-        setSelectedCard(shuffledCards[0]);
-        setScaleAnimations(shuffledCards.map(() => new Animated.Value(1)));
-        setRevealedCards(shuffledCards.map(() => false));
+        const content = response.data.challenges;
+
+        const challengesArray = content.map((item, index) => ({
+          id: index + 1,
+          title: item.title.trim(),
+          description: item.description.trim(),
+          level: item.level === "fácil" ? 1 : item.level === "intermédio" ? 2 : 3,
+        }));
+
+        setCards(challengesArray);
+        setSelectedCard(null);
+        setScaleAnimations(challengesArray.map(() => new Animated.Value(1)));
+        setRevealedCards(challengesArray.map(() => false));
       } catch (error) {
-        console.error("❌ Erro ao buscar cartas:", error);
-        Alert.alert("Erro", "Não foi possível buscar as cartas.");
+        console.error("❌ Erro ao gerar desafios:", error);
+        Alert.alert("Erro", "Não foi possível gerar os desafios.");
       }
     }
 
-    fetchCards();
+    fetchGeneratedCards();
   }, []);
 
   const handleCardSelect = (index) => {
@@ -69,12 +93,13 @@ export default function Cards() {
 
     try {
       const payload = {
-        participants_id: user.id,
-        challenges_id: selectedCard.id,
-        starting_date: new Date().toISOString(),
+        userId: user.id,
+        title: selectedCard.title,
+        description: selectedCard.description,
+        challengeLevelId: selectedCard.level,
       };
 
-      await axios.post(`${baseurl}/api/participants-has-challenges`, payload);
+      await axios.post(`${baseurl}/api/shake/save-challenge`, payload);
 
       const selectedIndex = cards.indexOf(selectedCard);
       router.push({
@@ -109,17 +134,13 @@ export default function Cards() {
                   },
                 ]}
               >
-                {revealedCards[index] && card.img && (
-                  
+                {revealedCards[index] && (
                   <Image
-                  accessibilityLabel="Carta revelada"
-                  source={{ uri: `${baseurl}/api/desafios/imagem/${card.id}` }}
-                  style={styles.cardImage}
-                  resizeMode="cover"
-                  onError={(e) => {
-                    console.error("❌ Erro ao carregar imagem:", e.nativeEvent);
-                  }}
-                />
+                    source={cardImages[card.level]}
+                    style={styles.cardImage}
+                    resizeMode="cover"
+                    accessibilityLabel={`Carta nível ${card.level}`}
+                  />
                 )}
               </Animated.View>
             </TouchableOpacity>
@@ -128,18 +149,12 @@ export default function Cards() {
 
         {selectedCard && (
           <View style={styles.mainCard}>
-            {selectedCard.img && (
-              <Image
-              accessibilityLabel="Imagem da carta selecionada"
-              source={{ uri: `${baseurl}/api/desafios/imagem/${selectedCard.id}` }}
+            <Image
+              source={cardImages[selectedCard.level]}
               style={styles.cardImage}
               resizeMode="cover"
-              onError={(e) => {
-                console.error("❌ Erro ao carregar imagem (carta selecionada):", e.nativeEvent);
-              }}
+              accessibilityLabel={`Imagem da carta selecionada - nível ${selectedCard.level}`}
             />
-            )}
-            
             <View style={styles.cardContent}>
               <Text style={styles.mainTitle}>{selectedCard.title}</Text>
               <Text style={styles.mainDescription}>{selectedCard.description}</Text>

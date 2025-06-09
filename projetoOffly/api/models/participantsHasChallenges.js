@@ -40,6 +40,10 @@ const ParticipantsHasChallenges = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    challenge_types_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     tableName: "participants_has_challenges",

@@ -39,7 +39,6 @@ export default function ShakeScreen() {
 
         setCarta(cartaAtiva || null);
       } catch (error) {
-        console.error("❌ Erro ao buscar carta ativa:", error);
         setCarta(null);
       } finally {
         setLoading(false);

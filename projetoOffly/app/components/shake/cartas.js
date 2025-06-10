@@ -16,12 +16,6 @@ import { baseurl } from "../../api-config/apiConfig";
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
 
-const cardImages = {
-  1: require("../../imagens/desafiodiario1.png"),
-  2: require("../../imagens/desafiodiario2.png"),
-  3: require("../../imagens/desafiodiario3.png"),
-};
-
 export default function Cards() {
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -42,14 +36,13 @@ export default function Cards() {
           userId: user.id,
         });
 
-        const content = response.data.challenges;
-
-        const challengesArray = content.map((item, index) => ({
+        const challengesArray = response.data.challenges.map((item, index) => ({
           id: index + 1,
           title: item.title.trim(),
           description: item.description.trim(),
           level: item.level,
-          levelId: item.level === "fácil" ? 1 : item.level === "intermédio" ? 2 : 3,
+          levelId: item.levelId,
+          image: item.image, // 🔹 Imagem vinda do backend
         }));
 
         setCards(challengesArray);
@@ -139,9 +132,9 @@ export default function Cards() {
                   },
                 ]}
               >
-                {revealedCards[index] && (
+                {revealedCards[index] && card.image && (
                   <Image
-                    source={cardImages[card.levelId]}
+                    source={{ uri: card.image }}
                     style={styles.cardImage}
                     resizeMode="cover"
                     accessibilityLabel={`Carta nível ${card.levelId}`}
@@ -154,12 +147,14 @@ export default function Cards() {
 
         {selectedCard && (
           <View style={styles.mainCard}>
-            <Image
-              source={cardImages[selectedCard.levelId]}
-              style={styles.cardImage}
-              resizeMode="cover"
-              accessibilityLabel={`Imagem da carta selecionada - nível ${selectedCard.levelId}`}
-            />
+            {selectedCard.image && (
+              <Image
+                source={{ uri: selectedCard.image }}
+                style={styles.cardImage}
+                resizeMode="cover"
+                accessibilityLabel={`Imagem da carta selecionada - nível ${selectedCard.levelId}`}
+              />
+            )}
             <View style={styles.cardContent}>
               <Text style={styles.mainTitle}>{selectedCard.title}</Text>
               <Text style={styles.mainDescription}>{selectedCard.description}</Text>
@@ -174,6 +169,7 @@ export default function Cards() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   background: {

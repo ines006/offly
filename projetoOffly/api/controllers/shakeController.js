@@ -1,8 +1,10 @@
 const { OpenAI } = require("openai");
+const { Op } = require("sequelize");
 const Participants = require("../models/participants");
 const Answers = require("../models/answers");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const Challenges = require("../models/challenges");
+const ChallengeLevels = require("../models/challengeLevel"); 
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -31,7 +33,7 @@ exports.generateShakeChallenges = async (req, res) => {
         participants_id: userId,
         validated: 1,
         challenge_types_id: 2,
-        completed_date: { [require("sequelize").Op.ne]: null },
+        completed_date: { [Op.ne]: null },
       },
     });
 
@@ -73,7 +75,6 @@ Responde apenas com o JSON.
 
     const raw = response.choices[0].message.content.trim();
 
-    // Tentar fazer parse do JSON
     let parsedChallenges;
     try {
       parsedChallenges = JSON.parse(raw);
@@ -82,7 +83,6 @@ Responde apenas com o JSON.
       return res.status(500).json({ error: "Erro ao interpretar os desafios gerados." });
     }
 
-    // Validar que há 3 desafios e que têm os campos certos
     if (!Array.isArray(parsedChallenges) || parsedChallenges.length !== 3) {
       return res.status(500).json({ error: "Resposta inválida. Esperados 3 desafios." });
     }
@@ -95,14 +95,42 @@ Responde apenas com o JSON.
       return res.status(500).json({ error: "Estrutura de desafio inválida." });
     }
 
-    res.status(200).json({ challenges: parsedChallenges });
+    // 🔽 Mapeia nível textual para ID numérico
+    const levelMap = {
+      "fácil": 1,
+      "intermédio": 2,
+      "difícil": 3,
+    };
+
+    const levelIds = [...new Set(parsedChallenges.map(c => levelMap[c.level]))];
+
+    const levelData = await ChallengeLevels.findAll({
+      where: { level: { [Op.in]: levelIds } }
+    });
+
+    const levelImageMap = {};
+    levelData.forEach((lvl) => {
+      levelImageMap[lvl.level] = {
+        image: lvl.image_level,
+        id: lvl.id
+      };
+    });
+
+    const challengesWithImages = parsedChallenges.map((challenge) => {
+      const levelInfo = levelImageMap[levelMap[challenge.level]] || {};
+      return {
+        ...challenge,
+        image: levelInfo.image || null,
+        levelId: levelInfo.id || null,
+      };
+    });
+
+    res.status(200).json({ challenges: challengesWithImages });
   } catch (error) {
     console.error("Erro em generateShakeChallenges:", error.message);
     res.status(500).json({ error: "Erro ao gerar desafios personalizados" });
   }
 };
-
-
 
 exports.saveSelectedChallenge = async (req, res) => {
   try {
@@ -114,12 +142,11 @@ exports.saveSelectedChallenge = async (req, res) => {
       });
     }
 
-    // Cria o desafio (challenge)
     const challenge = await Challenges.create({
       title,
       description,
-      img: null, // explicitamente null
-      challenge_types_id: 1, // tipo shake
+      img: null,
+      challenge_types_id: 1, // shake
       challenge_levels_id: levelId,
     });
 
@@ -127,12 +154,11 @@ exports.saveSelectedChallenge = async (req, res) => {
     const endDate = new Date(now);
     endDate.setDate(now.getDate() + 1);
 
-    // Cria a participação na tabela associativa
     const participation = await ParticipantsHasChallenges.create({
       participants_id: userId,
       challenges_id: challenge.id,
-      challenge_types_id: challenge.challenge_types_id, 
-      challenge_levels_id_challenge_levels: challenge.challenge_levels_id, 
+      challenge_types_id: challenge.challenge_types_id,
+      challenge_levels_id_challenge_levels: challenge.challenge_levels_id,
       user_img: "",
       validated: 0,
       streak: 0,

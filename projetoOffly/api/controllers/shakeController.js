@@ -2,6 +2,7 @@ const { OpenAI } = require("openai");
 const Participants = require("../models/participants");
 const Answers = require("../models/answers");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
+const Challenges = require("../models/challenges");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -102,29 +103,52 @@ Responde apenas com o JSON.
 };
 
 
+
 exports.saveSelectedChallenge = async (req, res) => {
   try {
-    const { title, description, levelId } = req.body;
+    const { title, description, levelId, userId } = req.body;
 
-    if (!title || !description || !levelId) {
-      return res
-        .status(400)
-        .json({ error: "title, description e levelId são obrigatórios" });
+    if (!title || !description || !levelId || !userId) {
+      return res.status(400).json({
+        error: "title, description, levelId e userId são obrigatórios",
+      });
     }
 
+    // Cria o desafio (challenge)
     const challenge = await Challenges.create({
       title,
       description,
+      img: null, // explicitamente null
       challenge_types_id: 1, // tipo shake
       challenge_levels_id: levelId,
     });
 
-    res.status(201).json({
-      message: "Desafio guardado com sucesso",
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setDate(now.getDate() + 1);
+
+    // Cria a participação na tabela associativa
+    const participation = await ParticipantsHasChallenges.create({
+      participants_id: userId,
+      challenges_id: challenge.id,
+      challenge_types_id: challenge.challenge_types_id, 
+      challenge_levels_id_challenge_levels: challenge.challenge_levels_id, 
+      user_img: "",
+      validated: 0,
+      streak: 0,
+      completed_date: null,
+      starting_date: now,
+      end_date: endDate,
+      description: challenge.description,
+    });
+
+    return res.status(201).json({
+      message: "Desafio guardado e associado com sucesso",
       challenge,
+      participation,
     });
   } catch (error) {
-    console.error("Erro em saveSelectedChallenge:", error.message);
-    res.status(500).json({ error: "Erro ao guardar desafio" });
+    console.error("❌ Erro em saveSelectedChallenge:", error);
+    return res.status(500).json({ error: "Erro ao guardar seleção" });
   }
 };

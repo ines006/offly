@@ -48,7 +48,8 @@ export default function Cards() {
           id: index + 1,
           title: item.title.trim(),
           description: item.description.trim(),
-          level: item.level === "fácil" ? 1 : item.level === "intermédio" ? 2 : 3,
+          level: item.level,
+          levelId: item.level === "fácil" ? 1 : item.level === "intermédio" ? 2 : 3,
         }));
 
         setCards(challengesArray);
@@ -96,19 +97,23 @@ export default function Cards() {
         userId: user.id,
         title: selectedCard.title,
         description: selectedCard.description,
-        challengeLevelId: selectedCard.level,
+        levelId: selectedCard.levelId,
       };
 
-      await axios.post(`${baseurl}/api/shake/save-challenge`, payload);
+      const response = await axios.post(`${baseurl}/api/shake/save-challenge`, payload);
 
-      const selectedIndex = cards.indexOf(selectedCard);
-      router.push({
-        pathname: "./cartaSelecionada",
-        params: {
-          card: JSON.stringify(selectedCard),
-          cardNumber: selectedIndex + 1,
-        },
-      });
+      if (response.data?.challenge?.id) {
+        const selectedIndex = cards.indexOf(selectedCard);
+        router.push({
+          pathname: "./cartaSelecionada",
+          params: {
+            card: JSON.stringify(selectedCard),
+            cardNumber: selectedIndex + 1,
+          },
+        });
+      } else {
+        Alert.alert("Erro", "Desafio não foi guardado corretamente.");
+      }
     } catch (error) {
       console.error("❌ Erro ao guardar seleção:", error);
       Alert.alert("Erro", "Não foi possível registar a carta.");
@@ -136,10 +141,10 @@ export default function Cards() {
               >
                 {revealedCards[index] && (
                   <Image
-                    source={cardImages[card.level]}
+                    source={cardImages[card.levelId]}
                     style={styles.cardImage}
                     resizeMode="cover"
-                    accessibilityLabel={`Carta nível ${card.level}`}
+                    accessibilityLabel={`Carta nível ${card.levelId}`}
                   />
                 )}
               </Animated.View>
@@ -150,10 +155,10 @@ export default function Cards() {
         {selectedCard && (
           <View style={styles.mainCard}>
             <Image
-              source={cardImages[selectedCard.level]}
+              source={cardImages[selectedCard.levelId]}
               style={styles.cardImage}
               resizeMode="cover"
-              accessibilityLabel={`Imagem da carta selecionada - nível ${selectedCard.level}`}
+              accessibilityLabel={`Imagem da carta selecionada - nível ${selectedCard.levelId}`}
             />
             <View style={styles.cardContent}>
               <Text style={styles.mainTitle}>{selectedCard.title}</Text>

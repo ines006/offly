@@ -115,14 +115,13 @@ const UploadScreen = () => {
       return;
     }
 
-    console.log("accessToken antes da requisição:", accessToken);
     console.log(
       "Iniciando handleSubmit com userId:",
       userId,
       "teamsId:",
       teamsId,
-      "e imagem:",
-      selectedImage
+      "accessToken:",
+      accessToken ? "presente" : "ausente"
     );
     setSubmitVisible(false);
     setProcessingModalVisible(true);
@@ -176,7 +175,8 @@ const UploadScreen = () => {
       if (
         errorMsg.includes("Imagem não é um print válido") ||
         errorMsg.includes("A imagem deve ser do dia anterior") ||
-        errorMsg.includes("Não foi possível extrair")
+        errorMsg.includes("Não foi possível extrair") ||
+        errorMsg.includes("Participant not found")
       ) {
         setErrorMessage(errorMsg);
         setErrorModalVisible(true);

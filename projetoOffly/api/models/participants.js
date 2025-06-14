@@ -48,7 +48,10 @@ const Participants = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-
+    upload_data: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     answers_id: {
       type: DataTypes.INTEGER,
       allowNull: true,

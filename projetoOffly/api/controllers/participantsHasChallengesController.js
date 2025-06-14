@@ -1,5 +1,6 @@
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const Challenges = require("../models/challenges");
+const ChallengeLevels = require("../models/challengeLevel");
 
 
 // POST - Criação de uma relação participante/desafio
@@ -39,36 +40,58 @@ exports.getActiveChallengeByUser = async (req, res) => {
 
   try {
     const activeChallenge = await ParticipantsHasChallenges.findOne({
-        where: {
-          participants_id,
-          completed_date: null,
-        },
-        include: [{
+      where: {
+        participants_id,
+        completed_date: null,
+      },
+      attributes: [
+        "participants_id",
+        "challenges_id",
+        "starting_date",
+        "completed_date",
+        "challenge_levels_id_challenge_levels", // importante
+      ],
+      include: [
+        {
           model: Challenges,
-          as: "challenge", 
+          as: "challenge",
           attributes: ["id", "title", "description", "img"],
-        }],
-      });
+        },
+      ],
+    });
 
     if (!activeChallenge) {
-      return res.status(404).json({ error: "Nenhuma carta ativa encontrada." });
+      return res
+        .status(404)
+        .json({ error: "Nenhuma carta ativa encontrada." });
     }
 
-    res.json({
-        participants_id: activeChallenge.participants_id,
-        challenges_id: activeChallenge.challenges_id,
-        starting_date: activeChallenge.starting_date,
-        completed_date: activeChallenge.completed_date,
-        challenge: {
-            id: activeChallenge.challenge?.id,
-            titulo: activeChallenge.challenge?.title,
-            imagem: activeChallenge.challenge?.img,
-            carta: activeChallenge.challenge?.description,
-        },
-      });
+    const levelId = activeChallenge.challenge_levels_id_challenge_levels;
+
+    // Corrigido: busca pelo id correto
+    const level = await ChallengeLevels.findOne({
+      where: { id: levelId },
+      attributes: ["image_level"],
+    });
+
+    return res.json({
+      participants_id: activeChallenge.participants_id,
+      challenges_id: activeChallenge.challenges_id,
+      starting_date: activeChallenge.starting_date,
+      completed_date: activeChallenge.completed_date,
+      challenge: {
+        id: activeChallenge.challenge?.id,
+        titulo: activeChallenge.challenge?.title,
+        imagem: activeChallenge.challenge?.img,
+        carta: activeChallenge.challenge?.description,
+        imagem_nivel: level?.image_level || null,
+      },
+    });
   } catch (error) {
     console.error("❌ Erro ao buscar carta ativa:", error);
-    res.status(500).json({ error: "Erro ao buscar carta ativa." });
+    return res
+      .status(500)
+      .json({ error: "Erro ao buscar carta ativa.", details: error.message });
   }
 };
 

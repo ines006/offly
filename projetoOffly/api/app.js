@@ -12,11 +12,13 @@ const touchRoutes = require("./routes/touchsRoutes");
 const { swaggerUi, specs } = require("./config/swagger");
 const teamPassbooksRoutes = require("./routes/teamsPassbooksRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const shakeRoutes = require ("./routes/shakeRoutes")
 
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3010;
+app.use(express.json());
 
 // Middleware para logging detalhado
 app.use((req, res, next) => {
@@ -75,6 +77,7 @@ app.use("/", cadernetaRoutes);
 app.use("/api", touchRoutes);
 app.use("/api", challengeRoutes); 
 app.use("/touchs", touchRoutes);
+app.use("/api/shake", shakeRoutes);
 
 // Testar conexão e iniciar servidor
 testConnection()

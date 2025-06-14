@@ -31,24 +31,20 @@ export default function Shake() {
   const shakeAnimation = useSharedValue(0);
   const [cards, setCards] = useState([]);
 
-  useEffect(() => {
-    const fetchChallenges = async () => {
-      if (!user?.id) {
-        console.warn("❌ Utilizador não autenticado.");
-        return;
-      }
+  const fetchChallenges = async () => {
+    if (!user?.id) {
+      console.warn("❌ Utilizador não autenticado.");
+      return;
+    }
 
-      try {
-        const url = `${baseurl}/api/desafios?userId=${user.id}`;
-        const response = await axios.get(url);
-        setCards(response.data);
-      } catch (error) {
-        console.error("❌ Erro ao buscar desafios:", error);
-      }
-    };
-
-    fetchChallenges();
-  }, [user]);
+    try {
+      const url = `${baseurl}/api/shake/generate-challenges`;
+      const response = await axios.post(url, { userId: user.id });
+      setCards(response.data);
+    } catch (error) {
+      console.error("❌ Erro ao gerar desafios:", error);
+    }
+  };
 
   useEffect(() => {
     shakeAnimation.value = withRepeat(
@@ -84,12 +80,15 @@ export default function Shake() {
     return () => subscription.remove();
   }, [isNavigating]);
 
-  const triggerCardAnimation = (subscription) => {
+  const triggerCardAnimation = async (subscription) => {
     setIsNavigating(true);
     subscription?.remove();
-
     AccessibilityInfo.announceForAccessibility("O Shake foi feito");
 
+    // 1. Chamar o backend para gerar desafios com base no ChatGPT
+    await fetchChallenges();
+
+    // 2. Animações após receber desafios
     rotateAnimation.value = withTiming(360, { duration: 1000, easing: Easing.out(Easing.ease) }, () => {
       rotateAnimation.value = 0;
     });

@@ -15,8 +15,25 @@ const Challenges = sequelize.define(
       allowNull: true,
       unique: true,
     },
-    description: { type: DataTypes.STRING, allowNull: true },
+    description: { 
+      type: DataTypes.STRING, 
+      allowNull: true 
+    },
+
+    img: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    challenge_types_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    challenge_levels_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
+  
   {
     tableName: "challenges",
   }

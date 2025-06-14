@@ -24,7 +24,7 @@ export default function CartaSelecionada() {
   useEffect(() => {
     const fetchCarta = async () => {
       try {
-        console.log("Usuário autenticado:", user);
+        console.log("Utilizador autenticado:", user);
         const response = await axios.get(
           `${baseurl}/api/participants-has-challenges/active/${user.id}`
         );
@@ -129,18 +129,17 @@ export default function CartaSelecionada() {
               </View>
             )}
 
-
             <View style={[styles.mainCard, { marginTop: 20 }]}>
-            {selectedCard.challenge && (
-            <Image
-              accessibilityLabel="Imagem da carta selecionada"
-              source={{ uri: `${baseurl}/api/desafios/imagem/${selectedCard.challenge.id}` }}
-              style={styles.cardImage}
-              resizeMode="cover"
-              onError={(e) => {
-                console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
-              }}
-            />
+              {selectedCard.challenge && selectedCard.challenge.imagem_nivel && (
+                <Image
+                  accessibilityLabel="Imagem da carta selecionada"
+                  source={{ uri: selectedCard.challenge.imagem_nivel }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                  onError={(e) => {
+                    console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
+                  }}
+                />
               )}
               <View style={styles.cardContent}>
                 <Text style={styles.mainTitle}>

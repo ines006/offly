@@ -1090,4 +1090,5 @@ router.put(
 
 router.get("/:id/stickerbook", authenticateToken, participantsController.getStickerBook);
 
+
 module.exports = router;

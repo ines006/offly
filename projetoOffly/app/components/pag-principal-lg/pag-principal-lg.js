@@ -124,7 +124,7 @@ export default function Home() {
 
         const teamData = response.data;
         setTeamName(teamData.name);
-        setTeamImage(teamData.image || null);
+        setTeamImage(teamData.image ? { uri: teamData.image } : null);
         setTeamMembers(teamData.participants.length);
         setteamCapacity(teamData.capacity);
         setTeamPoints(teamData.points);
@@ -335,7 +335,7 @@ export default function Home() {
             >
               <Header>
                 <IconContainer accessibilityLabel="Ícone da imagem">
-                  <TeamImage source={teamImage} />
+                  {teamImage && <TeamImage source={teamImage} />}
                 </IconContainer>
                 <TeamName accessibilityLabel={`Nome da equipa: ${teamName}`}>
                   <Text>{teamName}</Text>

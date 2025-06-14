@@ -1578,4 +1578,5 @@ router.post("/:id/invites", authenticateToken, teamsController.createInvite);
  */
 router.post("/join-by-invite", authenticateToken, teamsController.joinByInvite);
 
+
 module.exports = router;

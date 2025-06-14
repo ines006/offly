@@ -153,6 +153,7 @@ setInterval(clearExpiredTokens, 1000 * 60 * 60);
 exports.logout = (req, res) => {
   const { refreshToken } = req.body;
 
+
   if (!refreshToken) {
     return res.status(400).json({ message: "Refresh token missing" });
   }
@@ -170,3 +171,6 @@ exports.logout = (req, res) => {
 
   res.status(200).json({ message: "Logout successful" });
 };
+
+module.exports = exports;
+

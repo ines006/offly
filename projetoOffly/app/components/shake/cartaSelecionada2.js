@@ -131,13 +131,16 @@ export default function CartaSelecionada() {
 
 
             <View style={[styles.mainCard, { marginTop: 20 }]}>
-              {selectedCard.challenge?.imagem && (
-                <Image
-                  accessibilityLabel="Imagem da carta"
-                  source={{ uri: selectedCard.challenge.imagem }}
-                  style={styles.cardImage}
-                  resizeMode="cover"
-                />
+            {selectedCard.challenge && (
+            <Image
+              accessibilityLabel="Imagem da carta selecionada"
+              source={{ uri: `${baseurl}/api/desafios/imagem/${selectedCard.challenge.id}` }}
+              style={styles.cardImage}
+              resizeMode="cover"
+              onError={(e) => {
+                console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
+              }}
+            />
               )}
               <View style={styles.cardContent}>
                 <Text style={styles.mainTitle}>

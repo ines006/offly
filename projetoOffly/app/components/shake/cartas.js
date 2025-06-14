@@ -110,12 +110,16 @@ export default function Cards() {
                 ]}
               >
                 {revealedCards[index] && card.img && (
+                  
                   <Image
-                    accessibilityLabel="Carta revelada"
-                    source={{ uri: card.img }}
-                    style={styles.smallCardImage}
-                    resizeMode="cover"
-                  />
+                  accessibilityLabel="Carta revelada"
+                  source={{ uri: `${baseurl}/api/desafios/imagem/${card.id}` }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                  onError={(e) => {
+                    console.error("❌ Erro ao carregar imagem:", e.nativeEvent);
+                  }}
+                />
                 )}
               </Animated.View>
             </TouchableOpacity>
@@ -126,12 +130,16 @@ export default function Cards() {
           <View style={styles.mainCard}>
             {selectedCard.img && (
               <Image
-                accessibilityLabel="Imagem da carta selecionada"
-                source={{ uri: selectedCard.img }}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
+              accessibilityLabel="Imagem da carta selecionada"
+              source={{ uri: `${baseurl}/api/desafios/imagem/${selectedCard.id}` }}
+              style={styles.cardImage}
+              resizeMode="cover"
+              onError={(e) => {
+                console.error("❌ Erro ao carregar imagem (carta selecionada):", e.nativeEvent);
+              }}
+            />
             )}
+            
             <View style={styles.cardContent}>
               <Text style={styles.mainTitle}>{selectedCard.title}</Text>
               <Text style={styles.mainDescription}>{selectedCard.description}</Text>

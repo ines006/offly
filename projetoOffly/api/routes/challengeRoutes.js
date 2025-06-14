@@ -58,6 +58,49 @@ const challengeController = require("../controllers/challengeController");
  *       500:
  *         description: Internal server error
  */
+
+/**
+ * @swagger
+ * /api/desafios/imagem/{id}:
+ *   get:
+ *     summary: Get challenge image by ID
+ *     description: Returns the image associated with a challenge as binary content
+ *     tags: [Challenges]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Challenge ID
+ *     responses:
+ *       200:
+ *         description: Challenge image (binary)
+ *         content:
+ *           image/jpeg:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: Image not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/desafios/imagem/:id", challengeController.getChallengeImage);
+
 router.get("/desafios", challengeController.getRandomChallenges);
+
+router.get("/desafios-do-dia", challengeController.getDesafiosDoDia);
+
+router.get("/verificar/:id", challengeController.verificarDesafioRealizado);
+
+router.post("/discover-weekly-challenge", challengeController.discoverWeeklyChallenge);
+
+router.get("/:teamsId", challengeController.getChallengeForTeam);
+
+router.get('/challenges/dates/:teamId', challengeController.getChallengeDates);
+router.post('/challenges/validate/:teamId', challengeController.validateChallenge);
+router.get('/participants/:teamId', challengeController.getParticipantsByTeam);
+
 
 module.exports = router;

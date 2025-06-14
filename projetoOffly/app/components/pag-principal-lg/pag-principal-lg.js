@@ -53,6 +53,7 @@ export default function Home() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [userName, setUserName] = useState("");
   const [userLevel, setUserLevel] = useState();
+  const [userChallenges, setUserChallenges] = useState();
   const [teamId, setTeamId] = useState("");
   const [teamName, setTeamName] = useState("");
   const [teamPoints, setTeamPoints] = useState();
@@ -91,6 +92,7 @@ export default function Home() {
         const level = userData.level;
         const teamId = userData.teams_id;
         const dataUpload = userData.upload_data;
+        const challenges = userData.challenge_count;
 
         setUserId(user.id);
         setUserName(name);
@@ -98,6 +100,7 @@ export default function Home() {
         setProfileImage(image ? { uri: image } : null);
         setTeamId(teamId);
         setDataUpload(dataUpload);
+        setUserChallenges(challenges);
       } catch (error) {
         Alert.alert(
           "Erro",
@@ -397,8 +400,8 @@ export default function Home() {
                   <StatText accessibilityLabel="Desafios completos">
                     Desafios completos
                   </StatText>
-                  <StatValue accessibilityLabel="7 de 30 desafios completos">
-                    <Text>7/30 </Text>
+                  <StatValue accessibilityLabel={`Dia ${userChallenges} de ${competitionDaysTotal}`}>
+                    <Text>{userChallenges}/{competitionDaysTotal}</Text>
                     <FontAwesome
                       name="calendar"
                       size={14}

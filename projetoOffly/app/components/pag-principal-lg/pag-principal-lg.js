@@ -48,7 +48,7 @@ export default function Home() {
   const router = useRouter();
   const { user, accessToken } = useContext(AuthContext);
 
-   const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [dataUpload, setDataUpload] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [userName, setUserName] = useState("");
@@ -57,13 +57,14 @@ export default function Home() {
   const [teamName, setTeamName] = useState("");
   const [teamPoints, setTeamPoints] = useState();
   const [teamMembers, setTeamMembers] = useState();
-  const [teamCapacity, setteamCapacity] = useState();
+  const [teamCapacity, setTeamCapacity] = useState();
   const [profileImage, setProfileImage] = useState(null);
   const [teamImage, setTeamImage] = useState(null);
   const [tournamentName, setTournamentName] = useState(null);
   const [tournamentStart, setTournamentStart] = useState(null);
   const [tournamentEnd, setTournamentEnd] = useState(null);
   const [competitionDay, setCompetitionDay] = useState(null);
+  const [competitionDaysTotal, setCompetitionDaysTotal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function Home() {
         setTeamName(teamData.name);
         setTeamImage(teamData.image ? { uri: teamData.image } : null);
         setTeamMembers(teamData.participants.length);
-        setteamCapacity(teamData.capacity);
+        setTeamCapacity(teamData.capacity);
         setTeamPoints(teamData.points);
         setTournamentName(teamData.competition_name);
         setTournamentStart(teamData.competition_start_date);
@@ -168,12 +169,19 @@ export default function Home() {
   useEffect(() => {
     if (tournamentStart && tournamentEnd) {
       const day = getCompetitionDay(tournamentStart, tournamentEnd);
+      const totalDays = getCompetitionDaysTotal(tournamentStart, tournamentEnd);
       setCompetitionDay(day);
+      setCompetitionDaysTotal(totalDays);
     }
   }, [tournamentStart, tournamentEnd]);
 
+  const isValidDate = (dateString) => {
+    const date = new Date(dateString);
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+
   const isUploadedToday = () => {
-    if (!dataUpload) return false;
+    if (!dataUpload || !isValidDate(dataUpload)) return false;
     const today = new Date().toISOString().split("T")[0];
     const uploadDate = new Date(dataUpload).toISOString().split("T")[0];
     return uploadDate === today;
@@ -221,6 +229,10 @@ export default function Home() {
     const end = new Date(end_date);
     const now = new Date();
 
+    if (!isValidDate(start_date) || !isValidDate(end_date)) {
+      return 0;
+    }
+
     if (now < start) {
       return 0;
     }
@@ -232,6 +244,21 @@ export default function Home() {
 
     const dayNumber = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
     return dayNumber;
+  };
+
+  const getCompetitionDaysTotal = (start_date, end_date) => {
+    if (!isValidDate(start_date) || !isValidDate(end_date)) {
+      return 0;
+    }
+
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    if (end < start) {
+      return 0;
+    }
+
+    const duration = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    return duration;
   };
 
   const handleCirclePress = () => {
@@ -356,8 +383,8 @@ export default function Home() {
                   <StatText accessibilityLabel="Dias em competição">
                     Dias em competição
                   </StatText>
-                  <StatValue accessibilityLabel={`Dia ${competitionDay} de 30`}>
-                    <Text>{competitionDay}/30 </Text>
+                  <StatValue accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal}`}>
+                    <Text>{competitionDay}/{competitionDaysTotal}</Text>
                     <FontAwesome
                       name="calendar"
                       size={14}

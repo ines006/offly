@@ -48,7 +48,7 @@ export default function Home() {
   const router = useRouter();
   const { user, accessToken } = useContext(AuthContext);
 
-  const [userId, setUserId] = useState(null);
+const [userId, setUserId] = useState(null);
   const [dataUpload, setDataUpload] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [userName, setUserName] = useState("");
@@ -68,47 +68,51 @@ export default function Home() {
   const [competitionDaysTotal, setCompetitionDaysTotal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const getTodayInWEST = () => {
+    const date = new Date().toLocaleString("en-US", { timeZone: "Europe/Lisbon" });
+    const [month, day, year] = date.split(",")[0].split("/");
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  };
+
+  const fetchUserData = async () => {
+    if (!user?.id || !accessToken) {
+      Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
+      router.push("./login");
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${baseurl}/participants/${user.id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      const userData = response.data;
+      const name = userData.name || userData.fullName;
+      const image = userData.image || null;
+      const level = userData.level;
+      const teamId = userData.teams_id;
+      const dataUpload = userData.upload_data;
+      const challenges = userData.challenge_count;
+
+      setUserId(user.id);
+      setUserName(name);
+      setUserLevel(level);
+      setProfileImage(image ? { uri: image } : null);
+      setTeamId(teamId);
+      setDataUpload(dataUpload);
+      setUserChallenges(challenges);
+    } catch (error) {
+      console.error("Error fetching user data:", error.message);
+      Alert.alert("Erro", "Não foi possível carregar os dados do utilizador.");
+    }
+  };
+
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user?.id || !accessToken) {
-        Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
-        router.push("./login");
-        return;
-      }
-
-      try {
-        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
-
-        const userData = response.data;
-        const name = userData.name || userData.fullName;
-        const image = userData.image || null;
-        const level = userData.level;
-        const teamId = userData.teams_id;
-        const dataUpload = userData.upload_data;
-        const challenges = userData.challenge_count;
-
-        setUserId(user.id);
-        setUserName(name);
-        setUserLevel(level);
-        setProfileImage(image ? { uri: image } : null);
-        setTeamId(teamId);
-        setDataUpload(dataUpload);
-        setUserChallenges(challenges);
-      } catch (error) {
-        Alert.alert(
-          "Erro",
-          "Não foi possível carregar os dados do utilizador."
-        );
-      }
-    };
-
     fetchUserData();
   }, [user, accessToken]);
 
@@ -179,27 +183,27 @@ export default function Home() {
   }, [tournamentStart, tournamentEnd]);
 
   const isValidDate = (dateString) => {
+    if (!dateString) return false;
     const date = new Date(dateString);
     return date instanceof Date && !isNaN(date.getTime());
   };
 
   const isUploadedToday = () => {
-    if (!dataUpload || !isValidDate(dataUpload)) return false;
-    const today = new Date().toISOString().split("T")[0];
+    if (!dataUpload || !isValidDate(dataUpload)) {
+      return false;
+    }
+    const today = getTodayInWEST();
     const uploadDate = new Date(dataUpload).toISOString().split("T")[0];
+    //console.log("isUploadedToday debug:", { today, uploadDate, result: uploadDate === today }); // Temporary debug
     return uploadDate === today;
   };
 
   const calculateTimeUntilMidnight = () => {
     const now = new Date();
     const midnight = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-      0,
-      0,
-      0
+      now.toLocaleString("en-US", { timeZone: "Europe/Lisbon" })
     );
+    midnight.setHours(24, 0, 0, 0);
     return midnight.getTime() - now.getTime();
   };
 
@@ -210,12 +214,41 @@ export default function Home() {
     setTimeRemaining(calculateTimeUntilMidnight());
 
     // Update countdown every second
-    const interval = setInterval(() => {
+    const countdownInterval = setInterval(() => {
       setTimeRemaining(calculateTimeUntilMidnight());
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [userId]);
+    // Schedule re-fetch at midnight
+    let timeoutId;
+    const scheduleMidnightFetch = () => {
+      const timeToMidnight = calculateTimeUntilMidnight();
+      timeoutId = setTimeout(() => {
+        console.log("Midnight reached, re-fetching data:", getTodayInWEST());
+        fetchUserData();
+        scheduleMidnightFetch(); // Reschedule for next midnight
+      }, timeToMidnight + 1000); // Add 1s buffer
+    };
+
+    scheduleMidnightFetch();
+
+    // Poll for dataUpload updates if outdated
+    const pollInterval = setInterval(() => {
+      if (dataUpload && isValidDate(dataUpload)) {
+        const uploadDate = new Date(dataUpload).toISOString().split("T")[0];
+        const today = getTodayInWEST();
+        if (uploadDate < today) {
+          console.log("Outdated dataUpload detected, re-fetching:", { uploadDate, today });
+          fetchUserData();
+        }
+      }
+    }, 60000); // Check every 60 seconds
+
+    return () => {
+      clearInterval(countdownInterval);
+      clearTimeout(timeoutId);
+      clearInterval(pollInterval);
+    };
+  }, [userId, dataUpload]);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -365,7 +398,7 @@ export default function Home() {
             >
               <Header>
                 <IconContainer accessibilityLabel="Ícone da imagem">
-                  {teamImage && <TeamImage source={teamImage} />}
+                  <TeamImage source={teamImage} />
                 </IconContainer>
                 <TeamName accessibilityLabel={`Nome da equipa: ${teamName}`}>
                   <Text>{teamName}</Text>
@@ -386,8 +419,8 @@ export default function Home() {
                   <StatText accessibilityLabel="Dias em competição">
                     Dias em competição
                   </StatText>
-                  <StatValue accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal}`}>
-                    <Text>{competitionDay}/{competitionDaysTotal}</Text>
+                  <StatValue accessibilityLabel={`Dia ${competitionDay} de 30`}>
+                    <Text>{competitionDay}/30 </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -400,8 +433,8 @@ export default function Home() {
                   <StatText accessibilityLabel="Desafios completos">
                     Desafios completos
                   </StatText>
-                  <StatValue accessibilityLabel={`Dia ${userChallenges} de ${competitionDaysTotal}`}>
-                    <Text>{userChallenges}/{competitionDaysTotal}</Text>
+                  <StatValue accessibilityLabel="7 de 30 desafios completos">
+                    <Text>7/30 </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}

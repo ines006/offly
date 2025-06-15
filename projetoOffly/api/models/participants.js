@@ -44,11 +44,15 @@ const Participants = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    upload: {
-      type: DataTypes.INTEGER,
+    upload_data: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
-
+    challenge_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
     answers_id: {
       type: DataTypes.INTEGER,
       allowNull: true,

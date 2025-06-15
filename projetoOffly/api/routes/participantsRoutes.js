@@ -69,7 +69,8 @@ router.get("/", participantsController.getAllParticipants);
  *                 level: 1
  *                 image: "https://meusite.com/imagens/random.png"
  *                 gender: 1
- *                 upload: 1
+ *                 upload_data: 2025-06-15 00:18:01
+ *                 challenge_count: 7
  *                 answers_id: 1
  *                 teams_id: 1
  *                 teams_team_admin: 1
@@ -237,7 +238,7 @@ router.post("/", participantsController.createParticipant);
  * /participants/{id}:
  *   put:
  *     summary: Update a participant's personal data
- *     description: Updates the personal data (name, username, email, or password) of the authenticated participant. Only the participant themselves can update their own data. At least one field must be provided, and all provided fields must be valid.
+ *     description: Updates the personal data (name, username, email, password or challenge_count) of the authenticated participant. Only the participant themselves can update their own data. At least one field must be provided, and all provided fields must be valid.
  *     tags: [Participants]
  *     security:
  *       - bearerAuth: []
@@ -274,11 +275,10 @@ router.post("/", participantsController.createParticipant);
  *                 format: password
  *                 description: The participant's new password (min 8 characters, must include uppercase, lowercase, number, and special character)
  *                 example: NewPass123!
- *               upload:
+ *               challenge_count:
  *                 type: integer
- *                 enum: [0, 1]
- *                 description: Indicates whether the participant has uploaded the required document (0 = not uploaded, 1 = uploaded)
- *                 example: 1
+ *                 description: The number of challenges completed by the participant
+ *                 example: 7
  *     responses:
  *       200:
  *         description: Participant updated successfully

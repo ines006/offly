@@ -120,7 +120,7 @@ exports.createParticipant = async (req, res) => {
 // Atualizar os dados de um participante
 exports.updateParticipant = async (req, res) => {
   try {
-    const { name, username, email, password, upload } = req.body;
+    const { name, username, email, password, challenge_count } = req.body;
     const { id } = req.params;
 
     // Verificar se o utilizador está autenticado
@@ -144,7 +144,7 @@ exports.updateParticipant = async (req, res) => {
     }
 
     // Verificar se pelo menos um campo foi fornecido
-    if (!name && !username && !email && !password && upload === undefined) {
+    if (!name && !username && !email && !password && challenge_count === undefined) {
       return res.status(422).json({
         message: "At least one field must be provided for update",
       });
@@ -163,8 +163,14 @@ exports.updateParticipant = async (req, res) => {
     if (password === "") {
       return res.status(422).json({ message: "Password cannot be empty" });
     }
-    if (upload === "") {
-      return res.status(422).json({ message: "Upload cannot be empty" });
+
+    // Validar challenge_count, se fornecido
+    if (challenge_count !== undefined) {
+      if (!Number.isInteger(challenge_count) || challenge_count < 0) {
+        return res.status(422).json({
+          message: "Challenge count must be a non-negative integer",
+        });
+      }
     }
 
     // Validar formato do email, se fornecido
@@ -213,18 +219,6 @@ exports.updateParticipant = async (req, res) => {
       }
     }
 
-    // Validar upload, se é um número válido -> 0 ou 1
-    if (upload !== undefined) {
-      const parsedUpload = Number(upload);
-
-      if (isNaN(parsedUpload) || (parsedUpload !== 0 && parsedUpload !== 1)) {
-        return res.status(422).json({
-          message: "The 'upload' field must be a valid number: 0 or 1",
-        });
-      }
-    }
-
-
     // Criar objeto com os campos a serem atualizados
     const updateData = {};
     if (name) updateData.name = name;
@@ -233,9 +227,7 @@ exports.updateParticipant = async (req, res) => {
     if (password) {
       updateData.password_hash = await bcrypt.hash(password, 10);
     }
-    if (upload !== undefined) updateData.upload = Number(upload);
-
-
+    if (challenge_count !== undefined) updateData.challenge_count = challenge_count;
 
     // Atualizar participante
     const [updated] = await Participants.update(updateData, {
@@ -252,7 +244,7 @@ exports.updateParticipant = async (req, res) => {
           name: updatedParticipant.name,
           username: updatedParticipant.username,
           email: updatedParticipant.email,
-          upload: updatedParticipant.upload,
+          challenge_count: updatedParticipant.challenge_count,
         },
       });
     }

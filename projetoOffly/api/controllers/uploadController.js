@@ -6,6 +6,12 @@ const { sequelize } = require("../config/database");
 // Configuração do OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Função para verificar se uma string é uma data válida
+const isValidDate = (dateString) => {
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date.getTime());
+};
+
 // Função para analisar a imagem com ChatGPT
 const analyzeScreenTime = async (imageBuffer) => {
   try {
@@ -61,17 +67,14 @@ Do not return any other text or format.
       max_tokens: 50, // Limit tokens for concise response
     });
 
-    // Log raw response for debugging
     console.log("Raw OpenAI response:", response.choices[0].message.content);
 
     const result = response.choices[0].message.content.trim();
 
-    // Map response to points or error
     if (["10", "20", "30", "50"].includes(result)) {
       return parseInt(result, 10);
     }
 
-    // Map error strings to frontend-compatible messages
     switch (result) {
       case "Invalid image":
         throw new Error("Imagem não é um print válido do tempo de ecrã.");
@@ -112,11 +115,11 @@ exports.analyzeUpload = async (req, res) => {
 
     // Verificar se userId é um número válido
     const parsedUserId = parseInt(userId, 10);
-    if (isNaN(parsedUserId)) {
-      console.log("Erro: userId inválido", { userId });
+    if (isNaN(parsedUserId) || parsedUserId <= 0) {
+      console.log("Erro: userId inválido", { userId, parsedUserId });
       return res
         .status(400)
-        .json({ error: "userId deve ser um número válido" });
+        .json({ error: "userId deve ser um número inteiro positivo" });
     }
 
     // Verificar se o participante existe
@@ -127,6 +130,11 @@ exports.analyzeUpload = async (req, res) => {
       console.log("Erro: Participante não encontrado", { parsedUserId });
       return res.status(404).json({ error: "Participante não encontrado" });
     }
+    console.log("Participante encontrado:", {
+      id: participant.id,
+      teams_id: participant.teams_id,
+      upload_data: participant.upload_data,
+    });
 
     // Verificar se o participante pertence a uma equipe
     if (!participant.teams_id) {
@@ -137,8 +145,18 @@ exports.analyzeUpload = async (req, res) => {
     }
 
     // Verificar se o upload já foi realizado hoje
-    if (participant.upload === 1) {
-      console.log("Erro: Upload já realizado", { parsedUserId });
+    const today = new Date().toISOString().split("T")[0];
+    let uploadDate = null;
+    if (participant.upload_data && isValidDate(participant.upload_data)) {
+      uploadDate = new Date(participant.upload_data).toISOString().split("T")[0];
+    } else if (participant.upload_data) {
+      console.warn("Valor inválido em upload_data:", {
+        userId: parsedUserId,
+        upload_data: participant.upload_data,
+      });
+    }
+    if (uploadDate === today) {
+      console.log("Erro: Upload já realizado hoje", { parsedUserId });
       return res
         .status(400)
         .json({ error: "Upload já realizado hoje. Tente novamente amanhã." });
@@ -146,26 +164,68 @@ exports.analyzeUpload = async (req, res) => {
 
     // Analisar a imagem com ChatGPT usando o buffer
     const points = await analyzeScreenTime(image.buffer);
+    console.log("Pontos calculados:", { points });
 
-    // Iniciar transação para garantir consistência
-    await sequelize.transaction(async (t) => {
+    // Definir o datetime atual para upload_data
+    const currentDateTime = new Date().toISOString();
+    console.log("Tentando atualizar upload_data para:", {
+      userId: parsedUserId,
+      upload_data: currentDateTime,
+    });
+
+    // Iniciar transação
+    const transaction = await sequelize.transaction();
+    try {
       // Calcular a variação (negativa, pois os pontos estão sendo subtraídos)
       const variation = -points;
 
-      // Atualizar a pontuação da equipe e o campo last_variation
-      await Teams.update(
+      // Atualizar a pontuação da equipe
+      const [teamUpdated] = await Teams.update(
         {
           points: sequelize.literal(`points - ${points}`),
-          last_variation: variation, // Usar last_variation com underscore
+          last_variation: variation,
         },
-        { where: { id: participant.teams_id }, transaction: t }
+        { where: { id: participant.teams_id }, transaction }
       );
+      console.log("Team update result:", { teamUpdated, teamId: participant.teams_id });
 
-      // Atualizar o campo upload do participante
-      await Participants.update(
-        { upload: true },
-        { where: { id: parsedUserId }, transaction: t }
+      // Verificar novamente o participante antes de atualizar
+      const participantCheck = await Participants.findByPk(parsedUserId, { transaction });
+      if (!participantCheck) {
+        throw new Error("Participante não encontrado durante a transação");
+      }
+
+      // Atualizar upload_data
+      const [participantUpdated] = await Participants.update(
+        {
+          upload_data: currentDateTime,
+        },
+        { where: { id: parsedUserId }, transaction }
       );
+      console.log("Participant update result:", { participantUpdated, userId: parsedUserId });
+
+      if (participantUpdated === 0) {
+        console.error("Nenhuma linha atualizada para upload_data", {
+          userId: parsedUserId,
+          upload_data: currentDateTime,
+        });
+        throw new Error("Falha ao atualizar upload_data: participante não encontrado ou sem alterações");
+      }
+
+      // Confirmar transação
+      await transaction.commit();
+      console.log("Transação confirmada com sucesso");
+    } catch (error) {
+      await transaction.rollback();
+      console.error("Erro na transação, rollback executado:", error.message);
+      throw error;
+    }
+
+    // Verificar o participante atualizado
+    const updatedParticipant = await Participants.findByPk(parsedUserId);
+    console.log("Participante após atualização:", {
+      id: parsedUserId,
+      upload_data: updatedParticipant?.upload_data,
     });
 
     return res.status(200).json({
@@ -174,11 +234,12 @@ exports.analyzeUpload = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao processar o upload:", error.message, error.stack);
-    // Specific error for invalid images
     if (
       error.message.includes("Imagem não é um print válido") ||
       error.message.includes("A imagem deve ser do dia anterior") ||
-      error.message.includes("Não foi possível extrair")
+      error.message.includes("Não foi possível extrair") ||
+      error.message.includes("Falha ao atualizar upload_data") ||
+      error.message.includes("Participante não encontrado durante a transação")
     ) {
       return res.status(400).json({ error: error.message });
     }

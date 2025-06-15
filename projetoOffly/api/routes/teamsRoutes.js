@@ -445,7 +445,7 @@ router.get("/:id", teamsController.getTeamParticipants);
  * @swagger
  * /teams/competition/available:
  *   get:
- *     summary: List competitions with fewer than 10 teams and a specific number of players per team
+ *     summary: List available competitions with fewer than 10 teams and a specific number of players per team
  *     description: |
  *       Retrieves all competitions that currently have fewer than 10 registered teams
  *       and match the specified number of players per team (only 3, 4, or 5 allowed).
@@ -480,6 +480,14 @@ router.get("/:id", teamsController.getTeamParticipants);
  *                     type: integer
  *                     description: Required number of players per team
  *                     example: 5
+ *                   starting_date:
+ *                     type: string
+ *                     description: Start date and time of the competition
+ *                     example: 2025-06-01T08:00:00
+ *                   end_date:
+ *                     type: string
+ *                     description: End date and time of the competition
+ *                     example: 2025-06-30T23:59:59
  *                   team_count:
  *                     type: integer
  *                     description: Number of teams currently registered

@@ -92,6 +92,9 @@ const [userId, setUserId] = useState(null);
       });
 
       const userData = response.data;
+
+      console.log("Dados do utilizador: ", userData);
+
       const name = userData.name || userData.fullName;
       const image = userData.image || null;
       const level = userData.level;
@@ -419,8 +422,8 @@ const [userId, setUserId] = useState(null);
                   <StatText accessibilityLabel="Dias em competição">
                     Dias em competição
                   </StatText>
-                  <StatValue accessibilityLabel={`Dia ${competitionDay} de 30`}>
-                    <Text>{competitionDay}/30 </Text>
+                  <StatValue accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal} da competição`}>
+                    <Text>{competitionDay}/{competitionDaysTotal}  </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -433,8 +436,8 @@ const [userId, setUserId] = useState(null);
                   <StatText accessibilityLabel="Desafios completos">
                     Desafios completos
                   </StatText>
-                  <StatValue accessibilityLabel="7 de 30 desafios completos">
-                    <Text>7/30 </Text>
+                  <StatValue accessibilityLabel={`${userChallenges} de ${competitionDaysTotal} de desafios completos`}>
+                    <Text>{userChallenges}/{competitionDaysTotal}  </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}

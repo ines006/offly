@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -13,7 +13,7 @@ import {
   Definir_visibilidade_btn,
   Texto_Botoes_Definir_Visibilidade,
 } from "../../styles/styles";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useFonts } from "expo-font";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -35,8 +35,11 @@ const Register = () => {
   const [emailBarWidth] = useState(new Animated.Value(0));
   const [passwordBarWidth] = useState(new Animated.Value(0));
   const [confirmPasswordBarWidth] = useState(new Animated.Value(0));
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [touchedTerms, setTouchedTerms] = useState(false);
 
   const router = useRouter();
+  const searchParams = useLocalSearchParams();
   const { setUser, setAccessToken } = useContext(AuthContext);
 
   const [fontsLoaded] = useFonts({
@@ -146,6 +149,11 @@ const Register = () => {
       return;
     }
 
+    if (!termsAccepted) {
+      setError("Por favor, aceite os termos e condições para continuar.");
+      return;
+    }
+
     try {
       console.log("🧹 Limpando sessão anterior...");
       // Limpar AsyncStorage
@@ -213,6 +221,12 @@ const Register = () => {
     // Definir 0 para Masculino e 1 para Feminino
     setGender(button === "Masculino" ? 0 : 1);
   };
+
+  useEffect(() => {
+    if (searchParams?.aceitouTermos === '1' && !touchedTerms) {
+      setTermsAccepted(true);
+    }
+  }, [searchParams, touchedTerms]);
 
   if (!fontsLoaded) {
     return null; // Ou um componente de carregamento
@@ -458,9 +472,6 @@ const Register = () => {
           />
         </View>
 
-        {/* Mensagem de Erro */}
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
         {/* Gênero */}
         <View style={styles.wrapInput}>
           <Text
@@ -501,11 +512,41 @@ const Register = () => {
           </BotaoNavegacaoContainer>
         </View>
 
+        {/* Termos e Condições */}
+        <View style={styles.termsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.checkbox,
+              { backgroundColor: termsAccepted ? '#E3FC87' : 'transparent' }
+            ]}
+            onPress={() => {
+              setTermsAccepted(!termsAccepted);
+              setTouchedTerms(true);
+            }}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: termsAccepted }}
+          >
+            {termsAccepted && (
+              <Text style={styles.checkmark}>✓</Text>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.termsText}>
+            Aceito os{' '}
+            <Text style={styles.termsLink} onPress={() => router.push("./termos")}>
+              Termos e Condições
+            </Text>
+          </Text>
+        </View>
+
+        {/* Mensagem de Erro */}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         {/* Botão de Registro */}
         <TouchableOpacity
-          style={styles.loginButton}
+          style={[styles.loginButton, !termsAccepted && { opacity: 0.5 }]}
           onPress={handleSubmit}
           accessibilityRole="button"
+          disabled={!termsAccepted}
         >
           <Text style={styles.loginButtonText} accessibilityLabel="Registar-me">
             Registar-me
@@ -629,5 +670,33 @@ const styles = StyleSheet.create({
   },
   mandatory: {
     color: "#FF8F8F",
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#E3FC87',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkmark: {
+    color: '#263A83',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    color: '#adadad',
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  termsLink: {
+    color: '#E3FC87',
+    textDecorationLine: 'underline',
   },
 });

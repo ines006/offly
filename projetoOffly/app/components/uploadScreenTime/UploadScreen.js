@@ -16,6 +16,11 @@ import { AuthContext } from "../entrar/AuthContext";
 import { baseurl } from "../../api-config/apiConfig";
 import axios from "axios";
 
+import pontuacao10 from "../../imagens/pontuacao10.webp";
+import pontuacao20 from "../../imagens/pontuacao20.webp";
+import pontuacao30 from "../../imagens/pontuacao30.webp";
+import pontuacao50 from "../../imagens/pontuacao50.webp";
+
 const UploadScreen = () => {
   console.log("UploadScreen renderizado");
   const router = useRouter();
@@ -58,7 +63,6 @@ const UploadScreen = () => {
           console.log("teams_id obtido:", fetchedTeamsId);
         } catch (error) {
           console.error("Erro ao buscar teams_id:", error.response || error);
-          Alert.alert("Erro", "Não foi possível obter a equipa do utilizador.");
         }
       };
       fetchTeamsId();
@@ -162,10 +166,6 @@ const UploadScreen = () => {
       setPoints(response.data.points);
       setProcessingModalVisible(false);
       setSuccessModalVisible(true);
-      Alert.alert(
-        "Sucesso",
-        `Imagem analisada! ${response.data.points} pontos foram subtraídos da sua equipe.`
-      );
     } catch (error) {
       console.error("Erro ao processar upload:", error.response?.data || error);
       setProcessingModalVisible(false);
@@ -204,6 +204,55 @@ const UploadScreen = () => {
     console.log("Fechando modal de erro");
     setErrorModalVisible(false);
     setErrorMessage("");
+  };
+
+  const getModalContent = (points) => {
+    switch (points) {
+      case 10:
+        return {
+          image: pontuacao10,
+          title: "Ufa!",
+          subtitle: "Penalidade Suave",
+          message:
+            "Estás no caminho certo, mas ainda podes reduzir o tempo de ecrã",
+          backgroundColor: "#FFF",
+        };
+      case 20:
+        return {
+          image: pontuacao20,
+          title: "Oops!",
+          subtitle: "Atenção a dispersar... mantém o foco!",
+          message:
+            "Estás a exagerar um pouco, tenta fazer pausas mais regulares",
+          backgroundColor: "#FFF",
+        };
+      case 30:
+        return {
+          image: pontuacao30,
+          title: "Aí aí...",
+          subtitle: "Quase na zona crítica. Tu consegues melhor!",
+          message:
+            "Para um momento e pensa no impacto que este tempo tem em ti",
+          backgroundColor: "#FFF",
+        };
+      case 50:
+        return {
+          image: pontuacao50,
+          title: "Para e respira!",
+          subtitle: "A tua mente precisa de descanso",
+          message:
+            "O teu bem-estar está em risco se continuares assim. Vamos tentar uma pausa, amanhã?",
+          backgroundColor: "#FFF",
+        };
+      default:
+        return {
+          image: null,
+          title: "Pontuação processada.",
+          subtitle: "",
+          message: "Pontuação processada.",
+          backgroundColor: "#FFF",
+        };
+    }
   };
 
   return (
@@ -300,7 +349,7 @@ const UploadScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.processingModalContainer}>
-            <Text style={styles.modalTitle}>
+            <Text style={styles.modalTitle2}>
               Estamos a analisar o teu tempo de ecrã...
             </Text>
           </View>
@@ -314,25 +363,30 @@ const UploadScreen = () => {
         onRequestClose={handleCloseSuccessModal}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.circleWrapper}>
-              <Svg width={80} height={80} viewBox="0 0 80 80" fill="none">
-                <Circle cx="40" cy="40" r="40" fill="#BFE0FF" />
-                <Path
-                  d="M33.6 51.2L24 41.6C23.1 40.7 23.1 39.1 24 38.2C24.9 37.3 26.5 37.3 27.4 38.2L34.8 45.6L52.6 27.8C53.5 26.9 55.1 26.9 56 27.8C56.9 28.7 56.9 30.3 56 31.2L36 51.2C35.1 52.1 33.9 52.1 33.6 51.2Z"
-                  fill="#263A83"
-                />
-              </Svg>
-            </View>
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: getModalContent(points).backgroundColor },
+            ]}
+          >
             <Text style={styles.modalTitle}>
-              {points !== null
-                ? `Foram subtraídos ${points} pontos da tua equipa`
-                : "Pontuação processada."}
+              {getModalContent(points).title}
             </Text>
-            <Text style={styles.modalMessage}>{getPointsMessage(points)}</Text>
-            <Text style={styles.modalMessage2}>
-              Amanhã poderás fazer uma nova submissão!
+            <Text style={styles.modalSubtitle}>
+              {getModalContent(points).subtitle}
             </Text>
+            {getModalContent(points).image && (
+              <Image
+                source={getModalContent(points).image}
+                style={styles.modalImage}
+                resizeMode="contain"
+              />
+            )}
+            <View style={styles.messageBox}>
+              <Text style={styles.modalMessage}>
+                {getModalContent(points).message}
+              </Text>
+            </View>
             <TouchableOpacity
               style={styles.modalButton}
               onPress={handleCloseSuccessModal}
@@ -499,12 +553,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   modalContainer: {
-    width: 300,
-    height: 395,
+    width: 350,
+    height: 490,
     backgroundColor: "#FFF",
     borderRadius: 10,
     padding: 25,
     alignItems: "center",
+    justifyContent: "center",
   },
   circleWrapper: {
     position: "absolute",
@@ -522,20 +577,49 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#263A83",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalTitle2: {
     fontSize: 20,
     fontWeight: "700",
     color: "#263A83",
-    marginTop: 30,
-    marginBottom: 20,
+    marginBottom: 10,
     textAlign: "center",
   },
+  modalSubtitle: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: "#7C8191",
+    marginBottom: 40,
+    width: 200,
+    textAlign: "center",
+    lineHeight: 23,
+  },
+  modalImage: {
+    width: 135,
+    height: 68.5,
+    marginBottom: 20,
+  },
+  messageBox: {
+    width: 250,
+    height: 80,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 50,
+    marginBottom: 40,
+  },
   modalMessage: {
-    width: 180,
+    width: 200,
     fontSize: 14,
     fontWeight: "400",
-    color: "#263A83",
+    color: "#7C8191",
     textAlign: "center",
-    marginBottom: 20,
   },
   modalMessage2: {
     width: 180,
@@ -550,6 +634,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 47,
+    marginTop: 20,
   },
   modalButtonText: {
     color: "#FFF",

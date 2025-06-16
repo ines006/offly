@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { baseurl } from "../../api-config/apiConfig";
-import { AuthContext } from "./AuthContext"; // Ajuste o caminho se necessário
+import { AuthContext } from "./AuthContext"; 
 
 import {
   StyleSheet,
@@ -263,7 +263,7 @@ const Login = () => {
             Ainda não tens conta?
           </Text>
           <TouchableOpacity
-            onPress={() => router.push("./components/entrar/registo")}
+            onPress={() => router.push("./registo")}
           >
             <Text
               style={styles.txt2}

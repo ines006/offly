@@ -44,7 +44,7 @@ const Participants = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    upload: {
+    upload_data: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },

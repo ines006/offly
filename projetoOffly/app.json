@@ -3,6 +3,8 @@
     "name": "Oflly",
     "slug": "offly",
     "version": "1.0.0",
+    "sdkVersion": "53.0.0",
+    "plugins": ["expo-router"],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -10,7 +12,6 @@
     "developer": {
           "enabled": false
         },
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {

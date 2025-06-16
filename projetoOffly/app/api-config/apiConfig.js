@@ -1,4 +1,4 @@
 export const baseurl =
-  "https://187a-2001-8a0-c773-b300-5cb8-6877-f42c-f09b.ngrok-free.app"; // URL que varia conforme a indica pelo NGROk
+  "https://f03f-2001-8a0-ee84-7100-b9e3-c81e-c6ba-90a1.ngrok-free.app"; // URL que varia conforme a indica pelo NGROk
 
   

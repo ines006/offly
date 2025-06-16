@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, Animated } from "react-native";
+import { View, Text, StyleSheet, Image, Animated, useWindowDimensions } from "react-native";
+import { Dimensions } from "react-native";
 
 export default function OfflyScreen() {
+  const { width, height } = useWindowDimensions();
   const [logoScaleAnim] = useState(new Animated.Value(0)); // Animação do logo
   const [textScaleAnim] = useState(new Animated.Value(0)); // Animação do texto
 
@@ -23,7 +25,7 @@ export default function OfflyScreen() {
   }, [logoScaleAnim, textScaleAnim]);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { width: width * 1, height: height * 1 }]}>
       <Animated.Image
         source={require("../assets/images/logoo.png")}
         style={[styles.logo, { transform: [{ scale: logoScaleAnim }] }]} // Animação do logo
@@ -42,8 +44,6 @@ export default function OfflyScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    width: 300,
-    height: 600,
     backgroundColor: "#283B8B",
     borderRadius: 20,
     alignItems: "center",

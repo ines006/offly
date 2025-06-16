@@ -127,7 +127,7 @@ export default function DetalhesDia() {
                 <View key={index} style={styles.challengeCard}>
                   <View style={styles.challengeHeader}>
                     <Image
-                      source={{ uri: `${baseurl}/api/desafios/imagem/${item.challenge.id}` }}
+                      source={{ uri: getValidImageUrl(item.challenge.level?.image_level) }}
                       style={styles.challengeImage}
                       resizeMode="contain"
                     />
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   challengeImage: {
     width: 100,
-    height: 100,
+    height: 140,
     margin: 12,
     borderRadius: 12,
     backgroundColor: "#E5E7EB",

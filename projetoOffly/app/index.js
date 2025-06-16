@@ -1,10 +1,8 @@
-// app/index.js
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
-import Login from "./components/entrar/login";
-import OfflyScreen from "./OfflyScreen";
+import OfflyScreen from "../app/OfflyScreen"
 
 export default function Index() {
   const [showSplash, setShowSplash] = useState(true);
@@ -13,6 +11,7 @@ export default function Index() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false); // após 3s, troca para o login
+      router.replace("../components/entrar/login"); // redireciona para a rota de login
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -20,7 +19,7 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      {showSplash ? <OfflyScreen /> : <Login />}
+      {showSplash && <OfflyScreen />}
     </View>
   );
 }

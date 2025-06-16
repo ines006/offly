@@ -1,5 +1,6 @@
 const Participants = require("../models/participants");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
+const Challenge = require("../models/challenges"); // <--- Certifica-te que está importado
 const { Op } = require("sequelize");
 
 const getPassbookData = async (req, res) => {
@@ -34,6 +35,16 @@ const getPassbookData = async (req, res) => {
           [Op.in]: participantIds,
         },
       },
+      include: [
+        {
+          model: Challenge,
+          as: "challenge", // usa o alias correto conforme definido na associação
+          where: {
+            challenge_types_id: 1, // 🔥 só desafios do tipo diário
+          },
+          attributes: ["id", "title", "challenge_types_id"],
+        },
+      ],
     });
 
     res.status(200).json({

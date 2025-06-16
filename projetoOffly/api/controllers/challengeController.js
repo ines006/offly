@@ -120,6 +120,10 @@ exports.getDesafiosDoDia = async (req, res) => {
           model: Challenge,
           as: "challenge",
           attributes: ["id", "title", "description", "challenge_levels_id"],
+          required: true,
+          where: {
+            challenge_types_id: 1, // 🔥 filtro pelo tipo de desafio diário
+          },
           include: [
             {
               model: ChallengeLevels,

@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   challengeImage: {
     width: 100,
-    height: 100,
+    height: 140,
     margin: 12,
     borderRadius: 12,
     backgroundColor: "#E5E7EB",

@@ -4,6 +4,7 @@ const { Op, Sequelize, QueryTypes} = require("sequelize");
 const { sequelize } = require("../config/database"); 
 const Participants = require("../models/participants");
 const Team = require("../models/teams");
+const ChallengeLevels = require("../models/challengeLevel");
 
 
 exports.getRandomChallenges = async (req, res) => {
@@ -72,32 +73,26 @@ exports.getChallengeImage = async (req, res) => {
 exports.getDesafiosDoDia = async (req, res) => {
   const { dia, participanteId } = req.query;
 
-  // Verificação de parâmetros obrigatórios
   if (!dia || !participanteId) {
     return res.status(400).json({ error: "Os parâmetros 'dia' e 'participanteId' são obrigatórios." });
   }
 
   try {
-    // Verifica se o participante existe
     const participante = await Participants.findByPk(participanteId);
     if (!participante) {
       return res.status(404).json({ error: "Participante não encontrado." });
     }
 
-    // Obtem data atual para usar o mês e o ano
     const hoje = new Date();
     const ano = hoje.getFullYear();
-    const mes = hoje.getMonth() + 1; // Janeiro = 0
+    const mes = hoje.getMonth() + 1;
 
-    // Formata dia e mês para garantir 2 dígitos
     const diaFormatado = String(dia).padStart(2, '0');
     const mesFormatado = String(mes).padStart(2, '0');
 
-    // Define o intervalo de tempo para o dia selecionado
     const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00`);
     const fimDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T23:59:59`);
 
-    // Busca todos os membros da equipa do participante autenticado
     const teamMembers = await Participants.findAll({
       where: {
         teams_id: participante.teams_id,
@@ -105,7 +100,6 @@ exports.getDesafiosDoDia = async (req, res) => {
       attributes: ["id", "name", "image"],
     });
 
-    // Busca os desafios realizados nesse dia por membros da mesma equipa
     const completedChallenges = await ParticipantsHasChallenges.findAll({
       where: {
         starting_date: {
@@ -125,13 +119,19 @@ exports.getDesafiosDoDia = async (req, res) => {
         {
           model: Challenge,
           as: "challenge",
-          attributes: ["id", "title", "description"],
+          attributes: ["id", "title", "description", "challenge_levels_id"],
+          include: [
+            {
+              model: ChallengeLevels,
+              as: "level",
+              attributes: ["id", "level", "image_level"],
+            },
+          ],
         },
       ],
       order: [["starting_date", "ASC"]],
     });
 
-    // Envia os dados para o frontend
     res.status(200).json({
       teamMembers,
       completedChallenges,

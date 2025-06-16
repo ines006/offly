@@ -6,6 +6,7 @@ const Answers = require("./answers");
 const Competitions = require("./competitions");
 const Challenges = require("./challenges");
 const ParticipantsHasChallenges = require("./participantsHasChallenges");
+const ChallengeLevels = require("./challengeLevel");
 
 // === Participants ↔ Teams ===
 Teams.hasMany(Participants, {
@@ -89,4 +90,10 @@ Challenges.hasMany(ParticipantsHasChallenges, {
 Participants.hasMany(ParticipantsHasChallenges, {
   foreignKey: "participants_id",
   as: "participantsHasChallenges",
+});
+
+// === Challenges ↔ ChallengeLevels ===
+Challenges.belongsTo(ChallengeLevels, {
+  foreignKey: "challenge_levels_id",
+  as: "level",
 });

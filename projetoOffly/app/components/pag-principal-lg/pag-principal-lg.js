@@ -210,48 +210,48 @@ const [userId, setUserId] = useState(null);
     return midnight.getTime() - now.getTime();
   };
 
-  useEffect(() => {
-    if (!userId) return;
+  // useEffect(() => {
+  //   if (!userId) return;
 
-    // Initialize countdown
-    setTimeRemaining(calculateTimeUntilMidnight());
+  //   // Initialize countdown
+  //   setTimeRemaining(calculateTimeUntilMidnight());
 
-    // Update countdown every second
-    const countdownInterval = setInterval(() => {
-      setTimeRemaining(calculateTimeUntilMidnight());
-    }, 1000);
+  //   // Update countdown every second
+  //   const countdownInterval = setInterval(() => {
+  //     setTimeRemaining(calculateTimeUntilMidnight());
+  //   }, 1000);
 
-    // Schedule re-fetch at midnight
-    let timeoutId;
-    const scheduleMidnightFetch = () => {
-      const timeToMidnight = calculateTimeUntilMidnight();
-      timeoutId = setTimeout(() => {
-        console.log("Midnight reached, re-fetching data:", getTodayInWEST());
-        fetchUserData();
-        scheduleMidnightFetch(); // Reschedule for next midnight
-      }, timeToMidnight + 1000); // Add 1s buffer
-    };
+  //   // Schedule re-fetch at midnight
+  //   let timeoutId;
+  //   const scheduleMidnightFetch = () => {
+  //     const timeToMidnight = calculateTimeUntilMidnight();
+  //     timeoutId = setTimeout(() => {
+  //       console.log("Midnight reached, re-fetching data:", getTodayInWEST());
+  //       fetchUserData();
+  //       scheduleMidnightFetch(); // Reschedule for next midnight
+  //     }, timeToMidnight + 1000); // Add 1s buffer
+  //   };
 
-    scheduleMidnightFetch();
+  //   scheduleMidnightFetch();
 
-    // Poll for dataUpload updates if outdated
-    const pollInterval = setInterval(() => {
-      if (dataUpload && isValidDate(dataUpload)) {
-        const uploadDate = new Date(dataUpload).toISOString().split("T")[0];
-        const today = getTodayInWEST();
-        if (uploadDate < today) {
-          console.log("Outdated dataUpload detected, re-fetching:", { uploadDate, today });
-          fetchUserData();
-        }
-      }
-    }, 60000); // Check every 60 seconds
+  //   // Poll for dataUpload updates if outdated
+  //   const pollInterval = setInterval(() => {
+  //     if (dataUpload && isValidDate(dataUpload)) {
+  //       const uploadDate = new Date(dataUpload).toISOString().split("T")[0];
+  //       const today = getTodayInWEST();
+  //       if (uploadDate < today) {
+  //         console.log("Outdated dataUpload detected, re-fetching:", { uploadDate, today });
+  //         fetchUserData();
+  //       }
+  //     }
+  //   }, 60000); // Check every 60 seconds
 
-    return () => {
-      clearInterval(countdownInterval);
-      clearTimeout(timeoutId);
-      clearInterval(pollInterval);
-    };
-  }, [userId, dataUpload]);
+  //   return () => {
+  //     clearInterval(countdownInterval);
+  //     clearTimeout(timeoutId);
+  //     clearInterval(pollInterval);
+  //   };
+  // }, [userId, dataUpload]);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);

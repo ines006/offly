@@ -42,8 +42,8 @@ export default function OfflyScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    width: 300,
-    height: 600,
+    width: 400,
+    height: 900,
     backgroundColor: "#283B8B",
     borderRadius: 20,
     alignItems: "center",

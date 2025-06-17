@@ -12,6 +12,7 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Svg, Path } from "react-native-svg";
+import moment from "moment-timezone";
 import {
   CardContainer,
   Header,
@@ -48,7 +49,7 @@ export default function Home() {
   const router = useRouter();
   const { user, accessToken } = useContext(AuthContext);
 
-const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [dataUpload, setDataUpload] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [userName, setUserName] = useState("");
@@ -68,11 +69,11 @@ const [userId, setUserId] = useState(null);
   const [competitionDaysTotal, setCompetitionDaysTotal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+
   const getTodayInWEST = () => {
-    const date = new Date().toLocaleString("en-US", { timeZone: "Europe/Lisbon" });
-    const [month, day, year] = date.split(",")[0].split("/");
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  };
+  return moment().tz("Europe/Lisbon").format("YYYY-MM-DD");
+};
+
 
   const fetchUserData = async () => {
     if (!user?.id || !accessToken) {
@@ -178,7 +179,7 @@ const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     if (tournamentStart && tournamentEnd) {
-      const day = getCompetitionDay(tournamentStart, tournamentEnd);
+      const day = getCompetitionDay(tournamentStart, tournamentEnd) + 1;
       const totalDays = getCompetitionDaysTotal(tournamentStart, tournamentEnd);
       setCompetitionDay(day);
       setCompetitionDaysTotal(totalDays);
@@ -197,61 +198,47 @@ const [userId, setUserId] = useState(null);
     }
     const today = getTodayInWEST();
     const uploadDate = new Date(dataUpload).toISOString().split("T")[0];
-    //console.log("isUploadedToday debug:", { today, uploadDate, result: uploadDate === today }); // Temporary debug
     return uploadDate === today;
   };
 
+
   const calculateTimeUntilMidnight = () => {
-    const now = new Date();
-    const midnight = new Date(
-      now.toLocaleString("en-US", { timeZone: "Europe/Lisbon" })
-    );
-    midnight.setHours(24, 0, 0, 0);
-    return midnight.getTime() - now.getTime();
-  };
+  const now = moment().tz("Europe/Lisbon");
+  const midnight = now.clone().endOf("day");
+  return midnight.diff(now);
+};
 
-  // useEffect(() => {
-  //   if (!userId) return;
 
-  //   // Initialize countdown
-  //   setTimeRemaining(calculateTimeUntilMidnight());
+  // Midnight reset and countdown logic
+  useEffect(() => {
+    if (!userId) return;
 
-  //   // Update countdown every second
-  //   const countdownInterval = setInterval(() => {
-  //     setTimeRemaining(calculateTimeUntilMidnight());
-  //   }, 1000);
+    // Initialize countdown
+    setTimeRemaining(calculateTimeUntilMidnight());
 
-  //   // Schedule re-fetch at midnight
-  //   let timeoutId;
-  //   const scheduleMidnightFetch = () => {
-  //     const timeToMidnight = calculateTimeUntilMidnight();
-  //     timeoutId = setTimeout(() => {
-  //       console.log("Midnight reached, re-fetching data:", getTodayInWEST());
-  //       fetchUserData();
-  //       scheduleMidnightFetch(); // Reschedule for next midnight
-  //     }, timeToMidnight + 1000); // Add 1s buffer
-  //   };
+    // Update countdown every second
+    const countdownInterval = setInterval(() => {
+      setTimeRemaining(calculateTimeUntilMidnight());
+    }, 1000);
 
-  //   scheduleMidnightFetch();
+    // Schedule re-fetch at midnight
+    const scheduleMidnightFetch = () => {
+      const timeToMidnight = calculateTimeUntilMidnight();
+      const timeoutId = setTimeout(() => {
+        console.log("Midnight reached, re-fetching data:", getTodayInWEST());
+        fetchUserData();
+        scheduleMidnightFetch(); // Reschedule for next midnight
+      }, timeToMidnight + 1000); // Add 1s buffer
+      return timeoutId;
+    };
 
-  //   // Poll for dataUpload updates if outdated
-  //   const pollInterval = setInterval(() => {
-  //     if (dataUpload && isValidDate(dataUpload)) {
-  //       const uploadDate = new Date(dataUpload).toISOString().split("T")[0];
-  //       const today = getTodayInWEST();
-  //       if (uploadDate < today) {
-  //         console.log("Outdated dataUpload detected, re-fetching:", { uploadDate, today });
-  //         fetchUserData();
-  //       }
-  //     }
-  //   }, 60000); // Check every 60 seconds
+    const timeoutId = scheduleMidnightFetch();
 
-  //   return () => {
-  //     clearInterval(countdownInterval);
-  //     clearTimeout(timeoutId);
-  //     clearInterval(pollInterval);
-  //   };
-  // }, [userId, dataUpload]);
+    return () => {
+      clearInterval(countdownInterval);
+      clearTimeout(timeoutId);
+    };
+  }, [userId]);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -300,8 +287,10 @@ const [userId, setUserId] = useState(null);
     return duration;
   };
 
-  const handleCirclePress = () => {
-    router.push("../components/uploadScreenTime/UploadScreen");
+  const handleCirclePress = async () => {
+    await router.push("../components/uploadScreenTime/UploadScreen");
+    // Re-fetch user data after navigating back from upload screen
+    fetchUserData();
   };
 
   const handleCadernetaPress = () => {

@@ -119,6 +119,7 @@ exports.validateChallengeUpload = async (req, res) => {
         await ParticipantsHasChallenges.update(
           {
             completed_date: new Date(),
+            validated: 1, 
           },
           {
             where: {

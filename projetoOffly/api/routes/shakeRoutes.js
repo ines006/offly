@@ -8,5 +8,8 @@ router.post("/generate-challenges", ShakeController.generateShakeChallenges);
 // Guardar desafio escolhido
 router.post("/save-challenge", ShakeController.saveSelectedChallenge);
 
+//Valida o desafio quando o timeout chega ao fim 
+router.put("/validate-time/:id", ShakeController.validateChallengeTimeOut);
+
 module.exports = router;
 

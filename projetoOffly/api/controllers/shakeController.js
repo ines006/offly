@@ -146,11 +146,13 @@ exports.saveSelectedChallenge = async (req, res) => {
       title,
       description,
       img: null,
-      challenge_types_id: 1, // shake
+      challenge_types_id: 1, 
       challenge_levels_id: levelId,
     });
 
     const now = new Date();
+    now.setHours(0, 0, 0, 0); 
+
     const endDate = new Date(now);
     endDate.setDate(now.getDate() + 1);
 
@@ -176,5 +178,24 @@ exports.saveSelectedChallenge = async (req, res) => {
   } catch (error) {
     console.error("❌ Erro em saveSelectedChallenge:", error);
     return res.status(500).json({ error: "Erro ao guardar seleção" });
+  }
+};
+
+exports.validateChallengeTimeOut = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const challengeEntry = await ParticipantsHasChallenges.findByPk(id);
+    if (!challengeEntry) {
+      return res.status(404).json({ error: "Registo não encontrado" });
+    }
+
+    challengeEntry.validated = 1;
+    await challengeEntry.save();
+
+    return res.status(200).json({ message: "Desafio validado automaticamente com sucesso." });
+  } catch (error) {
+    console.error("❌ Erro ao validar desafio automaticamente:", error);
+    return res.status(500).json({ error: "Erro ao validar desafio." });
   }
 };

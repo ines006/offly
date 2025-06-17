@@ -15,6 +15,16 @@ import { AuthContext } from "../entrar/AuthContext";
 import axios from "axios";
 import { baseurl } from "../../api-config/apiConfig";
 
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const pad = (n) => n.toString().padStart(2, "0");
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
 export default function CartaSelecionada() {
   const router = useRouter();
   const { user } = useContext(AuthContext);
@@ -54,26 +64,30 @@ export default function CartaSelecionada() {
   }, [user]);
 
   useEffect(() => {
-    let timer;
-    if (timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => Math.max(prev - 1000, 0));
-      }, 1000);
-    } else if (timeLeft === 0 && selectedCard) {
-      Alert.alert("Tempo Esgotado", "O tempo para validar esta carta acabou.");
-    }
+  let timer;
+  if (timeLeft > 0) {
+    timer = setInterval(() => {
+      setTimeLeft((prev) => Math.max(prev - 1000, 0));
+    }, 1000);
+  } else if (timeLeft === 0 && selectedCard) {
+    Alert.alert("Tempo Esgotado", "O tempo para validar esta carta acabou.");
 
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+    const updateValidation = async () => {
+      try {
+        await axios.put(
+          `${baseurl}/api/validate-time/${selectedCard.id}`
+        );
+        console.log("✅ Validação marcada automaticamente.");
+      } catch (err) {
+        console.error("❌ Erro ao validar automaticamente:", err);
+      }
+    };
 
-  const formatTime = (ms) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    updateValidation();
+  }
 
-    return `${hours}h ${minutes}m ${seconds}s`;
-  };
+  return () => clearInterval(timer);
+}, [timeLeft, selectedCard]);
 
   return (
     <View style={styles.background}>

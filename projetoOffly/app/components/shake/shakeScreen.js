@@ -28,16 +28,8 @@ export default function ShakeScreen() {
 
         console.log("🔍 Resposta da API:", data);
 
-        // Se a API retorna um array, procura a carta ativa
-        let cartaAtiva = null;
-
-        if (Array.isArray(data)) {
-          cartaAtiva = data.find((c) => c.completed_date === null);
-        } else if (data && typeof data === "object" && data.completed_date === null) {
-          cartaAtiva = data;
-        }
-
-        setCarta(cartaAtiva || null);
+        // A API já retorna apenas a carta ativa, ou erro
+        setCarta(data || null);
       } catch (error) {
         setCarta(null);
       } finally {
@@ -48,6 +40,7 @@ export default function ShakeScreen() {
     fetchCartaAtiva();
   }, [user]);
 
+  
   const handleValidated = () => {
     console.log("✅ Carta validada com sucesso!");
     setCarta(null);      

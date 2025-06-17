@@ -34,7 +34,7 @@ exports.createChallengeSelection = async (req, res) => {
   }
 };
 
-// GET - Buscar carta ativa (onde completed_date é null)
+// GET - Buscar carta ativa 
 exports.getActiveChallengeByUser = async (req, res) => {
   const { participants_id } = req.params;
 
@@ -42,14 +42,17 @@ exports.getActiveChallengeByUser = async (req, res) => {
     const activeChallenge = await ParticipantsHasChallenges.findOne({
       where: {
         participants_id,
-        completed_date: null,
+        validated: 0,
+        challenge_types_id: 1,
       },
       attributes: [
         "participants_id",
         "challenges_id",
         "starting_date",
         "completed_date",
-        "challenge_levels_id_challenge_levels", // importante
+        "challenge_levels_id_challenge_levels", 
+        "challenge_types_id",
+        "validated"
       ],
       include: [
         {

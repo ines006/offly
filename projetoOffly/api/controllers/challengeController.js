@@ -196,7 +196,7 @@ exports.discoverWeeklyChallenge = async (req, res) => {
       return res.status(400).json({ success: false, message: "userId é obrigatório" });
     }
 
-  
+    // Buscar teamId do participante
     const [participant] = await sequelize.query(
       "SELECT teams_id FROM participants WHERE id = ?",
       {
@@ -211,33 +211,84 @@ exports.discoverWeeklyChallenge = async (req, res) => {
 
     const teamId = participant.teams_id;
 
-    const [challenges] = await sequelize.query(
+    // Selecionar desafio aleatório semanal
+    const [challenge] = await sequelize.query(
       "SELECT id FROM challenges WHERE challenge_types_id = 2 ORDER BY RAND() LIMIT 1",
       { type: sequelize.QueryTypes.SELECT }
     );
 
-    if (!challenges) {
+    if (!challenge) {
       return res.status(404).json({ success: false, message: "Nenhum desafio disponível." });
     }
 
-    const challengeId = challenges.id;
-    const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 dias depois
+    const challengeId = challenge.id;
 
+    // Data atual
+    const now = new Date();
+
+    // Calcular segunda-feira da semana atual
+    const dayOfWeek = now.getDay(); // 0 (Domingo) - 6 (Sábado)
+    const monday = new Date(now);
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    monday.setDate(now.getDate() - diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    // Calcular domingo da mesma semana
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    // Inserir desafio para a equipe
     await sequelize.query(
       "INSERT INTO challenges_has_teams (challenges_id, teams_id, starting_date, end_date, validated) VALUES (?, ?, ?, ?, ?)",
       {
-        replacements: [challengeId, teamId, startDate, endDate, 0],
+        replacements: [challengeId, teamId, monday, sunday, 0],
         type: sequelize.QueryTypes.INSERT,
       }
     );
 
-    return res.json({ success: true });
+    // Buscar todos os participantes da equipe
+    const participants = await sequelize.query(
+      "SELECT id FROM participants WHERE teams_id = ?",
+      {
+        replacements: [teamId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    // Inserir desafio para cada participante
+    const insertPromises = participants.map(participant =>
+      sequelize.query(
+        `INSERT INTO participants_has_challenges 
+          (participants_id, challenges_id, starting_date, end_date, completed_date, validated, streak, challenge_levels_id_challenge_levels, challenge_types_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        {
+          replacements: [
+            participant.id,       
+            challengeId,          
+            monday,               
+            sunday,               
+            null,              
+            0,                
+            JSON.stringify(["0","0","0","0","0","0","0"]), 
+            0,                    
+            2                    
+          ],
+          type: sequelize.QueryTypes.INSERT,
+        }
+      )
+    );
+
+    await Promise.all(insertPromises);
+
+    return res.json({ success: true, message: "Desafio semanal atribuído com sucesso." });
+
   } catch (err) {
     console.error("Erro interno no controller discoverWeeklyChallenge:", err);
     return res.status(500).json({ success: false, message: "Erro interno do servidor." });
   }
 };
+
 
 
 exports.getChallengeForTeam = async (req, res) => {

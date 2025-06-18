@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Alert } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   Container_Pagina_Equipa_Criada,
   Sub_Titulos_Criar_Equipa,
@@ -24,7 +24,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { AuthContext } from "./components/entrar/AuthContext";
 import { baseurl } from "./api-config/apiConfig";
 import axios from "axios";
-import { useRef } from "react";
 
 export default function EquipaCriada() {
   const [fontsLoaded] = useFonts({
@@ -33,9 +32,9 @@ export default function EquipaCriada() {
 
   const hasRedirectedRef = useRef(false);
   const intervalIdRef = useRef(null);
+  const isJoiningTournamentRef = useRef(false); // Novo ref para rastrear se o admin está entrando no torneio
 
   const { user, accessToken } = useContext(AuthContext);
-
   const { teamId } = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
@@ -47,7 +46,7 @@ export default function EquipaCriada() {
   const [teamName, setTeamName] = useState("");
   const [teamDescription, setTeamDescription] = useState("");
   const [teamMembers, setTeamMembers] = useState([]);
-  const [teamCapacity, setteamCapacity] = useState();
+  const [teamCapacity, setTeamCapacity] = useState();
   const [isAdmin, setIsAdmin] = useState(false);
 
   const router = useRouter();
@@ -154,18 +153,12 @@ export default function EquipaCriada() {
       const teamData = response.data;
       setTeamName(teamData.name);
       setTeamMembers(teamData.participants);
-      setteamCapacity(teamData.capacity);
+      setTeamCapacity(teamData.capacity);
       setTeamDescription(teamData.description);
 
       // Verifica se o user é o admin da equipa
-      if (teamData.team_admin.id == userId) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-
-      // console.log("📌 team admin id:", teamData.team_admin.id);
-      // console.log("🔁 O user é admin da equipa?", isAdmin);
+      const isUserAdmin = teamData.team_admin.id == userId;
+      setIsAdmin(isUserAdmin);
 
       setTeamDataLoaded(true);
 
@@ -175,18 +168,12 @@ export default function EquipaCriada() {
 
       setHasCompetition(hasComp);
 
-      // 🚫 Se já redirecionou, não faz mais nada
-      if (hasRedirectedRef.current) return;
-
-      // ✅ Redireciona e marca que já foi
-      if (hasComp && !isAdmin) {
+      // Evitar redirecionamento automático para o admin se ele acabou de entrar no torneio
+      if (hasComp && !isUserAdmin && !hasRedirectedRef.current) {
         hasRedirectedRef.current = true;
-
-        // ❌ Limpa o setInterval
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);
         }
-
         console.log("🚀 Redirecionando para a navbar...");
         router.push("./components/navbar");
       }
@@ -212,42 +199,20 @@ export default function EquipaCriada() {
     }
   }, [userId, teamId]);
 
-  // if (loading) {
-  //   return (
-  //     <View style={styles.loaderContainer}>
-  //       <ActivityIndicator size="large" color="#263A83" />
-  //     </View>
-  //   );
-  // }
-
-  if (!teamDataLoaded) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#263A83" />
-      </View>
-    );
-  }
-
-  if (!teamName && !teamDescription) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>
-          Detalhes da equipa não encontrados.
-        </Text>
-      </View>
-    );
-  }
-
   // Função para entrar no torneio
   const handleTorneio = async () => {
     try {
-      // Mostrar animação de loading
-      //setLoading(true);
+      // Indica que o admin está entrando no torneio
+      isJoiningTournamentRef.current = true;
+      setLoading(true);
 
-      // 1. Obter as competições disponíveis
+      // 1. Obter as competições disponíveis com base na capacidade da equipa
       const responseCompetitions = await axios.get(
         `${baseurl}/teams/competition/available`,
         {
+          params: {
+            players: teamCapacity,
+          },
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -266,9 +231,11 @@ export default function EquipaCriada() {
       );
 
       // 2. Escolher uma competição aleatória
-
       if (availableCompetitions.length === 0) {
-        Alert.alert("Erro", "Não há competições disponíveis no momento.");
+        Alert.alert(
+          "Erro",
+          "Não há competições disponíveis no momento para equipes com esta capacidade."
+        );
         return;
       }
 
@@ -276,11 +243,11 @@ export default function EquipaCriada() {
         availableCompetitions[
           Math.floor(Math.random() * availableCompetitions.length)
         ];
-      console.log("Random id: ", randomCompetition);
+      console.log("Random competition: ", randomCompetition);
 
       // 3. Atualizar a equipe com a competição escolhida
       const updatedTeamData = {
-        competitions_id: randomCompetition.id, // O ID da competição aleatória
+        competitions_id: randomCompetition.id,
       };
 
       const responseUpdateTeam = await axios.put(
@@ -309,15 +276,16 @@ export default function EquipaCriada() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
           },
         }
       );
 
       const newPassbookId = passbookResponse.data.team_passbook_id;
-
       console.log("✅ Caderneta criada com ID:", newPassbookId);
 
       // 5. Redirecionar para a navbar após atualização
+      hasRedirectedRef.current = true; // Marca que o redirecionamento ocorreu
       router.push("./components/navbar");
     } catch (error) {
       console.error("❌ Erro ao entrar no torneio:", error);
@@ -325,12 +293,29 @@ export default function EquipaCriada() {
         "Erro",
         error.response?.data?.message || "Não foi possível entrar no torneio."
       );
+    } finally {
+      isJoiningTournamentRef.current = false;
+      setLoading(false);
     }
-    // finally {
-    //   // 5. Remover animação de loading
-    //   //setLoading(false);
-    // }
   };
+
+  if (!teamDataLoaded) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#263A83" />
+      </View>
+    );
+  }
+
+  if (!teamName && !teamDescription) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>
+          Detalhes da equipa não encontrados.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={{ backgroundColor: "#fff" }}>

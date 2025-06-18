@@ -326,18 +326,21 @@ const UploadScreen = () => {
         {submitVisible && selectedImage ? (
           <>
             {console.log("Renderizando botões Submeter e Remover")}
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleSubmit}
-            >
-              <Text style={styles.submitText}>Submeter</Text>
-            </TouchableOpacity>
+            
             <TouchableOpacity
               style={styles.removeButton}
               onPress={handleRemoveImage}
             >
               <Text style={styles.removeText}>Remover</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleSubmit}
+            >
+              <Text style={styles.submitText}>Submeter</Text>
+            </TouchableOpacity>
+            
           </>
         ) : null}
       </View>

@@ -179,7 +179,7 @@ export default function Home() {
 
   useEffect(() => {
     if (tournamentStart && tournamentEnd) {
-      const day = getCompetitionDay(tournamentStart, tournamentEnd) + 1;
+      const day = getCompetitionDay(tournamentStart, tournamentEnd);
       const totalDays = getCompetitionDaysTotal(tournamentStart, tournamentEnd);
       setCompetitionDay(day);
       setCompetitionDaysTotal(totalDays);

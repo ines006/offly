@@ -9,7 +9,8 @@ router.post("/generate-challenges", ShakeController.generateShakeChallenges);
 router.post("/save-challenge", ShakeController.saveSelectedChallenge);
 
 //Valida o desafio quando o timeout chega ao fim 
-router.put("/validate-time/:id", ShakeController.validateChallengeTimeOut);
+router.put("/validate-time/:userId/:challengeId", ShakeController.validateChallengeTimeOut);
+
 
 module.exports = router;
 

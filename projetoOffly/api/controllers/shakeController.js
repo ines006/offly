@@ -183,9 +183,17 @@ exports.saveSelectedChallenge = async (req, res) => {
 
 exports.validateChallengeTimeOut = async (req, res) => {
   try {
-    const { id } = req.params;
+    const userId = parseInt(req.params.userId);
+    const challengeId = parseInt(req.params.challengeId);
 
-    const challengeEntry = await ParticipantsHasChallenges.findByPk(id);
+    const challengeEntry = await ParticipantsHasChallenges.findOne({
+      where: {
+        participants_id: userId,
+        challenges_id: challengeId,
+        validated: 0,
+      },
+    });
+
     if (!challengeEntry) {
       return res.status(404).json({ error: "Registo não encontrado" });
     }

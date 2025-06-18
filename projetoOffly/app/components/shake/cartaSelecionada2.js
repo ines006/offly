@@ -74,9 +74,7 @@ export default function CartaSelecionada() {
 
     const updateValidation = async () => {
       try {
-        await axios.put(
-          `${baseurl}/api/validate-time/${selectedCard.id}`
-        );
+        await axios.put(`${baseurl}/api/shake/validate-time/${user.id}/${selectedCard.challenge.id}`);
         console.log("✅ Validação marcada automaticamente.");
       } catch (err) {
         console.error("❌ Erro ao validar automaticamente:", err);

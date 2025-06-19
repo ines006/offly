@@ -128,16 +128,29 @@ const Login = () => {
         });
 
         console.log("📊 Resposta da equipa:", teamResponse.data);
-        const hasCompetition = teamResponse.data.competitions_id !== null && teamResponse.data.competitions_id !== undefined;
+        const hasCompetition = teamResponse.data.competition_id !== null && teamResponse.data.competition_id !== undefined;
         console.log("🏆 Equipa tem competição?", hasCompetition);
 
         if (hasCompetition) {
-          console.log("🚪 Redirecionando para: /components/navbar");
-          try {
-            router.push("/components/navbar");
-          } catch (navError) {
-            console.error("❌ Erro de navegação para /components/navbar:", navError);
-            router.push("/PaginaPrincipal"); // Fallback
+          const isAdmin = teamResponse.data.team_admin?.id === user.id;
+          console.log("👑 Utilizador é admin da equipa?", isAdmin, "team_admin.id:", teamResponse.data.team_admin?.id, "user.id:", user.id);
+
+          if (isAdmin) {
+            console.log("🚪 Redirecionando para: /components/navbar (admin com competição)");
+            try {
+              router.push("/components/navbar");
+            } catch (navError) {
+              console.error("❌ Erro de navegação para /components/navbar:", navError);
+              router.push("/PaginaPrincipal"); // Fallback
+            }
+          } else {
+            console.log("🚪 Redirecionando para: /components/navbar (não admin com competição)");
+            try {
+              router.push("/components/navbar");
+            } catch (navError) {
+              console.error("❌ Erro de navegação para /components/navbar:", navError);
+              router.push("/PaginaPrincipal"); // Fallback
+            }
           }
         } else {
           console.log("🚪 Redirecionando para: /EquipaCriada (sem competição) com teamId:", teamId);
@@ -154,12 +167,11 @@ const Login = () => {
           status: teamError.response?.status,
           data: teamError.response?.data,
         });
-        console.log("🚪 Redirecionando fallback para: /EquipaCriada com teamId:", teamId);
+        console.log("🚪 Redirecionando fallback para: /PaginaPrincipal (erro na API de equipa)");
         try {
-          router.push({ pathname: "/EquipaCriada", params: { teamId } });
+          router.push("/PaginaPrincipal");
         } catch (navError) {
-          console.error("❌ Erro de navegação para /EquipaCriada:", navError);
-          router.push("/PaginaPrincipal"); // Fallback
+          console.error("❌ Erro de navegação para /PaginaPrincipal:", navError);
         }
       }
     } catch (err) {

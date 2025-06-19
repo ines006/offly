@@ -9,6 +9,7 @@ const {
 const Invites = require("../models/invites");
 const { Op, literal } = require("sequelize");
 const { v4: uuidv4 } = require("uuid"); //gerar os tokens
+const moment = require("moment-timezone");
 
 exports.getTeamParticipants = async (req, res) => {
   try {
@@ -214,31 +215,64 @@ exports.updateTeam = async (req, res) => {
       return res.status(400).json({ message: "Valid team ID is required" });
     }
 
-    if (competitions_id === undefined || !Number.isInteger(competitions_id)) {
-      return res.status(400).json({
-        message: "Valid competitions_id (integer) is required",
-      });
-    }
-
-    // Verificar se a competição existe
-    const competition = await Competitions.findByPk(competitions_id);
-    if (!competition) {
-      return res.status(404).json({ message: "Competition not found" });
-    }
-
-    // Verificar se o utilizador é admin dessa equipa
+    // Find the team
     const team = await Teams.findByPk(teamId);
     if (!team) {
       return res.status(404).json({ message: "Team not found" });
     }
 
+    // Verify if the user is admin of the team
     if (team.team_admin !== req.user.id) {
-      return res
-        .status(403)
-        .json({ message: "You are not the admin of this team" });
+      return res.status(403).json({ message: "You are not the admin of this team" });
     }
 
-    // Atualizar equipa
+    // Handle setting competitions_id to null
+    if (competitions_id === null) {
+      // Verify if the current competition has ended
+      if (team.competitions_id) {
+        const competition = await Competitions.findByPk(team.competitions_id);
+        if (competition) {
+          const now = moment().tz("Europe/Lisbon");
+          const endDate = moment(competition.end_date).tz("Europe/Lisbon");
+          if (!now.isAfter(endDate)) {
+            return res.status(400).json({
+              message: "Cannot set competitions_id to null before competition end date",
+            });
+          }
+        }
+      }
+
+      // Update team to set competitions_id to null
+      const [updatedRows] = await Teams.update(
+        { competitions_id: null },
+        { where: { id: teamId } }
+      );
+
+      if (updatedRows === 0) {
+        return res.status(500).json({ message: "Team not updated" });
+      }
+
+      return res.status(200).json({
+        message: "Team updated successfully",
+        teamId,
+        competitions_id: null,
+      });
+    }
+
+    // Handle setting a non-null competitions_id
+    if (!Number.isInteger(competitions_id)) {
+      return res.status(400).json({
+        message: "Valid competitions_id (integer) is required",
+      });
+    }
+
+    // Verify if the competition exists
+    const competition = await Competitions.findByPk(competitions_id);
+    if (!competition) {
+      return res.status(404).json({ message: "Competition not found" });
+    }
+
+    // Update team with new competitions_id
     const [updatedRows] = await Teams.update(
       { competitions_id },
       { where: { id: teamId } }

@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   StyleSheet,
   Text,
+  Modal,
+  Button,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -60,15 +62,18 @@ export default function Home() {
   const [teamPoints, setTeamPoints] = useState();
   const [teamMembers, setTeamMembers] = useState();
   const [teamCapacity, setTeamCapacity] = useState();
+  const [teamAdmin, setTeamAdmin] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [teamImage, setTeamImage] = useState(null);
+  const [tournamentId, setTournamentId] = useState(null);
   const [tournamentName, setTournamentName] = useState(null);
   const [tournamentStart, setTournamentStart] = useState(null);
   const [tournamentEnd, setTournamentEnd] = useState(null);
   const [competitionDay, setCompetitionDay] = useState(null);
   const [competitionDaysTotal, setCompetitionDaysTotal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [showTournamentEndModal, setShowTournamentEndModal] = useState(false);
+  const [hasMadeTournamentEndChoice, setHasMadeTournamentEndChoice] = useState(false);
 
   const getTodayInWEST = () => {
   return moment().tz("Europe/Lisbon").format("YYYY-MM-DD");
@@ -110,9 +115,70 @@ export default function Home() {
       setTeamId(teamId);
       setDataUpload(dataUpload);
       setUserChallenges(challenges);
+
     } catch (error) {
       console.error("Error fetching user data:", error.message);
       Alert.alert("Erro", "Não foi possível carregar os dados do utilizador.");
+    }
+  };
+
+  const updateTeamCompetition = async () => {
+    try {
+      // Update team's competitions_id to null
+      await axios.put(
+        `${baseurl}/teams/${teamId}`,
+        { competitions_id: null },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error updating team competition:", error.message);
+      Alert.alert("Erro", "Não foi possível atualizar a competição da equipa.");
+    }
+  };
+
+  const handleTournamentEndChoice = async (stayWithTeam) => {
+    try {
+      console.log("Handling tournament end choice for user ID:", userId, "Stay with team:", stayWithTeam);
+      if (!userId || userId !== user.id) {
+        throw new Error("Invalid user ID");
+      }
+
+      if (!stayWithTeam) {
+        const response = await axios.put(
+          `${baseurl}/participants/${userId}`,
+          { teams_id: null },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+        console.log("Participant teams_id updated:", response.data);
+        setTeamId(null);
+        setShowTournamentEndModal(false);
+        setHasMadeTournamentEndChoice(true);
+        router.push("/PaginaPrincipal");
+      } else {
+        setShowTournamentEndModal(false);
+        setHasMadeTournamentEndChoice(true);
+        router.push({ pathname: "/EquipaCriada", params: { teamId } });
+      }
+    } catch (error) {
+      console.error("Error handling tournament end choice:", error.response?.data || error.message);
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message || "Não foi possível processar a sua escolha."
+      );
     }
   };
 
@@ -120,8 +186,9 @@ export default function Home() {
     fetchUserData();
   }, [user, accessToken]);
 
+
   useEffect(() => {
-    if (!teamId || !userId) return;
+    if (!teamId || !userId || hasMadeTournamentEndChoice) return;
 
     const fetchTeamData = async () => {
       try {
@@ -140,16 +207,51 @@ export default function Home() {
         setTeamMembers(teamData.participants.length);
         setTeamCapacity(teamData.capacity);
         setTeamPoints(teamData.points);
+        setTournamentId(teamData.competition_id);
         setTournamentName(teamData.competition_name);
         setTournamentStart(teamData.competition_start_date);
         setTournamentEnd(teamData.competition_end_date);
+        setTeamAdmin(teamData.team_admin.id);
+
+        // Check if tournament has ended and user is admin - LÓGICA ADMIN PARA DESFAZER EQUIPA DO TORNEIO
+        if (teamData.competition_end_date && parseInt(response.data.team_admin.id) === parseInt(userId)) {
+          const now = moment().tz("Europe/Lisbon");
+          const endDate = moment(teamData.competition_end_date).tz("Europe/Lisbon");
+          if (now.isAfter(endDate)) {
+            await updateTeamCompetition();
+            setShowTournamentEndModal(true);
+         }
+        }
+
+        // Check if tournament id is null - LÓGICA DE REDIRECIONAMENTO DO PARTICIPANTE DA EQUIPA PÓS TÉRMINO DO TORNEIO
+        if (teamData.competition_id === null && parseInt(teamData.team_admin) !== parseInt(userId)) {
+            setShowTournamentEndModal(true);
+        }
+
       } catch (error) {
         Alert.alert("Erro", "Não foi possível carregar os dados da equipa.");
       }
     };
 
     fetchTeamData();
-  }, [teamId, userId]);
+
+    // Poll team data every 30 seconds if tournament end date has passed
+    if (tournamentEnd) {
+      const now = moment().tz("Europe/Lisbon");
+      const endDate = moment(tournamentEnd).tz("Europe/Lisbon");
+      if (now.isAfter(endDate)) {
+        console.log("Tournament end date passed, starting polling");
+        const pollInterval = setInterval(() => {
+          if (!hasMadeTournamentEndChoice) {
+            console.log("Polling team data to check competition_id");
+            fetchTeamData();
+          }
+        }, 30000); // Poll every 30 seconds
+        return () => clearInterval(pollInterval);
+      }
+    }
+
+  }, [teamId, userId, tournamentId, hasMadeTournamentEndChoice, tournamentEnd]); 
 
   useEffect(() => {
     if (
@@ -313,6 +415,36 @@ export default function Home() {
         </View>
       ) : (
         <>
+        {/* Modal de término de torneio */}
+        <Modal
+            visible={showTournamentEndModal}
+            transparent={true}
+            animationType="none"
+            onRequestClose={() => setShowTournamentEndModal(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Torneio Terminou!</Text>
+                <Text style={styles.modalText}>
+                  O torneio {tournamentName} chegou ao fim. Deseja continuar com a
+                  equipa {teamName}?
+                </Text>
+                <View style={styles.modalButtons}>
+                  <Button
+                    title="Ficar com a Equipa"
+                    onPress={() => handleTournamentEndChoice(true)}
+                    color="#263A83"
+                  />
+                  <Button
+                    title="Sair da Equipa"
+                    onPress={() => handleTournamentEndChoice(false)}
+                    color="#FF0000"
+                  />
+                </View>
+              </View>
+            </View>
+          </Modal>
+
           <TittlePagina
             accessible={true}
             accessibilityRole="header"

@@ -237,7 +237,7 @@ router.post("/", participantsController.createParticipant);
  * /participants/{id}:
  *   put:
  *     summary: Update a participant's personal data
- *     description: Updates the personal data (name, username, email, password or challenge_count) of the authenticated participant. Only the participant themselves can update their own data. At least one field must be provided, and all provided fields must be valid.
+ *     description: Updates the personal data (name, username, email, password, challenge_count, teams_id) of the authenticated participant. Only the participant themselves can update their own data. At least one field must be provided, and all provided fields must be valid.
  *     tags: [Participants]
  *     security:
  *       - bearerAuth: []
@@ -278,6 +278,11 @@ router.post("/", participantsController.createParticipant);
  *                 type: integer
  *                 description: The number of challenges completed by the participant
  *                 example: 7
+ *               teams_id:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: The ID of the team the participant is associated with, or null
+ *                 example: 3
  *     responses:
  *       200:
  *         description: Participant updated successfully

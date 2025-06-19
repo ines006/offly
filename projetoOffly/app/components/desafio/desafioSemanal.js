@@ -102,7 +102,7 @@ const DesafioSemanal = () => {
         clearInterval(intervaloRef.current);
 
         try {
-          await fetch(`${baseurl}/api/challenges/validate/${teamId}`, {
+          await fetch(`${baseurl}/api/validate-weekly/${teamId}`, {
             method: "POST",
           });
         } catch (error) {

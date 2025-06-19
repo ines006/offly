@@ -10,6 +10,7 @@ import {
   Text,
   Modal,
   Button,
+  Image,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -46,6 +47,8 @@ import {
 import { AuthContext } from "../entrar/AuthContext";
 import { baseurl } from "../../api-config/apiConfig";
 import axios from "axios";
+import imagemPalmas from "../../imagens/clapping-hands.png";
+
 
 export default function Home() {
   const router = useRouter();
@@ -422,25 +425,31 @@ export default function Home() {
             animationType="none"
             onRequestClose={() => setShowTournamentEndModal(false)}
           >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Torneio Terminou!</Text>
-                <Text style={styles.modalText}>
-                  O torneio {tournamentName} chegou ao fim. Deseja continuar com a
-                  equipa {teamName}?
-                </Text>
-                <View style={styles.modalButtons}>
-                  <Button
-                    title="Ficar com a Equipa"
-                    onPress={() => handleTournamentEndChoice(true)}
-                    color="#263A83"
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                  <Text style={styles.modalTitle}>Torneio Terminou!</Text>
+                  <Text style={styles.modalSubtitle}>
+                    Parabéns pelas tuas conquistas.
+                  </Text>
+                  <Image 
+                    style={styles.tinyImage}
+                    source={imagemPalmas}
                   />
-                  <Button
-                    title="Sair da Equipa"
-                    onPress={() => handleTournamentEndChoice(false)}
-                    color="#FF0000"
-                  />
-                </View>
+                  <Text style={styles.modalText}>
+                    Desejas continuar com a equipa {teamName}?
+                  </Text>
+                    <TouchableOpacity
+                      style={styles.modalButton}
+                      onPress={() => handleTournamentEndChoice(true)}
+                    >
+                      <Text style={styles.modalButtonText}>Ficar com a Equipa</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleTournamentEndChoice(false)}
+                    >
+                      <Text style={styles.removeText}>Sair da Equipa</Text>
+                    </TouchableOpacity>
               </View>
             </View>
           </Modal>
@@ -686,5 +695,95 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    marginTop: 35,
+  },
+  title: {
+    width: 172,
+    color: "#263A83",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    fontSize: 20,
+    fontWeight: "600",
+    lineHeight: 25,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: 350,
+    height: 490,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    padding: 25,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tinyImage: {
+    width: 85,
+    height:85,
+    marginBottom: 45,
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#263A83",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: "#7C8191",
+    marginBottom: 20,
+    width: 200,
+    textAlign: "center",
+    lineHeight: 23,
+  },
+  modalText: {
+    width: 250,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#414141",
+    textAlign: "center",
+  },
+  modalButton: {
+    backgroundColor: "#263A83",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 47,
+    marginTop: 20,
+  },
+  modalButtonText: {
+    color: "#FFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  removeButton: {
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 47,
+    marginTop: 20,
+    borderColor: "#FF3B30",
+    backgroundColor: "#FFE6E6",
+  },
+  removeText: {
+    color: "#FF3B30",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

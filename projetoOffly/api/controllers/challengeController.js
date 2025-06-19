@@ -462,13 +462,18 @@ exports.validateTeamChallenge = async (req, res) => {
       return res.status(400).json({ message: "teamId é obrigatório." });
     }
 
-    // Buscar o challenge ativo da equipe
+    const teamIdInt = parseInt(teamId, 10);
+    if (isNaN(teamIdInt)) {
+      return res.status(400).json({ message: "teamId inválido." });
+    }
+
+    // Buscar o desafio ativo (não validado ainda) mais recente da equipe
     const [challengeRecord] = await sequelize.query(
       `SELECT challenges_id FROM challenges_has_teams 
        WHERE teams_id = ? AND validated = 0 
        ORDER BY starting_date DESC LIMIT 1`,
       {
-        replacements: [teamId],
+        replacements: [teamIdInt],
         type: sequelize.QueryTypes.SELECT,
       }
     );
@@ -479,18 +484,18 @@ exports.validateTeamChallenge = async (req, res) => {
 
     const challengeId = challengeRecord.challenges_id;
 
-    // Atualizar a tabela challenges_has_teams
+    // Marcar o desafio como validado na tabela challenges_has_teams
     await sequelize.query(
       `UPDATE challenges_has_teams 
        SET validated = 1 
        WHERE teams_id = ? AND challenges_id = ?`,
       {
-        replacements: [teamId, challengeId],
+        replacements: [teamIdInt, challengeId],
         type: sequelize.QueryTypes.UPDATE,
       }
     );
 
-    // Atualizar a tabela participants_has_challenges
+    // Validar também para os participantes da equipa
     await sequelize.query(
       `UPDATE participants_has_challenges 
        SET validated = 1 
@@ -499,14 +504,80 @@ exports.validateTeamChallenge = async (req, res) => {
          SELECT id FROM participants WHERE teams_id = ?
        )`,
       {
-        replacements: [challengeId, teamId],
+        replacements: [challengeId, teamIdInt],
         type: sequelize.QueryTypes.UPDATE,
       }
     );
 
-    return res.json({ message: "Desafio da equipe e dos participantes validado com sucesso." });
+    // Buscar os streaks dos participantes da equipa
+    const participantes = await sequelize.query(
+  `
+        SELECT phc.streak 
+        FROM participants_has_challenges phc
+        JOIN participants p ON p.id = phc.participants_id
+        WHERE p.teams_id = ? AND phc.challenges_id = ?
+        `,
+        {
+          replacements: [teamId, challengeId], 
+          type: sequelize.QueryTypes.SELECT,
+        }
+      );
+
+    let totalBolinhasAzuis = 0;
+    const totalPossivel = participantes.length * 7;
+
+    participantes.forEach(p => {
+      try {
+        const parsedStreak = JSON.parse(p.streak);
+        totalBolinhasAzuis += parsedStreak.filter(val => val === "1" || val === 1).length;
+      } catch (e) {
+        console.warn("Erro ao fazer parse do streak:", p.streak);
+      }
+    });
+
+    let progresso = 0;
+    if (totalPossivel > 0) {
+      progresso = Math.round((totalBolinhasAzuis / totalPossivel) * 100);
+    }
+
+    // Buscar pontos atuais da equipa
+    const [team] = await sequelize.query(
+      `SELECT points FROM teams WHERE id = ?`,
+      {
+        replacements: [teamIdInt],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!team) {
+      return res.status(404).json({ message: "Equipe não encontrada." });
+    }
+
+    const pontosAtuais = team.points || 0;
+    const novosPontos = pontosAtuais + progresso;
+
+    // Atualizar pontos da equipa
+    const [updateResult] = await sequelize.query(
+      `UPDATE teams SET points = ? WHERE id = ?`,
+      {
+        replacements: [novosPontos, teamIdInt],
+        type: sequelize.QueryTypes.UPDATE,
+      }
+    );
+
+    if (updateResult === 0) {
+      console.warn("Nenhuma linha foi atualizada na tabela teams.");
+    }
+
+    return res.json({
+      message: "Desafio da equipe e dos participantes validado com sucesso.",
+      pontosGanhos: progresso,
+      pontosTotais: novosPontos,
+    });
+
   } catch (error) {
     console.error("Erro ao validar desafio:", error);
     return res.status(500).json({ message: "Erro interno do servidor." });
   }
 };
+

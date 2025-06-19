@@ -299,6 +299,51 @@ export default function EquipaCriada() {
     }
   };
 
+  // Função para lidar com a saída da equipa
+  const handleLeaveTeam = async () => {
+    try {
+     await axios.put(
+          `${baseurl}/participants/${userId}`,
+          { teams_id: null },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+
+      router.push("/PaginaPrincipal");
+    } catch (error) {
+      console.error("❌ Erro ao sair da equipa:", error);
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message || "Não foi possível sair da equipa."
+      );
+    }
+  };
+
+  // Função para exibir o alerta de confirmação
+  const confirmLeaveTeam = () => {
+    Alert.alert(
+      "Sair da Equipa",
+      "Tem certeza que deseja sair da equipa?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: handleLeaveTeam, // Chama a função de sair ao confirmar
+        },
+      ]
+    );
+  };
+  
   if (!teamDataLoaded) {
     return (
       <View style={styles.loaderContainer}>
@@ -341,6 +386,17 @@ export default function EquipaCriada() {
             />
           </Svg>
         </TouchableOpacity>
+
+        {/* Botão de Sair da Equipa */}
+        <TouchableOpacity
+          style={styles.leaveButton}
+          onPress={confirmLeaveTeam}
+          accessibilityLabel="Sair da equipa"
+        >
+          <Text style={styles.leaveButtonText}>Sair</Text>
+        </TouchableOpacity>
+
+
         <Titulos_Equipa_Criada
           accessibilityRole="text"
           accessibilityLabel={teamName}
@@ -500,4 +556,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  leaveButton: {
+    position: "absolute",
+    right: 25,
+    backgroundColor: "#FFE6E6", 
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#FF3B30",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  leaveButtonText: {
+    color: "#FF3B30",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    fontSize: 15,
+    fontWeight: "600",
+  },
 });
+

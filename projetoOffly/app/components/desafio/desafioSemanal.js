@@ -3,10 +3,12 @@ import {
   View,
   Text,
   Image,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  StyleSheet,
+  Pressable,
 } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,6 +16,18 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { baseurl } from "../../api-config/apiConfig";
 
 const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
+
+const getMensagemMotivacional = (pontos) => {
+  if (pontos < 40) {
+    return "Ainda não foi desta! Continuem a esforçar-se, a próxima semana será melhor! 💪";
+  } else if (pontos < 70) {
+    return "Bom trabalho! Estão no caminho certo. Com mais dedicação, vão mais longe! 🚀";
+  } else if (pontos < 100) {
+    return "Parabéns! Estão quase lá, mantenham o foco e vão atingir o topo! 🎯";
+  } else {
+    return "Vocês são INCRÍVEIS! Desafio completo com perfeição. Parabéns! 🏆";
+  }
+};
 
 const DesafioSemanal = () => {
   const { teamId } = useLocalSearchParams();
@@ -29,6 +43,8 @@ const DesafioSemanal = () => {
     seconds: 0,
   });
   const [participantes, setParticipantes] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [resultadoValidacao, setResultadoValidacao] = useState(null);
 
   useEffect(() => {
     const fetchDesafio = async () => {
@@ -102,9 +118,19 @@ const DesafioSemanal = () => {
         clearInterval(intervaloRef.current);
 
         try {
-          await fetch(`${baseurl}/api/validate-weekly/${teamId}`, {
+          const response = await fetch(`${baseurl}/api/validate-weekly/${teamId}`, {
             method: "POST",
           });
+
+          if (!response.ok) throw new Error("Erro na validação automática");
+
+          const data = await response.json();
+          setResultadoValidacao({
+            message: data.message,
+            pontosGanhos: data.pontosGanhos,
+            pontosTotais: data.pontosTotais,
+          });
+          setModalVisible(true);
         } catch (error) {
           console.error("Erro ao validar desafio:", error);
         }
@@ -204,10 +230,10 @@ const DesafioSemanal = () => {
                         {
                           backgroundColor:
                             status === true
-                              ? "#263A83" // azul
+                              ? "#263A83"
                               : status === false
-                              ? "#A9A9A9" // cinzento escuro
-                              : "#D3D3D3", // cinzento claro
+                              ? "#A9A9A9"
+                              : "#D3D3D3",
                         },
                       ]}
                     >
@@ -222,6 +248,36 @@ const DesafioSemanal = () => {
       ) : (
         <Text style={styles.loadingText}>Nenhum desafio disponível.</Text>
       )}
+
+      {/* Modal com resultado da validação estilizada */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.newModalContent}>
+            <LinearGradient
+              colors={["#263A83", "#1E2B6F", "#10194F"]}
+              style={styles.gradientBackground}
+            >
+              <Text style={styles.newModalTitle}>🏁 Desafio Semanal Finalizado!</Text>
+
+              {resultadoValidacao && (
+                <>
+                  <Text style={styles.pointsText}>
+                    A vossa equipa ganhou {resultadoValidacao.pontosGanhos} pontos!
+                  </Text>
+
+                  <Text style={styles.motivationalText}>
+                    {getMensagemMotivacional(resultadoValidacao.pontosGanhos)}
+                  </Text>
+                </>
+              )}
+
+              <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.closeButtonText}>Fechar</Text>
+              </Pressable>
+            </LinearGradient>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -394,6 +450,54 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     marginTop: 50,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  newModalContent: {
+    marginHorizontal: 20,
+    borderRadius: 20,
+    overflow: "hidden",
+    elevation: 5,
+  },
+  gradientBackground: {
+    padding: 30,
+    alignItems: "center",
+  },
+  newModalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  pointsText: {
+    fontSize: 20,
+    color: "#fff",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  motivationalText: {
+    fontSize: 16,
+    color: "#D1D9FF",
+    fontStyle: "italic",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  closeButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 50,
+  },
+  closeButtonText: {
+    color: "#263A83",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 

@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:3010",
+        url: "https://offly.onrender.com",
       },
     ],
     components: {

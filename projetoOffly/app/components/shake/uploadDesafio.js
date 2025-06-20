@@ -21,35 +21,9 @@ const UploadDesafio = () => {
   const [submitVisible, setSubmitVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-
-  const handleSubmit = async () => {
-    setSubmitVisible(false);
-    setModalVisible(true);
-
-    try {
-      if (!user || !user.id) {
-        Alert.alert("Erro", "Utilizador não autenticado.");
-        return;
-      }
-
-      const currentDate = new Date().toISOString();
-
-      const updateResponse = await axios.put(
-        `${baseurl}/api/participants-has-challenges/complete/${user.id}`,
-        { completed_date: currentDate }
-      );
-
-      if (updateResponse.status === 200) {
-        console.log("✅ Carta validada com sucesso");
-        setModalVisible(true);
-      } else {
-        Alert.alert("Erro", "Não foi possível validar a carta.");
-      }
-    } catch (error) {
-      console.error("❌ Erro ao submeter desafio:", error);
-      Alert.alert("Erro", "Ocorreu um erro ao submeter o desafio.");
-    }
-  };
+  const [validationResult, setValidationResult] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [earnedPoints, setEarnedPoints] = useState(0); 
 
   const handleSelectImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -75,15 +49,68 @@ const UploadDesafio = () => {
     setSubmitVisible(false);
   };
 
+  const handleSubmit = async () => {
+    try {
+      if (!user || !user.id || !selectedImage) {
+        Alert.alert("Erro", "Utilizador não autenticado ou imagem não selecionada.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("userId", user.id);
+      formData.append("image", {
+        uri: selectedImage,
+        name: "image.jpg",
+        type: "image/jpeg",
+      });
+
+      const response = await axios.post(
+        `${baseurl}/api/validation/validate-challenge`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const { resultado, justificativa, pontos_atribuidos } = response.data;
+
+      if (resultado === "válido") {
+        setValidationResult("valid");
+        setEarnedPoints(pontos_atribuidos || 0);
+        setErrorMessage("");
+      } else {
+        setValidationResult("invalid");
+        setErrorMessage(justificativa || "A imagem não corresponde ao desafio.");
+      }
+
+      setModalVisible(true);
+    } catch (error) {
+      console.error("Erro ao validar desafio:", error);
+      setValidationResult("invalid");
+
+      const backendErrorMessage =
+        error?.response?.data?.justificativa ||
+        "Ocorreu um erro ao validar o desafio. Tenta novamente mais tarde.";
+
+      setErrorMessage(backendErrorMessage);
+      setModalVisible(true);
+    }
+  };
+
   const handleCloseModal = () => {
     setModalVisible(false);
-    router.push("../../components/navbar");
+    if (validationResult === "valid") {
+      router.push("../../components/navbar");
+    }
   };
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} accessibilityLabel="Botão voltar atrás">
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle cx="18.1351" cy="17.1713" r="16.0177" stroke="#263A83" strokeWidth={2} />
             <Path d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275" stroke="#263A83" strokeWidth={2} strokeLinecap="round" />
@@ -92,12 +119,14 @@ const UploadDesafio = () => {
         <Text style={styles.title}>Comprova o teu desafio</Text>
       </View>
 
+      {/* Upload Image */}
       <View style={styles.dashedBox}>
         {selectedImage ? (
           <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
         ) : (
           <>
             <TouchableOpacity onPress={handleSelectImage}>
+              {/* Icon upload */}
               <Svg width={49} height={49} viewBox="0 0 49 49" fill="none">
                 <Path d="M0.125 8.25C0.125 3.7627 3.7627 0.125 8.25 0.125H40.75C45.2374 0.125 48.875 3.7627 48.875 8.25V24.559C47.2351 23.509 45.4094 22.7236 43.4583 22.2626V8.25C43.4583 6.75424 42.2458 5.54167 40.75 5.54167H8.25C6.75424 5.54167 5.54167 6.75424 5.54167 8.25V40.75C5.54167 42.2458 6.75424 43.4583 8.25 43.4583H22.2626C22.7236 45.4094 23.509 47.2351 24.559 48.875H8.25C3.7627 48.875 0.125 45.2374 0.125 40.75V8.25Z" fill="#263A83" />
               </Svg>
@@ -116,24 +145,45 @@ const UploadDesafio = () => {
         )}
       </View>
 
+      {/* Submit */}
       {submitVisible && (
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitText}>Submeter</Text>
         </TouchableOpacity>
       )}
 
-      <Modal visible={modalVisible} animationType="none" transparent={true} onRequestClose={handleCloseModal}>
+      {/* Modal Resultado */}
+      <Modal visible={modalVisible} animationType="fade" transparent={true} onRequestClose={handleCloseModal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.circleWrapper}>
               <Svg width={80} height={80} viewBox="0 0 80 80" fill="none">
-                <Circle cx="40" cy="40" r="40" fill="#BFE0FF" />
-                <Path d="M33.6 51.2L24 41.6C23.1 40.7 23.1 39.1 24 38.2C24.9 37.3 26.5 37.3 27.4 38.2L34.8 45.6L52.6 27.8C53.5 26.9 55.1 26.9 56 27.8C56.9 28.7 56.9 30.3 56 31.2L36 51.2C35.1 52.1 33.9 52.1 33.6 51.2Z" fill="#263A83" />
+                <Circle cx="40" cy="40" r="40" fill={validationResult === "valid" ? "#BFE0FF" : "#FFD6D6"} />
+                {validationResult === "valid" ? (
+                  <Path d="M33.6 51.2L24 41.6C23.1 40.7 23.1 39.1 24 38.2C24.9 37.3 26.5 37.3 27.4 38.2L34.8 45.6L52.6 27.8C53.5 26.9 55.1 26.9 56 27.8C56.9 28.7 56.9 30.3 56 31.2L36 51.2C35.1 52.1 33.9 52.1 33.6 51.2Z" fill="#263A83" />
+                ) : (
+                  <Path d="M28 28L52 52M52 28L28 52" stroke="#263A83" strokeWidth="5" strokeLinecap="round" />
+                )}
               </Svg>
             </View>
-            <Text style={styles.modalTitle}>Muitos parabéns campeão</Text>
-            <Text style={styles.modalMessage}>Mais um desafio alcançado. Estás pronto para outro</Text>
-            <Text style={styles.modalMessage2}>Amanhã poderás realizar mais uma missão.</Text>
+            <Text style={styles.modalTitle}>
+              {validationResult === "valid" ? "Muitos parabéns campeão" : "Desafio inválido"}
+            </Text>
+            {validationResult === "valid" ? (
+              <>
+                <Text style={styles.modalMessage}>
+                  Mais um desafio alcançado. Estás pronto para outro.
+                </Text>
+                <Text style={styles.modalMessage}>
+                  Ganhaste {earnedPoints} ponto{earnedPoints === 1 ? "" : "s"}!
+                </Text>
+                <Text style={styles.modalMessage2}>
+                  Amanhã poderás realizar mais uma missão.
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.modalMessage}>{errorMessage}</Text>
+            )}
             <TouchableOpacity style={styles.modalButton} onPress={handleCloseModal}>
               <Text style={styles.modalButtonText}>Fechar</Text>
             </TouchableOpacity>

@@ -14,14 +14,12 @@ import Svg, { Path } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios from "axios";
 
-// Screens
 import Home from "./pag-principal-lg/pag-principal-lg";
 import PodioPontuacao from "./leaderboard/podio";
 import ShakeScreen from "./shake/shakeScreen";
 
-// Contexto de autenticação
 import { AuthContext } from "../components/entrar/AuthContext";
-import { baseurl } from '../api-config/apiConfig';
+import { baseurl } from "../api-config/apiConfig";
 
 const Tab = createBottomTabNavigator();
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -66,9 +64,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               ? options.tabBarLabel
               : typeof options.title === "string"
               ? options.title
-              : typeof route.name === "string"
-              ? route.name
-              : "";
+              : route.name;
 
           const isFocused = state.index === index;
 
@@ -99,7 +95,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               ) : (
                 <View style={[styles.inactiveIcon, { bottom: tabBarHeight * -0.05 }]}>
                   <Icon name={options.tabBarIcon} size={30} color="#fff" />
-                  {label !== "" && <Text style={styles.iconLabel}>{label}</Text>}
+                  {label && <Text style={styles.iconLabel}>{label}</Text>}
                 </View>
               )}
             </TouchableOpacity>
@@ -117,15 +113,10 @@ export default function Navbar() {
   const [touchId, setTouchId] = useState(null);
 
   useEffect(() => {
-    console.log("🔄 Navbar montado");
-    console.log("📦 Loading:", loading);
-    console.log("👤 User:", user);
-
     if (loading || !user?.id) return;
 
     const checkForTouch = async () => {
       try {
-        console.log("🔍 A verificar touch para receiver_id:", user.id);
         const res = await axios.get(`${baseurl}/touchs/receiver/${user.id}`);
         const today = new Date().toISOString().split("T")[0];
 
@@ -135,17 +126,13 @@ export default function Navbar() {
         );
 
         if (validTouch) {
-          console.log("✅ Touch válido encontrado:", validTouch);
           setTouchId(validTouch.id);
-
           const senderRes = await axios.get(`${baseurl}/participants/${validTouch.sender_id}`);
           setSenderName(senderRes.data.name || "Outro utilizador");
           setShowPopup(true);
-        } else {
-          console.log("❌ Nenhum touch válido para hoje.");
         }
       } catch (err) {
-        console.error("🚨 Erro ao verificar fly:", err);
+        console.error("Erro ao verificar fly:", err);
       }
     };
 
@@ -153,13 +140,13 @@ export default function Navbar() {
   }, [loading, user]);
 
   const handleConfirm = async () => {
-  try {
-    await axios.put(`${baseurl}/api/touchs/${touchId}/desativar`);
-    setShowPopup(false);
-  } catch (err) {
-    console.error("Erro ao atualizar fly:", err);
-  }
-};
+    try {
+      await axios.put(`${baseurl}/api/touchs/${touchId}/desativar`);
+      setShowPopup(false);
+    } catch (err) {
+      console.error("Erro ao atualizar fly:", err);
+    }
+  };
 
   return (
     <>
@@ -182,17 +169,21 @@ export default function Navbar() {
       </Tab.Navigator>
 
       <Modal visible={showPopup} transparent animationType="slide">
-        <View style={styles.modalBackground}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalText}>
-              {senderName} desafiou-te! Vai fazer o desafio! 💪
-            </Text>
-            <Pressable style={styles.button} onPress={handleConfirm}>
-              <Text style={styles.buttonText}>Recebido</Text>
-            </Pressable>
-          </View>
+      <View style={styles.modalOverlay}>
+        <View style={styles.newModalContent}>
+          <Text style={styles.newModalTitle}>🚀 FLY FLY FLY </Text>
+          <Text style={styles.pointsText}>
+            <Text style={styles.senderName}>{senderName}</Text> está a desafiar-te para fazeres o teu desafio.{"\n"}
+          </Text>
+          <Text> Será que és melhor do que ele? </Text>
+          <Text style={styles.motivationalText}>Mostra do que és capaz! 💪</Text>
+
+          <Pressable style={styles.newConfirmButton} onPress={handleConfirm}>
+            <Text style={styles.newConfirmButtonText}>Recebido</Text>
+          </Pressable>
         </View>
-      </Modal>
+      </View>
+    </Modal>
     </>
   );
 }
@@ -236,33 +227,70 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 20,
-  },
-  modalBox: {
-    backgroundColor: "#fff",
-    padding: 25,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalText: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#263A83",
-  },
-  button: {
-    backgroundColor: "#C0E862",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: "#263A83",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+newModalContent: {
+  backgroundColor: "#C0E862", // verde vibrante
+  borderRadius: 20,
+  padding: 30,
+  width: "85%",
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOpacity: 0.25,
+  shadowOffset: { width: 0, height: 4 },
+  shadowRadius: 10,
+  elevation: 10,
+},
+
+newModalTitle: {
+  fontSize: 24,
+  fontWeight: "bold",
+  color: "#263A83",
+  marginBottom: 15,
+  textAlign: "center",
+},
+
+pointsText: {
+  fontSize: 16,
+  color: "#263A83",
+  textAlign: "center",
+  marginBottom: 15,
+},
+
+motivationalText: {
+  fontSize: 18,
+  fontStyle: "italic",
+  fontWeight: "600",
+  color: "#1A3E1A",
+  marginBottom: 20,
+  textAlign: "center",
+},
+
+senderName: {
+  fontWeight: "bold",
+  color: "#1A3E1A",
+},
+
+newConfirmButton: {
+  backgroundColor: "#263a83", 
+  paddingVertical: 12,
+  paddingHorizontal: 35,
+  borderRadius: 30,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.2,
+  shadowRadius: 4,
+  elevation: 4,
+},
+
+newConfirmButtonText: {
+  color: "#fff",
+  fontWeight: "bold",
+  fontSize: 16,
+},
 });

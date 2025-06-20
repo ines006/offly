@@ -23,7 +23,7 @@ const VerificacaoDesafios = () => {
         const { shakeFeito, teamId } = response.data;
 
         console.log("🏷️ teamId:", teamId);
-        setTeamId(teamId); // se quiseres guardar em estado
+        setTeamId(teamId); 
 
         if (shakeFeito) {
           router.push(`/components/desafio/desafioSemanal?teamId=${teamId}`);

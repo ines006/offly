@@ -11,8 +11,8 @@ const options = {
     },
     servers: [
       {
-        //url: "http://localhost:3010",
-        url: "https://offly.onrender.com",
+        url: "http://localhost:3010",
+        //url: "https://offly.onrender.com",
       },
     ],
     components: {
@@ -30,8 +30,8 @@ const options = {
       },
     ],
   },
-  //apis: ["./routes/*.js"],
-  apis: ["./api/routes/*.js"],
+  apis: ["./routes/*.js"],
+  //apis: ["./api/routes/*.js"],
 };
 
 const specs = swaggerJsdoc(options);

@@ -201,7 +201,7 @@ exports.createTeam = async (req, res) => {
   }
 };
 
-// Atualização da equipa via ID (alterar competitions_id)
+// Atualização da equipa via ID 
 exports.updateTeam = async (req, res) => {
   try {
     if (!req.user) {
@@ -209,7 +209,7 @@ exports.updateTeam = async (req, res) => {
     }
 
     const teamId = parseInt(req.params.id, 10);
-    const { competitions_id } = req.body;
+    const { competitions_id, points, team_passbooks_id, last_variation } = req.body;
 
     if (!Number.isInteger(teamId)) {
       return res.status(400).json({ message: "Valid team ID is required" });
@@ -226,57 +226,87 @@ exports.updateTeam = async (req, res) => {
       return res.status(403).json({ message: "You are not the admin of this team" });
     }
 
-    // Handle setting competitions_id to null
-    if (competitions_id === null) {
-      // Verify if the current competition has ended
-      if (team.competitions_id) {
-        const competition = await Competitions.findByPk(team.competitions_id);
-        if (competition) {
-          const now = moment().tz("Europe/Lisbon");
-          const endDate = moment(competition.end_date).tz("Europe/Lisbon");
-          if (!now.isAfter(endDate)) {
-            return res.status(400).json({
-              message: "Cannot set competitions_id to null before competition end date",
-            });
+    // Initialize update fields
+    const updateFields = {};
+
+    // Handle competitions_id
+    if (competitions_id !== undefined) {
+      if (competitions_id === null) {
+        // Verify if the current competition has ended
+        if (team.competitions_id) {
+          const competition = await Competitions.findByPk(team.competitions_id);
+          if (competition) {
+            const now = moment().tz("Europe/Lisbon");
+            const endDate = moment(competition.end_date).tz("Europe/Lisbon");
+            if (!now.isAfter(endDate)) {
+              return res.status(400).json({
+                message: "Cannot set competitions_id to null before competition end date",
+              });
+            }
           }
         }
+        updateFields.competitions_id = null;
+      } else {
+        // Verify if the competition exists for non-null competitions_id
+        if (!Number.isInteger(competitions_id)) {
+          return res.status(400).json({
+            message: "Valid competitions_id (integer) is required",
+          });
+        }
+        const competition = await Competitions.findByPk(competitions_id);
+        if (!competition) {
+          return res.status(404).json({ message: "Competition not found" });
+        }
+        updateFields.competitions_id = competitions_id;
       }
+    }
 
-      // Update team to set competitions_id to null
-      const [updatedRows] = await Teams.update(
-        { competitions_id: null },
-        { where: { id: teamId } }
-      );
-
-      if (updatedRows === 0) {
-        return res.status(500).json({ message: "Team not updated" });
+    // Handle points
+    if (points !== undefined) {
+      if (!Number.isInteger(points)) {
+        return res.status(400).json({
+          message: "Points must be an integer",
+        });
       }
-
-      return res.status(200).json({
-        message: "Team updated successfully",
-        teamId,
-        competitions_id: null,
-      });
+      updateFields.points = points;
     }
 
-    // Handle setting a non-null competitions_id
-    if (!Number.isInteger(competitions_id)) {
-      return res.status(400).json({
-        message: "Valid competitions_id (integer) is required",
-      });
+    // Handle team_passbooks_id
+    if (team_passbooks_id !== undefined) {
+      if (team_passbooks_id !== null && !Number.isInteger(team_passbooks_id)) {
+        return res.status(400).json({
+          message: "team_passbooks_id must be an integer or null",
+        });
+      }
+      // Optional: Verify if team_passbooks_id exists in Passbooks table
+      if (team_passbooks_id !== null) {
+        const passbook = await Passbooks.findByPk(team_passbooks_id);
+        if (!passbook) {
+          return res.status(404).json({ message: "Passbook not found" });
+        }
+      }
+      updateFields.team_passbooks_id = team_passbooks_id;
     }
 
-    // Verify if the competition exists
-    const competition = await Competitions.findByPk(competitions_id);
-    if (!competition) {
-      return res.status(404).json({ message: "Competition not found" });
+    // Handle last_variation
+    if (last_variation !== undefined) {
+      if (!Number.isInteger(last_variation)) {
+        return res.status(400).json({
+          message: "last_variation must be an integer",
+        });
+      }
+      updateFields.last_variation = last_variation;
     }
 
-    // Update team with new competitions_id
-    const [updatedRows] = await Teams.update(
-      { competitions_id },
-      { where: { id: teamId } }
-    );
+    // Check if there are fields to update
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ message: "No valid fields provided for update" });
+    }
+
+    // Update team with provided fields
+    const [updatedRows] = await Teams.update(updateFields, {
+      where: { id: teamId },
+    });
 
     if (updatedRows === 0) {
       return res.status(500).json({ message: "Team not updated" });
@@ -285,7 +315,7 @@ exports.updateTeam = async (req, res) => {
     res.status(200).json({
       message: "Team updated successfully",
       teamId,
-      competitions_id,
+      ...updateFields,
     });
   } catch (error) {
     console.error("Error updating team:", error.stack);

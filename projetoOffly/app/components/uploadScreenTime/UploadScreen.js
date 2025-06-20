@@ -98,18 +98,6 @@ const UploadScreen = () => {
     }
   };
 
-  const getPointsMessage = (points) => {
-    if (points === null) {
-      return "Pontuação processada.";
-    } else if (points <= 9) {
-      return "Parabéns! Estás muito próximo do equilíbrio.";
-    } else if (points <= 20) {
-      return "Estás no caminho certo, mas ainda podes reduzir o tempo de ecrã!";
-    } else {
-      return "O teu tempo de ecrã está elevado! Tenta reduzir para melhorar o teu bem-estar digital.";
-    }
-  };
-
   const handleSubmit = async () => {
     if (!userId || !selectedImage || !teamsId) {
       Alert.alert(
@@ -196,12 +184,12 @@ const UploadScreen = () => {
   const handleCloseSuccessModal = () => {
     setSuccessModalVisible(false);
     setPoints(null);
-    console.log("Navegando para a navbar");
+    //console.log("Navegando para a navbar");
     router.push("/components/navbar");
   };
 
   const handleCloseErrorModal = () => {
-    console.log("Fechando modal de erro");
+    //console.log("Fechando modal de erro");
     setErrorModalVisible(false);
     setErrorMessage("");
   };

@@ -82,7 +82,7 @@ export default function Home() {
   return moment().tz("Europe/Lisbon").format("YYYY-MM-DD");
 };
 
-
+  // Fetch Dados do utilizador
   const fetchUserData = async () => {
     if (!user?.id || !accessToken) {
       Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
@@ -125,12 +125,17 @@ export default function Home() {
     }
   };
 
+  // Função para atualizar a equipa quando competição acaba (admin)
   const updateTeamCompetition = async () => {
     try {
-      // Update team's competitions_id to null
       await axios.put(
         `${baseurl}/teams/${teamId}`,
-        { competitions_id: null },
+        { 
+          competitions_id: null,
+          points: 100, //predefinido
+          team_passbooks_id: null,
+          last_variation: 0,
+         },
         {
           headers: {
             "Content-Type": "application/json",
@@ -146,6 +151,7 @@ export default function Home() {
     }
   };
 
+  // função para lidar com escolha de ficar ou não na equipa quando competição termina
   const handleTournamentEndChoice = async (stayWithTeam) => {
     try {
       console.log("Handling tournament end choice for user ID:", userId, "Stay with team:", stayWithTeam);
@@ -156,7 +162,11 @@ export default function Home() {
       if (!stayWithTeam) {
         const response = await axios.put(
           `${baseurl}/participants/${userId}`,
-          { teams_id: null },
+          { 
+            teams_id: null,
+            upload_data: null,
+            challenge_count: 0,          
+          },
           {
             headers: {
               "Content-Type": "application/json",
@@ -166,12 +176,32 @@ export default function Home() {
             },
           }
         );
-        console.log("Participant teams_id updated:", response.data);
+        //console.log("Participant without team updated:", response.data);
         setTeamId(null);
+        setDataUpload(null);
+        setUserChallenges(0);
         setShowTournamentEndModal(false);
         setHasMadeTournamentEndChoice(true);
         router.push("/PaginaPrincipal");
       } else {
+        const response = await axios.put(
+          `${baseurl}/participants/${userId}`,
+          { 
+            upload_data: null,
+            challenge_count: 0,          
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+        //console.log("Participant with team updated:", response.data);
+        setDataUpload(null);
+        setUserChallenges(0);
         setShowTournamentEndModal(false);
         setHasMadeTournamentEndChoice(true);
         router.push({ pathname: "/EquipaCriada", params: { teamId } });
@@ -185,11 +215,12 @@ export default function Home() {
     }
   };
 
+  // carrega dados do utilizador
   useEffect(() => {
     fetchUserData();
   }, [user, accessToken]);
 
-
+  // carrega dados da equipa e verfica a competição 
   useEffect(() => {
     if (!teamId || !userId || hasMadeTournamentEndChoice) return;
 
@@ -249,13 +280,14 @@ export default function Home() {
             console.log("Polling team data to check competition_id");
             fetchTeamData();
           }
-        }, 30000); // Poll every 30 seconds
+        }, 30000); 
         return () => clearInterval(pollInterval);
       }
     }
 
   }, [teamId, userId, tournamentId, hasMadeTournamentEndChoice, tournamentEnd]); 
 
+  // carrega e monta os dados da página
   useEffect(() => {
     if (
       userId !== null &&
@@ -282,6 +314,7 @@ export default function Home() {
     teamCapacity,
   ]);
 
+  // carrega dias da competição
   useEffect(() => {
     if (tournamentStart && tournamentEnd) {
       const day = getCompetitionDay(tournamentStart, tournamentEnd);
@@ -291,12 +324,14 @@ export default function Home() {
     }
   }, [tournamentStart, tournamentEnd]);
 
+  // função que valida a data
   const isValidDate = (dateString) => {
     if (!dateString) return false;
     const date = new Date(dateString);
     return date instanceof Date && !isNaN(date.getTime());
   };
 
+  // função que verifica a data do upload
   const isUploadedToday = () => {
     if (!dataUpload || !isValidDate(dataUpload)) {
       return false;
@@ -306,34 +341,30 @@ export default function Home() {
     return uploadDate === today;
   };
 
-
+  // função que define o temporizador
   const calculateTimeUntilMidnight = () => {
   const now = moment().tz("Europe/Lisbon");
   const midnight = now.clone().endOf("day");
   return midnight.diff(now);
 };
 
-
-  // Midnight reset and countdown logic
+  // Reset e lógica do countdown
   useEffect(() => {
     if (!userId) return;
 
-    // Initialize countdown
     setTimeRemaining(calculateTimeUntilMidnight());
 
-    // Update countdown every second
     const countdownInterval = setInterval(() => {
       setTimeRemaining(calculateTimeUntilMidnight());
     }, 1000);
 
-    // Schedule re-fetch at midnight
     const scheduleMidnightFetch = () => {
       const timeToMidnight = calculateTimeUntilMidnight();
       const timeoutId = setTimeout(() => {
         console.log("Midnight reached, re-fetching data:", getTodayInWEST());
         fetchUserData();
-        scheduleMidnightFetch(); // Reschedule for next midnight
-      }, timeToMidnight + 1000); // Add 1s buffer
+        scheduleMidnightFetch(); 
+      }, timeToMidnight + 1000); 
       return timeoutId;
     };
 
@@ -345,6 +376,7 @@ export default function Home() {
     };
   }, [userId]);
 
+  // formato do datetime
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -355,6 +387,7 @@ export default function Home() {
       .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  // dias da competição
   const getCompetitionDay = (start_date, end_date) => {
     const start = new Date(start_date);
     const end = new Date(end_date);
@@ -392,9 +425,9 @@ export default function Home() {
     return duration;
   };
 
+  // redirecionamentos
   const handleCirclePress = async () => {
-    await router.push("../components/uploadScreenTime/UploadScreen");
-    // Re-fetch user data after navigating back from upload screen
+    await router.push("../../components/uploadScreenTime/UploadScreen");
     fetchUserData();
   };
 

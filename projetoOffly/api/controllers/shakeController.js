@@ -190,6 +190,7 @@ exports.validateChallengeTimeOut = async (req, res) => {
       where: {
         participants_id: userId,
         challenges_id: challengeId,
+        challenge_types_id: 1,
         validated: 0,
       },
     });

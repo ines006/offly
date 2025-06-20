@@ -7,6 +7,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const validateChallengeImage = async (imageBuffer, challengeDescription) => {
   const prompt = `
 Com base na imagem submetida pelo utilizador, valida com detalhe se a pessoa realizou o desafio personalizado que escolheu: "${challengeDescription}".
+Não é necessário seres especifico em situações que em imagens não são possiveis serem confirmadas, por exemplo, não precisas de confirmar se um bairro é desconhecido ou não ao utilizador.
 Retorne apenas:
 - "válido"
 - "inválido: <justificação>"
@@ -54,6 +55,8 @@ exports.validateChallengeUpload = async (req, res) => {
       where: {
         participants_id: parsedUserId,
         completed_date: null,
+        validated: 0,
+        challenge_types_id: 1,
       },
     });
 

@@ -530,13 +530,8 @@ export default function Home() {
                   <StatText accessibilityLabel="Desafios completos">
                     <Text> Desafios completos </Text>
                   </StatText>
-<<<<<<< HEAD
                   <StatValue accessibilityLabel={`${userChallenges} de ${competitionDaysTotal} de desafios completos`}>
                     <Text>{userChallenges}/{competitionDaysTotal}  </Text>
-=======
-                  <StatValue accessibilityLabel="7 de 30 desafios completos">
-                    <Text> 7/30 </Text>
->>>>>>> copia-main
                     <FontAwesome
                       name="calendar"
                       size={14}

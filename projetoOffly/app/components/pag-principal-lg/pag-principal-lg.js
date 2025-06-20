@@ -288,7 +288,7 @@ export default function Home() {
   };
 
   const handleCirclePress = async () => {
-    await router.push("../components/uploadScreenTime/UploadScreen");
+    await router.push("/components/uploadScreenTime/UploadScreen");
     // Re-fetch user data after navigating back from upload screen
     fetchUserData();
   };

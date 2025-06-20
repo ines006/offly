@@ -99,7 +99,7 @@ export default function CartaSelecionada() {
           </Svg>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.homeButton}
           onPress={() => router.push("../navbar")}
         >
@@ -118,7 +118,7 @@ export default function CartaSelecionada() {
               </G>
             </G>
           </Svg>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {selectedCard ? (
           <>
@@ -128,26 +128,29 @@ export default function CartaSelecionada() {
                 <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
               </View>
             )}
+            
 
-            <View style={[styles.mainCard, { marginTop: 20 }]}>
-              {selectedCard.challenge && selectedCard.challenge.imagem_nivel && (
+            <View style={styles.cardWrapper}>
+              <View style={styles.imageContainer}>
                 <Image
                   accessibilityLabel="Imagem da carta selecionada"
                   source={{ uri: selectedCard.challenge.imagem_nivel }}
                   style={styles.cardImage}
-                  resizeMode="cover"
+                  resizeMode="contain"
                   onError={(e) => {
                     console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
                   }}
                 />
-              )}
-              <View style={styles.cardContent}>
-                <Text style={styles.mainTitle}>
-                  {selectedCard.challenge?.titulo}
-                </Text>
-                <Text style={styles.mainDescription}>
-                  {selectedCard.challenge?.carta}
-                </Text>
+              </View>
+              <View style={styles.mainCard}>
+                <View style={styles.cardContent}>
+                  <Text style={styles.mainTitle}>
+                    {selectedCard.challenge?.titulo}
+                  </Text>
+                  <Text style={styles.mainDescription}>
+                    {selectedCard.challenge?.carta}
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -179,11 +182,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 50,
   },
   backButton: {
     position: "absolute",
-    top: 40,
+    top: 100,
     width: 40,
     height: 40,
     left: 25,
@@ -213,6 +215,7 @@ const styles = StyleSheet.create({
   timerContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: -40,
     marginBottom: 10,
     backgroundColor: "#E3FC87",
     padding: 13,
@@ -234,54 +237,87 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#263A83",
     textAlign: "center",
-    marginVertical: 20,
+    // marginVertical: 20,
     backgroundColor: "white",
     padding: 13,
     borderRadius: 12,
   },
+  cardWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 20,
+  },
   mainCard: {
-    width: 210,
-    height: 360,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 10,
-    overflow: "hidden",
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    marginTop: 60, // espaço para a imagem sobrepor
+  },
+  imageContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 2,
   },
   cardImage: {
     width: "100%",
-    height: 230,
-    borderRadius: 10,
-    marginBottom: 10,
+    height: 120,
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+    marginBottom: 5,
+    paddingHorizontal: 4,
   },
   mainTitle: {
-    color: "#2E3A8C",
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 5,
+    color: '#263A83',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+    marginTop: 10,
   },
   mainDescription: {
-    color: "#2E3A8C",
-    fontSize: 12,
-    textAlign: "center",
+    color: '#263A83',
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 8,
+    
+    alignSelf: 'stretch',
   },
   validateButton: {
-    marginTop: 20,
-    backgroundColor: "#2E3A8C",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    marginTop: 30,
+    backgroundColor: '#2E3A8C',
+    paddingVertical: 16,
+    paddingHorizontal: 30,
+    borderRadius: 14,
+    alignSelf: 'center',
+    marginBottom: 10,
+    width: '80%',
   },
   validateButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

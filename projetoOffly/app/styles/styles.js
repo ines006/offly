@@ -6,6 +6,7 @@ export const Container = styled.View`
   padding: 60px;
   align-items: center;
   background-color: #263a83;
+  padding-top: 120px;
 `;
 
 // Container da Barra de Progresso
@@ -415,6 +416,7 @@ export const ProfileContainer = styled.TouchableOpacity`
   padding: 20px;
   width: 100%;
   align-self: center;
+  padding-top: 50px;
 `;
 
 export const Avatar = styled.Image.attrs({

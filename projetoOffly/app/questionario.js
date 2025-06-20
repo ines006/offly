@@ -221,7 +221,7 @@ export default function Questionario() {
           fill="none"
           style={{
             position: "absolute",
-            top: -50,
+            top: -7,
             right: 20,
             zIndex: 0,
           }}

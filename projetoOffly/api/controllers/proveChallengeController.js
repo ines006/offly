@@ -1,5 +1,10 @@
 const { OpenAI } = require("openai");
-const { Participants, Teams, Challenges, ParticipantsHasChallenges } = require("../models");
+const {
+  Participants,
+  Teams,
+  Challenges,
+  ParticipantsHasChallenges,
+} = require("../models");
 const { sequelize } = require("../config/database");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -7,7 +12,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const validateChallengeImage = async (imageBuffer, challengeDescription) => {
   const prompt = `
 Com base na imagem submetida pelo utilizador, valida com detalhe se a pessoa realizou o desafio personalizado que escolheu: "${challengeDescription}".
-Não é necessário seres especifico em situações que em imagens não são possiveis serem confirmadas, por exemplo, não precisas de confirmar se um bairro é desconhecido ou não ao utilizador.
+Não é necessário seres específico em situações que em imagens não são possíveis de serem confirmadas, por exemplo, não precisas de confirmar se um bairro é desconhecido ou não ao utilizador.
 Retorne apenas:
 - "válido"
 - "inválido: <justificação>"
@@ -43,7 +48,9 @@ exports.validateChallengeUpload = async (req, res) => {
     const image = req.file;
 
     if (!userId || !image) {
-      return res.status(400).json({ error: "userId e imagem são obrigatórios" });
+      return res
+        .status(400)
+        .json({ error: "userId e imagem são obrigatórios" });
     }
 
     const parsedUserId = parseInt(userId, 10);
@@ -61,11 +68,12 @@ exports.validateChallengeUpload = async (req, res) => {
     });
 
     if (!participation) {
-      return res.status(404).json({ error: "Nenhum desafio pendente encontrado para o participante." });
+      return res.status(404).json({
+        error: "Nenhum desafio pendente encontrado para o participante.",
+      });
     }
 
     const challengeId = participation.challenges_id;
-
 
     const challenge = await Challenges.findByPk(challengeId);
     if (!challenge) {
@@ -74,7 +82,6 @@ exports.validateChallengeUpload = async (req, res) => {
 
     const challengeDescription = challenge.description;
     const challengeLevel = challenge.challenge_levels_id;
-
 
     const participant = await Participants.findByPk(parsedUserId);
     if (!participant) {
@@ -87,10 +94,12 @@ exports.validateChallengeUpload = async (req, res) => {
     }
 
     // Validar imagem com OpenAI
-    const validationResponse = await validateChallengeImage(image.buffer, challengeDescription);
+    const validationResponse = await validateChallengeImage(
+      image.buffer,
+      challengeDescription
+    );
 
     if (validationResponse.startsWith("válido")) {
-
       let pointsToAdd = 0;
       switch (challengeLevel) {
         case 1:
@@ -106,7 +115,6 @@ exports.validateChallengeUpload = async (req, res) => {
           pointsToAdd = 0;
       }
 
-     
       await sequelize.transaction(async (t) => {
         await Teams.update(
           {
@@ -122,7 +130,8 @@ exports.validateChallengeUpload = async (req, res) => {
         await ParticipantsHasChallenges.update(
           {
             completed_date: new Date(),
-            validated: 1, 
+            validated: 1,
+            user_img: image.buffer, // o buffer guarda como blob
           },
           {
             where: {
@@ -145,7 +154,9 @@ exports.validateChallengeUpload = async (req, res) => {
         justificativa: validationResponse.replace("inválido:", "").trim(),
       });
     } else {
-      return res.status(500).json({ error: "Resposta inesperada da API de validação." });
+      return res
+        .status(500)
+        .json({ error: "Resposta inesperada da API de validação." });
     }
   } catch (error) {
     console.error("Erro ao validar desafio:", error.message);

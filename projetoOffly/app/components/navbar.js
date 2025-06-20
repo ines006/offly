@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
 },
 
 newModalContent: {
-  backgroundColor: "#C0E862", // verde vibrante
+  backgroundColor: "#C0E862", 
   borderRadius: 20,
   padding: 30,
   width: "85%",

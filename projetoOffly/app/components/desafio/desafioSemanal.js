@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { baseurl } from "../../api-config/apiConfig";
 
 const diasDaSemana = ["S", "T", "Q", "Q", "S", "S", "D"];
@@ -33,6 +33,7 @@ const DesafioSemanal = () => {
   const { teamId } = useLocalSearchParams();
   const router = useRouter();
   const intervaloRef = useRef(null);
+  const navigation = useNavigation();
 
   const [desafio, setDesafio] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,52 @@ const DesafioSemanal = () => {
   const [participantes, setParticipantes] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [resultadoValidacao, setResultadoValidacao] = useState(null);
+
+  const handleGoBack = () => {
+    const navigationState = navigation.getState();
+
+    //Correção da rota voltar para trás na página de desafio semanal (ignorar rota intermediária)
+    if (navigationState?.routes && navigationState.routes.length > 1) {
+      for (let i = navigationState.routes.length - 2; i >= 0; i--) {
+        const route = navigationState.routes[i];
+
+        if (
+          route.name?.startsWith("(") ||
+          route.name === "index" ||
+          route.name === "_sitemap" ||
+          route.name?.toLowerCase().includes("verificardesafio")
+        ) {
+          continue;
+        }
+
+        if (
+          route.name?.toLowerCase().includes("detalhesequipa") ||
+          route.name?.includes("[teamId]") ||
+          route.path?.toLowerCase().includes("detalhesequipa")
+        ) {
+          router.push(
+            `/components/leaderboard/detalhesEquipa?teamId=${teamId}`
+          );
+          return;
+        }
+
+        if (
+          route.name?.toLowerCase().includes("navbar") ||
+          route.path?.toLowerCase().includes("navbar")
+        ) {
+          router.push("/components/navbar");
+          return;
+        }
+      }
+    }
+
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    router.push("/components/navbar");
+  };
 
   useEffect(() => {
     const fetchDesafio = async () => {
@@ -60,7 +107,9 @@ const DesafioSemanal = () => {
         const data = await responseDesafio.json();
         const imagemUrl = `${baseurl}/api/desafios/imagem/${data.challenges_id}`;
 
-        const responseDatas = await fetch(`${baseurl}/api/challenges/dates/${teamId}`);
+        const responseDatas = await fetch(
+          `${baseurl}/api/challenges/dates/${teamId}`
+        );
         if (!responseDatas.ok) throw new Error("Erro ao buscar datas");
         const datas = await responseDatas.json();
 
@@ -73,8 +122,11 @@ const DesafioSemanal = () => {
           end: datas.end_date,
         });
 
-        const responseParticipantes = await fetch(`${baseurl}/api/participants/${teamId}`);
-        if (!responseParticipantes.ok) throw new Error("Erro ao buscar participantes");
+        const responseParticipantes = await fetch(
+          `${baseurl}/api/participants/${teamId}`
+        );
+        if (!responseParticipantes.ok)
+          throw new Error("Erro ao buscar participantes");
         const participantesData = await responseParticipantes.json();
 
         const formatted = participantesData.map((user) => {
@@ -118,9 +170,12 @@ const DesafioSemanal = () => {
         clearInterval(intervaloRef.current);
 
         try {
-          const response = await fetch(`${baseurl}/api/validate-weekly/${teamId}`, {
-            method: "POST",
-          });
+          const response = await fetch(
+            `${baseurl}/api/validate-weekly/${teamId}`,
+            {
+              method: "POST",
+            }
+          );
 
           if (!response.ok) throw new Error("Erro na validação automática");
 
@@ -136,8 +191,12 @@ const DesafioSemanal = () => {
         }
       } else {
         const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const hours = Math.floor(
+          (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
+        );
         const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
         setTimer({ days, hours, minutes, seconds });
@@ -152,20 +211,28 @@ const DesafioSemanal = () => {
     };
   }, [desafio]);
 
-  const valorPorBolinha = participantes.length ? 100 / (7 * participantes.length) : 0;
+  const valorPorBolinha = participantes.length
+    ? 100 / (7 * participantes.length)
+    : 0;
   const bolinhasAzuis = participantes.reduce((total, p) => {
     return total + p.status.filter((s) => s === true).length;
   }, 0);
-  const progresso = Math.max(0, Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2)));
+  const progresso = Math.max(
+    0,
+    Math.min(100, (bolinhasAzuis * valorPorBolinha).toFixed(2))
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push("../../components/navbar")}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
         <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
-          <Circle cx="18.1351" cy="17.1713" r="16.0177" stroke="#263A83" strokeWidth={2} />
+          <Circle
+            cx="18.1351"
+            cy="17.1713"
+            r="16.0177"
+            stroke="#263A83"
+            strokeWidth={2}
+          />
           <Path
             d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
             stroke="#263A83"
@@ -257,12 +324,15 @@ const DesafioSemanal = () => {
               colors={["#263A83", "#1E2B6F", "#10194F"]}
               style={styles.gradientBackground}
             >
-              <Text style={styles.newModalTitle}>🏁 Desafio Semanal Finalizado!</Text>
+              <Text style={styles.newModalTitle}>
+                🏁 Desafio Semanal Finalizado!
+              </Text>
 
               {resultadoValidacao && (
                 <>
                   <Text style={styles.pointsText}>
-                    A vossa equipa ganhou {resultadoValidacao.pontosGanhos} pontos!
+                    A vossa equipa ganhou {resultadoValidacao.pontosGanhos}{" "}
+                    pontos!
                   </Text>
 
                   <Text style={styles.motivationalText}>
@@ -271,7 +341,10 @@ const DesafioSemanal = () => {
                 </>
               )}
 
-              <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+              <Pressable
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}
+              >
                 <Text style={styles.closeButtonText}>Fechar</Text>
               </Pressable>
             </LinearGradient>
@@ -403,16 +476,16 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   circlesWrapperSingleRow: {
-  flexDirection: "row",
-  flexWrap: "wrap",
-  justifyContent: "center", 
-  alignItems: "center",
-  maxWidth: 110, 
-  rowGap: 4,
-  columnGap: 4,
-  marginTop: 4,
-  marginLeft: "auto", 
-},
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
+    maxWidth: 110,
+    rowGap: 4,
+    columnGap: 4,
+    marginTop: 4,
+    marginLeft: "auto",
+  },
   circle: {
     width: 20,
     height: 20,
@@ -502,4 +575,3 @@ const styles = StyleSheet.create({
 });
 
 export default DesafioSemanal;
-

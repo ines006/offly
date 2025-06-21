@@ -3,6 +3,7 @@ const router = express.Router();
 const participantsHasChallengesController = require("../controllers/participantsHasChallengesController");
 const controller = require("../controllers/participantsHasChallengesController");
 
+
 /**
  * @swagger
  * /api/participants-has-challenges:

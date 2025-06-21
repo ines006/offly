@@ -5,6 +5,7 @@ const Challenges = require("../models/challenges");
 const ChallengeLevels = require("../models/challengeLevel");
 
 
+
 // POST - Criação de uma relação participante/desafio
 exports.createChallengeSelection = async (req, res) => {
   const { participants_id, challenges_id, starting_date } = req.body;
@@ -186,15 +187,48 @@ exports.completeActiveChallenge = async (req, res) => {
   }
 };
 
+
+
 exports.getActiveChallengeWithUserImage = async (req, res) => {
   const { participants_id } = req.params;
 
   try {
-    const activeChallenge = await ParticipantsHasChallenges.findOne({
+    // Obtem o desafio mais recente validado do tipo diário para o participante
+    const challenge = await ParticipantsHasChallenges.findOne({
       where: {
         participants_id,
         validated: 1,
         challenge_types_id: 1,
+      },
+      order: [["starting_date", "DESC"]], // assume-se o mais recente
+    });
+
+    if (!challenge) {
+      return res.status(404).json({ error: "Nenhum desafio diário validado encontrado." });
+    }
+
+    const startDate = new Date(challenge.starting_date);
+    const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // +1 dia
+
+    // Helpers para início/fim do dia
+    const startOfDay = (date) => new Date(date.setHours(0, 0, 0, 0));
+    const endOfDay = (date) => new Date(date.setHours(23, 59, 59, 999));
+
+    const filteredChallenge = await ParticipantsHasChallenges.findOne({
+      where: {
+        participants_id,
+        validated: 1,
+        challenge_types_id: 1,
+        completed_date: {
+          [Op.or]: [
+            {
+              [Op.between]: [startOfDay(new Date(startDate)), endOfDay(new Date(startDate))],
+            },
+            {
+              [Op.between]: [startOfDay(new Date(endDate)), endOfDay(new Date(endDate))],
+            },
+          ],
+        },
       },
       attributes: [
         "participants_id",
@@ -204,7 +238,7 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
         "challenge_levels_id_challenge_levels",
         "challenge_types_id",
         "validated",
-        "user_img"
+        "user_img",
       ],
       include: [
         {
@@ -215,48 +249,28 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
       ],
     });
 
-    if (!activeChallenge) {
-      return res.status(404).json({ error: "Nenhuma carta ativa encontrada." });
-    }
-
-    const startDate = new Date(activeChallenge.starting_date);
-    const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-    const completedDate = new Date(activeChallenge.completed_date);
-
-    // Verifica se completed_date é igual a startDate ou endDate
-    const isSameDay = (d1, d2) => {
-      return (
-        d1.getDate() === d2.getDate() &&
-        d1.getMonth() === d2.getMonth() &&
-        d1.getFullYear() === d2.getFullYear()
-      );
-    };
-
-    if (
-      !isSameDay(completedDate, startDate) &&
-      !isSameDay(completedDate, endDate)
-    ) {
+    if (!filteredChallenge) {
       return res.status(404).json({
-        error: "A completed_date não corresponde a nenhuma das datas esperadas.",
+        error: "Nenhuma carta encontrada com a data concluída esperada.",
       });
     }
 
     const level = await ChallengeLevels.findOne({
-      where: { id: activeChallenge.challenge_levels_id_challenge_levels },
+      where: { id: filteredChallenge.challenge_levels_id_challenge_levels },
       attributes: ["image_level"],
     });
 
     return res.json({
-      participants_id: activeChallenge.participants_id,
-      challenges_id: activeChallenge.challenges_id,
-      starting_date: activeChallenge.starting_date,
-      completed_date: activeChallenge.completed_date,
-      user_img: activeChallenge.user_img,
+      participants_id: filteredChallenge.participants_id,
+      challenges_id: filteredChallenge.challenges_id,
+      starting_date: filteredChallenge.starting_date,
+      completed_date: filteredChallenge.completed_date,
+      user_img: filteredChallenge.user_img,
       challenge: {
-        id: activeChallenge.challenge?.id,
-        titulo: activeChallenge.challenge?.title,
-        imagem: activeChallenge.challenge?.img,
-        carta: activeChallenge.challenge?.description,
+        id: filteredChallenge.challenge?.id,
+        titulo: filteredChallenge.challenge?.title,
+        imagem: filteredChallenge.challenge?.img,
+        carta: filteredChallenge.challenge?.description,
         imagem_nivel: level?.image_level || null,
       },
     });
@@ -265,6 +279,7 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
     return res.status(500).json({ error: "Erro ao buscar carta ativa.", details: error.message });
   }
 };
+
 
 
   module.exports = exports;

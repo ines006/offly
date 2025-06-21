@@ -500,58 +500,22 @@ export default function Home() {
               <UserName>{userName}</UserName>
               <UserLevel> Nível {userLevel} </UserLevel>
               <StarsContainer>
-                <Svg
-                  accessibilityLabel="estrela nível 1"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#263A83"
-                  />
-                </Svg>
-                <Svg
-                  accessibilityLabel="estrela nível 2"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#BEC4DA"
-                  />
-                </Svg>
-                <Svg
-                  accessibilityLabel="estrela nível 3"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#BEC4DA"
-                  />
-                </Svg>
-                <Svg
-                  accessibilityLabel="estrela nível 4"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#BEC4DA"
-                  />
-                </Svg>
+                {[...Array(4)].map((_, index) => (
+                  <Svg
+                    key={index}
+                    accessibilityLabel={`estrela nível ${index + 1}`}
+                    width="13"
+                    height="11"
+                    viewBox="0 0 13 11"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <Path
+                      d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+                      fill={index < userLevel ? "#263A83" : "#BEC4DA"}
+                    />
+                  </Svg>
+                ))}
               </StarsContainer>
             </ProfileTextContainer>
           </ProfileContainer>
@@ -583,7 +547,7 @@ export default function Home() {
               <Stats accessibilityRole="summary">
                 <StatItem accessible={true}>
                   <StatText accessibilityLabel="Dias em competição">
-                    Dias em competição
+                     <Text>Dias em competição</Text>
                   </StatText>
                   <StatValue accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal} da competição`}>
                     <Text>{competitionDay}/{competitionDaysTotal}  </Text>
@@ -597,7 +561,7 @@ export default function Home() {
                 </StatItem>
                 <StatItem accessible={true}>
                   <StatText accessibilityLabel="Desafios completos">
-                    Desafios completos
+                    <Text> Desafios completos </Text>
                   </StatText>
                   <StatValue accessibilityLabel={`${userChallenges} de ${competitionDaysTotal} de desafios completos`}>
                     <Text>{userChallenges}/{competitionDaysTotal}  </Text>
@@ -619,7 +583,7 @@ export default function Home() {
                 <FooterText
                   accessibilityLabel={`${teamMembers} de ${teamCapacity} membros`}
                 >
-                  {teamMembers}/{teamCapacity}
+                 <Text>{teamMembers}/{teamCapacity}</Text> 
                 </FooterText>
                 <FontAwesome
                   name="group"
@@ -667,7 +631,7 @@ export default function Home() {
                   />
                 </Svg>
               </DesafioIcon>
-              <DesafioText>Caderneta</DesafioText>
+              <DesafioText> <Text>Caderneta</Text></DesafioText>
             </DesafioCard>
 
             <DesafioCard onPress={() => handleDesafioPress(1)}>
@@ -693,7 +657,7 @@ export default function Home() {
                   />
                 </Svg>
               </DesafioIcon>
-              <DesafioText>Desafio Semanal</DesafioText>
+              <DesafioText> <Text> Desafio Semanal </Text></DesafioText>
             </DesafioCard>
           </DesafioContainer>
         </>

@@ -102,5 +102,8 @@ router.get('/challenges/dates/:teamId', challengeController.getChallengeDates);
 router.post('/challenges/validate/:teamId', challengeController.validateChallenge);
 router.get('/participants/:teamId', challengeController.getParticipantsByTeam);
 
+// Validar automaticamente desafios expirados
+router.post("/validate-weekly/:teamId", challengeController.validateTeamChallenge);
+
 
 module.exports = router;

@@ -25,7 +25,7 @@ function formatTime(ms) {
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
-export default function CartaSelecionada() {
+export default function EsperaShake() {
   const router = useRouter();
   const { user } = useContext(AuthContext);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -36,7 +36,7 @@ export default function CartaSelecionada() {
       try {
         console.log("Utilizador autenticado:", user);
         const response = await axios.get(
-          `${baseurl}/api/participants-has-challenges/active/${user.id}`
+          `${baseurl}/api/participants-has-challenges/active-with-image/${user.id}`
         );
 
         const data = response.data;
@@ -64,28 +64,14 @@ export default function CartaSelecionada() {
   }, [user]);
 
   useEffect(() => {
-  let timer;
-  if (timeLeft > 0) {
-    timer = setInterval(() => {
-      setTimeLeft((prev) => Math.max(prev - 1000, 0));
-    }, 1000);
-  } else if (timeLeft === 0 && selectedCard) {
-    Alert.alert("Tempo Esgotado", "O tempo para validar esta carta acabou.");
-
-    const updateValidation = async () => {
-      try {
-        await axios.put(`${baseurl}/api/shake/validate-time/${user.id}/${selectedCard.challenge.id}`);
-        console.log("✅ Validação marcada automaticamente.");
-      } catch (err) {
-        console.error("❌ Erro ao validar automaticamente:", err);
-      }
-    };
-
-    updateValidation();
-  }
-
-  return () => clearInterval(timer);
-}, [timeLeft, selectedCard]);
+    let timer;
+    if (timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => Math.max(prev - 1000, 0));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   return (
     <View style={styles.background}>
@@ -135,22 +121,35 @@ export default function CartaSelecionada() {
         {selectedCard ? (
           <>
             {timeLeft !== null && (
-              <View style={styles.timerContainer}>
-                <Icon name="time-outline" size={24} color="#263A83" />
-                <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-              </View>
-            )}
+          <>
+            <View style={styles.timerInfoContainer}>
+              <Text style={styles.timerMessage}>
+                Já queres outro?
+                {"\n"}
+                Infelizmente vais ter de esperar campeão. Assim que o timer chegar ao 0
+                já poderás realizar mais um desafio.
+              </Text>
+            </View>
 
+            <View style={styles.timerContainer}>
+              <Icon name="time-outline" size={24} color="#263A83" />
+              <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+            </View>
+          </>
+        )}
             <View style={[styles.mainCard, { marginTop: 20 }]}>
-              {selectedCard.challenge && selectedCard.challenge.imagem_nivel && (
+              {selectedCard.challenge?.imagem_nivel && (
                 <Image
                   accessibilityLabel="Imagem da carta selecionada"
                   source={{ uri: selectedCard.challenge.imagem_nivel }}
                   style={styles.cardImage}
                   resizeMode="cover"
-                  onError={(e) => {
-                    console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
-                  }}
+                  onError={(e) =>
+                    console.error(
+                      "❌ Erro ao carregar imagem (EsperaShake):",
+                      e.nativeEvent
+                    )
+                  }
                 />
               )}
               <View style={styles.cardContent}>
@@ -162,15 +161,6 @@ export default function CartaSelecionada() {
                 </Text>
               </View>
             </View>
-
-            <TouchableOpacity
-              style={styles.validateButton}
-              onPress={() => router.push("../shake/uploadDesafio")}
-            >
-              <Text style={styles.validateButtonText}>
-                Comprova o teu desafio
-              </Text>
-            </TouchableOpacity>
           </>
         ) : (
           <Text style={{ color: "#263A83", marginTop: 50 }}>
@@ -216,12 +206,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  backButtonText: {
-    color: "#263A83",
-    fontSize: 30,
-    alignItems: "center",
-    marginTop: -4,
-  },
   timerContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -235,21 +219,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#263A83",
-  },
-  validationMessage: {
-    fontSize: 16,
-    color: "#2E3A8C",
-    marginVertical: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#263A83",
-    textAlign: "center",
-    marginVertical: 20,
-    backgroundColor: "white",
-    padding: 13,
-    borderRadius: 12,
   },
   mainCard: {
     width: 210,
@@ -284,16 +253,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
-  validateButton: {
-    marginTop: 20,
-    backgroundColor: "#2E3A8C",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  validateButtonText: {
-    color: "#FFF",
-    fontSize: 18,
+  
+  timerInfoContainer: {
+  marginBottom: 10,
+  paddingHorizontal: 20,
+},
+  timerMessage: {
+    color: "#263A83",
+    fontSize: 15,
+    textAlign: "center",
     fontWeight: "bold",
   },
 });

@@ -36,9 +36,9 @@ const ParticipantsHasChallenges = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    user_img: {
-      type: DataTypes.STRING,
-      allowNull: false,
+   user_img: {
+      type: DataTypes.BLOB("long"), 
+      allowNull: true, 
     },
     challenge_types_id: {
       type: DataTypes.INTEGER,

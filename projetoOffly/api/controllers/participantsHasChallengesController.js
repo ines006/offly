@@ -193,14 +193,14 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
   const { participants_id } = req.params;
 
   try {
-    // Obtem o desafio mais recente validado do tipo diário para o participante
+    // Busca o desafio mais recente e validado do tipo diário
     const challenge = await ParticipantsHasChallenges.findOne({
       where: {
         participants_id,
         validated: 1,
         challenge_types_id: 1,
       },
-      order: [["starting_date", "DESC"]], // assume-se o mais recente
+      order: [["starting_date", "DESC"]],
     });
 
     if (!challenge) {
@@ -210,7 +210,7 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
     const startDate = new Date(challenge.starting_date);
     const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // +1 dia
 
-    // Helpers para início/fim do dia
+
     const startOfDay = (date) => new Date(date.setHours(0, 0, 0, 0));
     const endOfDay = (date) => new Date(date.setHours(23, 59, 59, 999));
 
@@ -238,7 +238,7 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
         "challenge_levels_id_challenge_levels",
         "challenge_types_id",
         "validated",
-        "user_img",
+        "user_img", // Blob da imagem do usuário
       ],
       include: [
         {
@@ -255,17 +255,27 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
       });
     }
 
+    // Pega imagem de nível
     const level = await ChallengeLevels.findOne({
       where: { id: filteredChallenge.challenge_levels_id_challenge_levels },
       attributes: ["image_level"],
     });
 
+    // Convertendo blob em base64 (se existir)
+    let userImageBase64 = null;
+    if (filteredChallenge.user_img) {
+      const mimeType = "image/jpeg"; // ou image/png dependendo do tipo real
+      const base64 = filteredChallenge.user_img.toString("base64");
+      userImageBase64 = `data:${mimeType};base64,${base64}`;
+    }
+
+    // Resposta final
     return res.json({
       participants_id: filteredChallenge.participants_id,
       challenges_id: filteredChallenge.challenges_id,
       starting_date: filteredChallenge.starting_date,
       completed_date: filteredChallenge.completed_date,
-      user_img: filteredChallenge.user_img,
+      user_img: userImageBase64, 
       challenge: {
         id: filteredChallenge.challenge?.id,
         titulo: filteredChallenge.challenge?.title,
@@ -276,10 +286,12 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Erro ao buscar carta ativa com imagem:", error);
-    return res.status(500).json({ error: "Erro ao buscar carta ativa.", details: error.message });
+    return res.status(500).json({
+      error: "Erro ao buscar carta ativa.",
+      details: error.message,
+    });
   }
 };
-
 
 
   module.exports = exports;

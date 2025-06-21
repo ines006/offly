@@ -1,10 +1,16 @@
 const { OpenAI } = require("openai");
 const { Op } = require("sequelize");
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const Participants = require("../models/participants");
 const Answers = require("../models/answers");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const Challenges = require("../models/challenges");
-const ChallengeLevels = require("../models/challengeLevel"); 
+const ChallengeLevels = require("../models/challengeLevel");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -95,7 +101,6 @@ Responde apenas com o JSON.
       return res.status(500).json({ error: "Estrutura de desafio inválida." });
     }
 
-    // 🔽 Mapeia nível textual para ID numérico
     const levelMap = {
       "fácil": 1,
       "intermédio": 2,
@@ -150,11 +155,13 @@ exports.saveSelectedChallenge = async (req, res) => {
       challenge_levels_id: levelId,
     });
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); 
+    // Obter hora atual e datas em timezone de Lisboa
+    const nowLisbon = dayjs().tz("Europe/Lisbon");
+    const startDate = nowLisbon.startOf('day').toDate();
+    const endDate = nowLisbon.add(1, 'day').startOf('day').toDate();
 
-    const endDate = new Date(now);
-    endDate.setDate(now.getDate() + 1);
+    console.log("📆 Data início (Lisboa):", startDate);
+    console.log("📆 Data fim (Lisboa):", endDate);
 
     const participation = await ParticipantsHasChallenges.create({
       participants_id: userId,
@@ -165,7 +172,7 @@ exports.saveSelectedChallenge = async (req, res) => {
       validated: 0,
       streak: 0,
       completed_date: null,
-      starting_date: now,
+      starting_date: startDate,
       end_date: endDate,
       description: challenge.description,
     });

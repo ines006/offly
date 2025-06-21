@@ -116,6 +116,7 @@ exports.validateChallengeUpload = async (req, res) => {
       }
 
       await sequelize.transaction(async (t) => {
+        // Atualiza pontos da equipa
         await Teams.update(
           {
             points: sequelize.literal(`points + ${pointsToAdd}`),
@@ -127,17 +128,29 @@ exports.validateChallengeUpload = async (req, res) => {
           }
         );
 
+        // Marca desafio como concluído e guarda a imagem
         await ParticipantsHasChallenges.update(
           {
             completed_date: new Date(),
             validated: 1,
-            user_img: image.buffer, // o buffer guarda como blob
+            user_img: image.buffer,
           },
           {
             where: {
               participants_id: parsedUserId,
               challenges_id: challengeId,
             },
+            transaction: t,
+          }
+        );
+
+        // Incrementa challenge_count do participante
+        await Participants.update(
+          {
+            challenge_count: sequelize.literal("challenge_count + 1"),
+          },
+          {
+            where: { id: parsedUserId },
             transaction: t,
           }
         );

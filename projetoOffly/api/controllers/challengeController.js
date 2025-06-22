@@ -90,8 +90,8 @@ exports.getDesafiosDoDia = async (req, res) => {
     const diaFormatado = String(dia).padStart(2, '0');
     const mesFormatado = String(mes).padStart(2, '0');
 
-    const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00`);
-    const fimDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T23:59:59`);
+    const inicioDia = new Date(ano, mes - 1, parseInt(dia), 0, 0, 0); // Local time, sem conversão
+    const fimDia = new Date(ano, mes - 1, parseInt(dia), 23, 59, 59);
 
     const teamMembers = await Participants.findAll({
       where: {

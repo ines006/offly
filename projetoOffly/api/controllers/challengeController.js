@@ -90,8 +90,10 @@ exports.getDesafiosDoDia = async (req, res) => {
     const diaFormatado = String(dia).padStart(2, '0');
     const mesFormatado = String(mes).padStart(2, '0');
 
-    const inicioDia = new Date(ano, mes - 1, parseInt(dia), 0, 0, 0); // Local time, sem conversão
-    const fimDia = new Date(ano, mes - 1, parseInt(dia), 23, 59, 59);
+    // Cria o intervalo de data do dia exato
+    const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00.000Z`);
+    const proximoDia = new Date(inicioDia);
+    proximoDia.setDate(proximoDia.getDate() + 1); // Dia seguinte às 00:00
 
     const teamMembers = await Participants.findAll({
       where: {
@@ -102,8 +104,9 @@ exports.getDesafiosDoDia = async (req, res) => {
 
     const completedChallenges = await ParticipantsHasChallenges.findAll({
       where: {
-        starting_date: {
-          [Op.between]: [inicioDia, fimDia],
+        completed_date: {
+          [Op.gte]: inicioDia,
+          [Op.lt]: proximoDia,
         },
       },
       include: [
@@ -133,7 +136,7 @@ exports.getDesafiosDoDia = async (req, res) => {
           ],
         },
       ],
-      order: [["starting_date", "ASC"]],
+      order: [["completed_date", "ASC"]],
     });
 
     res.status(200).json({

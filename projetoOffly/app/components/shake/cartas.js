@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
     padding: 10,
     overflow: "hidden",
   },
+  // esta propriedade pode estar estragada
   cardImage: {
     width: "100%",
     height: 230,

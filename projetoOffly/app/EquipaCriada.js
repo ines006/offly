@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  FlatList,
 } from "react-native";
 import { Alert } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -411,35 +412,39 @@ export default function EquipaCriada() {
         </Sub_Titulos_Criar_Equipa>
 
         <View style={styles.remainingTeamsContainer}>
-          {Array.from({ length: teamCapacity }).map((_, index) => {
-            const participant = teamMembers[index];
-            const isEmptySlot = !participant;
-
-            return (
-              <View
-                key={index}
-                style={[styles.card, isEmptySlot && styles.cardVazio]}
-              >
-                <Image
-                  source={{
-                    uri: isEmptySlot
-                      ? "https://celina05.sirv.com/icones/empty-user.png"
-                      : participant.image || getRandomImage(),
-                  }}
-                  style={styles.peopleImage}
-                />
-                <Text
-                  style={[
-                    styles.participantText,
-                    isEmptySlot && styles.participantTextVazio,
-                  ]}
+          <FlatList
+            data={Array.from({ length: teamCapacity })}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ index }) => {
+              const participant = teamMembers[index];
+              const isEmptySlot = !participant;
+              return (
+                <View
+                  style={[styles.card, isEmptySlot && styles.cardVazio]}
                 >
-                  {isEmptySlot ? ". . ." : participant.name}
-                </Text>
-              </View>
-            );
-          })}
-
+                  <Image
+                    source={{
+                      uri: isEmptySlot
+                        ? "https://celina05.sirv.com/icones/empty-user.png"
+                        : participant.image || getRandomImage(),
+                    }}
+                    style={styles.peopleImage}
+                  />
+                  <Text
+                    style={[
+                      styles.participantText,
+                      isEmptySlot && styles.participantTextVazio,
+                    ]}
+                  >
+                    {isEmptySlot ? ". . ." : participant.name}
+                  </Text>
+                </View>
+              );
+            }}
+            showsVerticalScrollIndicator={true}
+            style={{ width: "100%" }}
+            contentContainerStyle={{ alignItems: "center" }}
+          />
           {teamMembers.length === teamCapacity ? (
             isAdmin ? (
               <Botoes_Pagina_principal onPress={handleTorneio}>

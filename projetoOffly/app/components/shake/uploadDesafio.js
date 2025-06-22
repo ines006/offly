@@ -116,13 +116,13 @@ const UploadDesafio = () => {
             <Path d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275" stroke="#263A83" strokeWidth={2} strokeLinecap="round" />
           </Svg>
         </TouchableOpacity>
-        <Text style={styles.title}>Comprova o teu desafio</Text>
       </View>
+      <Text style={styles.title}>Comprova o teu desafio</Text>
 
       {/* Upload Image */}
       <View style={styles.dashedBox}>
         {selectedImage ? (
-          <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+          <Image source={{ uri: selectedImage }} style={styles.imagePreview} resizeMode="cover" />
         ) : (
           <>
             <TouchableOpacity onPress={handleSelectImage}>
@@ -136,12 +136,6 @@ const UploadDesafio = () => {
             </TouchableOpacity>
             <Text style={styles.description}>Comprova o teu desafio e ganha pontos</Text>
           </>
-        )}
-
-        {selectedImage && (
-          <TouchableOpacity style={styles.removeButton} onPress={handleRemoveImage}>
-            <Text style={styles.removeText}>Remover</Text>
-          </TouchableOpacity>
         )}
       </View>
 
@@ -195,59 +189,6 @@ const UploadDesafio = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F0F4FF", padding: 20 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
-  backButton: { marginRight: 10 },
-  title: { fontSize: 20, color: "#263A83", fontWeight: "bold" },
-  dashedBox: {
-    borderWidth: 2,
-    borderColor: "#263A83",
-    borderStyle: "dashed",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    height: 250,
-  },
-  plusIcon: { position: "absolute", top: 10, right: -10 },
-  description: { marginTop: 10, color: "#263A83", fontSize: 16, textAlign: "center" },
-  imagePreview: { width: 200, height: 200, borderRadius: 10 },
-  removeButton: { marginTop: 10 },
-  removeText: { color: "#263A83", textDecorationLine: "underline" },
-  submitButton: {
-    backgroundColor: "#263A83",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-    marginTop: 30,
-    alignSelf: "center",
-  },
-  submitText: { color: "white", fontSize: 16 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 30,
-    alignItems: "center",
-    width: "80%",
-  },
-  circleWrapper: { marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#263A83", marginBottom: 10 },
-  modalMessage: { fontSize: 16, color: "#263A83", textAlign: "center", marginBottom: 5 },
-  modalMessage2: { fontSize: 14, color: "#263A83", textAlign: "center", marginBottom: 20 },
-  modalButton: {
-    backgroundColor: "#263A83",
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-  },
-  modalButtonText: { color: "white", fontSize: 16 },
-
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -264,6 +205,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     left: 25,
+    marginTop: 50,
   },
   title: {
     width: 172,
@@ -273,6 +215,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     lineHeight: 25,
+    marginTop: 60,
   },
   dashedBox: {
     width: 286,
@@ -284,18 +227,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 60,
+    overflow: "hidden",
   },
-  imagePreview: { 
-    width: 200, 
-    height: 200, 
-    resizeMode: "contain" 
-  },
-  iconWrapper: {
-    position: "relative",
-    width: 49,
-    height: 49,
-    justifyContent: "center",
-    alignItems: "center",
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
   },
   plusIcon: {
     position: "absolute",
@@ -312,56 +249,44 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 20,
   },
-  submitButton: {
-    display: "flex",
-    paddingVertical: 10,
-    paddingHorizontal: 47,
-    flexDirection: "column",
+  buttonContainer: {
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 10,
+    marginTop: 30,
+    gap: 20,
+  },
+  submitButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 47,
     borderRadius: 10,
     backgroundColor: "#263A83",
-    marginTop: 30,
+    justifyContent: "center",
+    alignItems: "center",
   },
   submitText: {
     color: "#FFF",
-    textAlign: "justify",
+    textAlign: "center",
     fontFamily: "Poppins",
     fontSize: 15,
     fontWeight: "600",
   },
-  circleWrapper: {
-    position: "absolute",
-    top: -30, 
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 30,
-    width: 60,
-    height: 60,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5, 
-  },
-  modalContainer: {
-    width: 300,
-    backgroundColor: "#FFF",
+  removeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 47,
     borderRadius: 10,
-    padding: 20,
+    borderWidth: 2,
+    borderColor: "#FF3B30",
+    backgroundColor: "#FFE6E6",
+    justifyContent: "center",
     alignItems: "center",
-    paddingTop: 50, 
-    position: "relative",
   },
-  removeButton: { 
-    marginTop: 10, 
-    padding: 10 
-  },
-  removeText: { 
-    color: "#FF3B30", 
-    fontSize: 15 
+  removeText: {
+    color: "#FF3B30",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    fontSize: 15,
+    fontWeight: "400",
   },
   modalOverlay: {
     flex: 1,
@@ -376,6 +301,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 25,
     alignItems: "center",
+    paddingTop: 50,
+    position: "relative",
+  },
+  circleWrapper: {
+    position: "absolute",
+    top: -30,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   modalTitle: {
     fontSize: 18,

@@ -277,14 +277,14 @@ const DetalhesEquipa = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     paddingHorizontal: width * 0.04,
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between", // Garante que o centro seja realmente o centro
-    marginTop: height * 0.05,
+    marginTop: height * 0.1,
     marginBottom: height * 0.02,
   },
   backButton: {

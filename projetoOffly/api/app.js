@@ -74,7 +74,6 @@ app.use("/api/participants-has-challenges", participantsHasChallengesRoutes);
 app.use("/api/team-passbooks", teamPassbooksRoutes);
 app.use("/uploads", uploadRoutes);
 app.use("/passbook", cadernetaRoutes);
-app.use("/", cadernetaRoutes);
 app.use("/api", touchRoutes);
 app.use("/api", challengeRoutes); 
 app.use("/touchs", touchRoutes);

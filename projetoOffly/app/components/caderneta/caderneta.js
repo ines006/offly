@@ -58,8 +58,11 @@ const Caderneta = () => {
 
     const fetchWeeklyChallenges = async () => {
       try {
+        console.log("🚀 Antes do fetch");
         const response = await fetch(`${baseurl}/passbook/week?id=${user.id}`);
+        console.log("📡 Fetch feito!");
         const data = await response.json();
+        console.log("DEBUG DATA:", data);
         setWeeklyChallenges(data.images || []);
       } catch (error) {
         console.error('❌ Erro ao buscar desafios semanais:', error);

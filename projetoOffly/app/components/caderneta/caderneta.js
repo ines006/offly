@@ -18,6 +18,7 @@ const Caderneta = () => {
   const [completedDaysSet, setCompletedDaysSet] = useState(new Set());
   const [participantIds, setParticipantIds] = useState([]);
   const [teamChallenges, setTeamChallenges] = useState([]);
+  const [weeklyChallenges, setWeeklyChallenges] = useState([]);
   const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -55,7 +56,20 @@ const Caderneta = () => {
       }
     };
 
-    fetchPassbookData();
+    const fetchWeeklyChallenges = async () => {
+      try {
+        const response = await fetch(`${baseurl}/passbook/week?id=${user.id}`);
+        const data = await response.json();
+        setWeeklyChallenges(data.images || []);
+      } catch (error) {
+        console.error('❌ Erro ao buscar desafios semanais:', error);
+      }
+    };
+
+    if (user?.id) {
+      fetchPassbookData();
+      fetchWeeklyChallenges();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -103,17 +117,36 @@ const Caderneta = () => {
 
         <View style={styles.viewcaderneta}>
           <Text style={styles.sectionTitle}>Desafios semanais</Text>
-          <Text style={styles.subtitle}>Vê os desafios das semanas passadas</Text>
+          <Text style={styles.subtitle}>Vê os desafios da semana</Text>
           <View style={styles.cardGrid}>
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <View
-                key={idx}
-                style={[styles.card, styles.inactiveCard]}
-                accessibilityLabel={`Desafio semanal ${idx + 1} ainda não disponível`}
-              >
-                <Text style={styles.cardNumber}>{idx + 1}</Text>
-              </View>
-            ))}
+            {Array.from({ length: 4 }).map((_, idx) => {
+              const challenge = weeklyChallenges[idx];
+
+              if (!challenge) {
+                return (
+                  <View
+                    key={idx}
+                    style={[styles.card, styles.inactiveCard]}
+                    accessibilityLabel={`Desafio semanal ${idx + 1} ainda não disponível`}
+                  >
+                    <Text style={styles.cardNumber}>{idx + 1}</Text>
+                  </View>
+                );
+              }
+
+              return (
+                <View
+                  key={challenge.challengeId || idx}
+                  style={[styles.card, styles.activeCard]}
+                >
+                  <Image
+                    source={{ uri: challenge.base64Image }}
+                    style={styles.cardImageWeek}
+                    resizeMode="cover"
+                  />
+                </View>
+              );
+            })}
           </View>
 
           <View style={styles.divider} />
@@ -275,6 +308,13 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderRadius: 11,
   },
+  cardImageWeek: {
+    width: '100%',
+    height: '100%',
+    borderWidth: 4,
+    borderRadius: 11,
+    borderColor: '#263A83',
+  },
   cardContentContainer: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -330,6 +370,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#2D2F45',
+  },
+  image: {
+    width: '100%',
+    height: 100,
+    borderRadius: 12,
   },
 });
 

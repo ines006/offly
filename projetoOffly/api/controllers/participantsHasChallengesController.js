@@ -5,7 +5,6 @@ const Challenges = require("../models/challenges");
 const ChallengeLevels = require("../models/challengeLevel");
 
 
-
 // POST - Criação de uma relação participante/desafio
 exports.createChallengeSelection = async (req, res) => {
   const { participants_id, challenges_id, starting_date } = req.body;
@@ -290,7 +289,5 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
     });
   }
 };
-
-
 
   module.exports = exports;

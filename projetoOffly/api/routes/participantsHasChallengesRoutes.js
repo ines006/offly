@@ -3,7 +3,6 @@ const router = express.Router();
 const participantsHasChallengesController = require("../controllers/participantsHasChallengesController");
 const controller = require("../controllers/participantsHasChallengesController");
 
-
 /**
  * @swagger
  * /api/participants-has-challenges:
@@ -88,5 +87,5 @@ router.get("/completed-today/:participants_id", controller.getChallengeOfToday);
 
 router.get("/active-with-image/:participants_id",controller.getActiveChallengeWithUserImage);
 
-
 module.exports = router;
+

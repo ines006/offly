@@ -31,7 +31,7 @@ export default function EsperaShake() {
   const { user } = useContext(AuthContext);
   const [selectedCard, setSelectedCard] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
-  const [imageIndex, setImageIndex] = useState(0); // 0 = carta, 1 = user_img
+  const [imageIndex, setImageIndex] = useState(0); 
 
   const imageAnim = useRef(new Animated.Value(0)).current;
 

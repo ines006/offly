@@ -33,7 +33,7 @@ export default function EquipaCriada() {
 
   const hasRedirectedRef = useRef(false);
   const intervalIdRef = useRef(null);
-  const isJoiningTournamentRef = useRef(false); // Novo ref para rastrear se o admin está entrando no torneio
+  const isJoiningTournamentRef = useRef(false); 
 
   const { user, accessToken } = useContext(AuthContext);
   const { teamId } = useLocalSearchParams();
@@ -85,7 +85,7 @@ export default function EquipaCriada() {
   // Utilizador logado + Dados do utilizador
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log("🔍 Depurando dados do utilizador...");
+      //console.log("🔍 Depurando dados do utilizador...");
       console.log("👤 User:", user);
       console.log("🔑 AccessToken:", accessToken);
 
@@ -97,9 +97,9 @@ export default function EquipaCriada() {
       }
 
       try {
-        console.log(
-          `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
-        );
+        //console.log(
+        //  `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
+        //);
         const response = await axios.get(`${baseurl}/participants/${user.id}`, {
           headers: {
             "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export default function EquipaCriada() {
           },
         });
 
-        console.log("✅ Resposta da API:", response.data);
+        console.log("Dados do utilizador:", response.data);
 
         const userData = response.data;
         const name = userData.name || userData.fullName;
@@ -119,7 +119,6 @@ export default function EquipaCriada() {
         setUserName(name);
         setProfileImage(image ? { uri: image } : null);
 
-        console.log("✅ Dados processados:", { name, image });
       } catch (error) {
         console.error("❌ Erro ao buscar dados do utilizador:", {
           message: error.message,
@@ -149,7 +148,7 @@ export default function EquipaCriada() {
         },
       });
 
-      console.log("📥 Dados completos da equipa:", response.data);
+      console.log("Dados da equipa:", response.data);
 
       const teamData = response.data;
       setTeamName(teamData.name);
@@ -175,7 +174,7 @@ export default function EquipaCriada() {
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);
         }
-        console.log("🚀 Redirecionando para a navbar...");
+        console.log("🚀 Redirecionando para Home...");
         router.push("./components/navbar");
       }
     } catch (error) {
@@ -190,7 +189,7 @@ export default function EquipaCriada() {
   // Carrega os dados da equipa ao entrar + atualização automática
   useEffect(() => {
     if (userId && teamId) {
-      teamData(); // chamada inicial
+      teamData(); 
 
       intervalIdRef.current = setInterval(teamData, 10000); // polling a cada 10s
 
@@ -203,7 +202,7 @@ export default function EquipaCriada() {
   // Função para entrar no torneio
   const handleTorneio = async () => {
     try {
-      // Indica que o admin está entrando no torneio
+      // Indica que o admin está a entrar no torneio
       isJoiningTournamentRef.current = true;
       setLoading(true);
 
@@ -222,14 +221,14 @@ export default function EquipaCriada() {
         }
       );
 
-      console.log("✅ Resposta da API:", responseCompetitions.data);
+      console.log("Competições disponíveis: ", responseCompetitions.data);
 
       const availableCompetitions = responseCompetitions.data;
 
-      console.log(
-        "Length competições disponíveis: ",
-        availableCompetitions.length
-      );
+      // console.log(
+      //   "Length competições disponíveis: ",
+      //   availableCompetitions.length
+      // );
 
       // 2. Escolher uma competição aleatória
       if (availableCompetitions.length === 0) {
@@ -246,7 +245,7 @@ export default function EquipaCriada() {
         ];
       console.log("Random competition: ", randomCompetition);
 
-      // 3. Atualizar a equipe com a competição escolhida
+      // 3. Atualizar a equipa com a competição escolhida
       const updatedTeamData = {
         competitions_id: randomCompetition.id,
       };
@@ -286,7 +285,7 @@ export default function EquipaCriada() {
       console.log("✅ Caderneta criada com ID:", newPassbookId);
 
       // 5. Redirecionar para a navbar após atualização
-      hasRedirectedRef.current = true; // Marca que o redirecionamento ocorreu
+      hasRedirectedRef.current = true; 
       router.push("./components/navbar");
     } catch (error) {
       console.error("❌ Erro ao entrar no torneio:", error);
@@ -339,7 +338,7 @@ export default function EquipaCriada() {
         {
           text: "Sair",
           style: "destructive",
-          onPress: handleLeaveTeam, // Chama a função de sair ao confirmar
+          onPress: handleLeaveTeam, 
         },
       ]
     );

@@ -188,7 +188,6 @@ exports.completeActiveChallenge = async (req, res) => {
 };
 
 
-
 exports.getActiveChallengeWithUserImage = async (req, res) => {
   const { participants_id } = req.params;
 
@@ -209,7 +208,6 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
 
     const startDate = new Date(challenge.starting_date);
     const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // +1 dia
-
 
     const startOfDay = (date) => new Date(date.setHours(0, 0, 0, 0));
     const endOfDay = (date) => new Date(date.setHours(23, 59, 59, 999));
@@ -292,6 +290,7 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
     });
   }
 };
+
 
 
   module.exports = exports;

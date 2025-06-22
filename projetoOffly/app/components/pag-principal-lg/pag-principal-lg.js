@@ -49,7 +49,6 @@ import { baseurl } from "../../api-config/apiConfig";
 import axios from "axios";
 import imagemPalmas from "../../imagens/clapping-hands.png";
 
-
 export default function Home() {
   const router = useRouter();
   const { user, accessToken } = useContext(AuthContext);
@@ -76,16 +75,15 @@ export default function Home() {
   const [competitionDaysTotal, setCompetitionDaysTotal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showTournamentEndModal, setShowTournamentEndModal] = useState(false);
-  const [hasMadeTournamentEndChoice, setHasMadeTournamentEndChoice] = useState(false);
+  const [hasMadeTournamentEndChoice, setHasMadeTournamentEndChoice] =
+    useState(false);
 
   const getTodayInWEST = () => {
-  return moment().tz("Europe/Lisbon").format("YYYY-MM-DD");
-};
-
+    return moment().tz("Europe/Lisbon").format("YYYY-MM-DD");
+  };
 
   const fetchUserData = async () => {
     if (!user?.id || !accessToken) {
-      Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
       router.push("./login");
       return;
     }
@@ -118,7 +116,6 @@ export default function Home() {
       setTeamId(teamId);
       setDataUpload(dataUpload);
       setUserChallenges(challenges);
-
     } catch (error) {
       console.error("Error fetching user data:", error.message);
       Alert.alert("Erro", "Não foi possível carregar os dados do utilizador.");
@@ -148,7 +145,12 @@ export default function Home() {
 
   const handleTournamentEndChoice = async (stayWithTeam) => {
     try {
-      console.log("Handling tournament end choice for user ID:", userId, "Stay with team:", stayWithTeam);
+      console.log(
+        "Handling tournament end choice for user ID:",
+        userId,
+        "Stay with team:",
+        stayWithTeam
+      );
       if (!userId || userId !== user.id) {
         throw new Error("Invalid user ID");
       }
@@ -177,10 +179,14 @@ export default function Home() {
         router.push({ pathname: "/EquipaCriada", params: { teamId } });
       }
     } catch (error) {
-      console.error("Error handling tournament end choice:", error.response?.data || error.message);
+      console.error(
+        "Error handling tournament end choice:",
+        error.response?.data || error.message
+      );
       Alert.alert(
         "Erro",
-        error.response?.data?.message || "Não foi possível processar a sua escolha."
+        error.response?.data?.message ||
+          "Não foi possível processar a sua escolha."
       );
     }
   };
@@ -188,7 +194,6 @@ export default function Home() {
   useEffect(() => {
     fetchUserData();
   }, [user, accessToken]);
-
 
   useEffect(() => {
     if (!teamId || !userId || hasMadeTournamentEndChoice) return;
@@ -217,20 +222,27 @@ export default function Home() {
         setTeamAdmin(teamData.team_admin.id);
 
         // Check if tournament has ended and user is admin - LÓGICA ADMIN PARA DESFAZER EQUIPA DO TORNEIO
-        if (teamData.competition_end_date && parseInt(response.data.team_admin.id) === parseInt(userId)) {
+        if (
+          teamData.competition_end_date &&
+          parseInt(response.data.team_admin.id) === parseInt(userId)
+        ) {
           const now = moment().tz("Europe/Lisbon");
-          const endDate = moment(teamData.competition_end_date).tz("Europe/Lisbon");
+          const endDate = moment(teamData.competition_end_date).tz(
+            "Europe/Lisbon"
+          );
           if (now.isAfter(endDate)) {
             await updateTeamCompetition();
             setShowTournamentEndModal(true);
-         }
+          }
         }
 
         // Check if tournament id is null - LÓGICA DE REDIRECIONAMENTO DO PARTICIPANTE DA EQUIPA PÓS TÉRMINO DO TORNEIO
-        if (teamData.competition_id === null && parseInt(teamData.team_admin) !== parseInt(userId)) {
-            setShowTournamentEndModal(true);
+        if (
+          teamData.competition_id === null &&
+          parseInt(teamData.team_admin) !== parseInt(userId)
+        ) {
+          setShowTournamentEndModal(true);
         }
-
       } catch (error) {
         Alert.alert("Erro", "Não foi possível carregar os dados da equipa.");
       }
@@ -253,8 +265,7 @@ export default function Home() {
         return () => clearInterval(pollInterval);
       }
     }
-
-  }, [teamId, userId, tournamentId, hasMadeTournamentEndChoice, tournamentEnd]); 
+  }, [teamId, userId, tournamentId, hasMadeTournamentEndChoice, tournamentEnd]);
 
   useEffect(() => {
     if (
@@ -306,13 +317,11 @@ export default function Home() {
     return uploadDate === today;
   };
 
-
   const calculateTimeUntilMidnight = () => {
-  const now = moment().tz("Europe/Lisbon");
-  const midnight = now.clone().endOf("day");
-  return midnight.diff(now);
-};
-
+    const now = moment().tz("Europe/Lisbon");
+    const midnight = now.clone().endOf("day");
+    return midnight.diff(now);
+  };
 
   // Midnight reset and countdown logic
   useEffect(() => {
@@ -393,8 +402,7 @@ export default function Home() {
   };
 
   const handleCirclePress = async () => {
-    await router.push("../components/uploadScreenTime/UploadScreen");
-    // Re-fetch user data after navigating back from upload screen
+    await router.push("/components/uploadScreenTime/UploadScreen");
     fetchUserData();
   };
 
@@ -418,8 +426,8 @@ export default function Home() {
         </View>
       ) : (
         <>
-        {/* Modal de término de torneio */}
-        <Modal
+          {/* Modal de término de torneio */}
+          <Modal
             visible={showTournamentEndModal}
             transparent={true}
             animationType="none"
@@ -427,29 +435,26 @@ export default function Home() {
           >
             <View style={styles.modalOverlay}>
               <View style={styles.modalContainer}>
-                  <Text style={styles.modalTitle}>Torneio Terminou!</Text>
-                  <Text style={styles.modalSubtitle}>
-                    Parabéns pelas tuas conquistas.
-                  </Text>
-                  <Image 
-                    style={styles.tinyImage}
-                    source={imagemPalmas}
-                  />
-                  <Text style={styles.modalText}>
-                    Desejas continuar com a equipa {teamName}?
-                  </Text>
-                    <TouchableOpacity
-                      style={styles.modalButton}
-                      onPress={() => handleTournamentEndChoice(true)}
-                    >
-                      <Text style={styles.modalButtonText}>Ficar com a Equipa</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => handleTournamentEndChoice(false)}
-                    >
-                      <Text style={styles.removeText}>Sair da Equipa</Text>
-                    </TouchableOpacity>
+                <Text style={styles.modalTitle}>Torneio Terminou!</Text>
+                <Text style={styles.modalSubtitle}>
+                  Parabéns pelas tuas conquistas.
+                </Text>
+                <Image style={styles.tinyImage} source={imagemPalmas} />
+                <Text style={styles.modalText}>
+                  Desejas continuar com a equipa {teamName}?
+                </Text>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => handleTournamentEndChoice(true)}
+                >
+                  <Text style={styles.modalButtonText}>Ficar com a Equipa</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleTournamentEndChoice(false)}
+                >
+                  <Text style={styles.removeText}>Sair da Equipa</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </Modal>
@@ -514,10 +519,14 @@ export default function Home() {
               <Stats accessibilityRole="summary">
                 <StatItem accessible={true}>
                   <StatText accessibilityLabel="Dias em competição">
-                     <Text>Dias em competição</Text>
+                    <Text>Dias em competição</Text>
                   </StatText>
-                  <StatValue accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal} da competição`}>
-                    <Text>{competitionDay}/{competitionDaysTotal}  </Text>
+                  <StatValue
+                    accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal} da competição`}
+                  >
+                    <Text>
+                      {competitionDay}/{competitionDaysTotal}{" "}
+                    </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -530,8 +539,12 @@ export default function Home() {
                   <StatText accessibilityLabel="Desafios completos">
                     <Text> Desafios completos </Text>
                   </StatText>
-                  <StatValue accessibilityLabel={`${userChallenges} de ${competitionDaysTotal} de desafios completos`}>
-                    <Text>{userChallenges}/{competitionDaysTotal}  </Text>
+                  <StatValue
+                    accessibilityLabel={`${userChallenges} de ${competitionDaysTotal} de desafios completos`}
+                  >
+                    <Text>
+                      {userChallenges}/{competitionDaysTotal}{" "}
+                    </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -550,7 +563,9 @@ export default function Home() {
                 <FooterText
                   accessibilityLabel={`${teamMembers} de ${teamCapacity} membros`}
                 >
-                 <Text>{teamMembers}/{teamCapacity}</Text> 
+                  <Text>
+                    {teamMembers}/{teamCapacity}
+                  </Text>
                 </FooterText>
                 <FontAwesome
                   name="group"
@@ -598,7 +613,10 @@ export default function Home() {
                   />
                 </Svg>
               </DesafioIcon>
-              <DesafioText> <Text>Caderneta</Text></DesafioText>
+              <DesafioText>
+                {" "}
+                <Text>Caderneta</Text>
+              </DesafioText>
             </DesafioCard>
 
             <DesafioCard onPress={() => handleDesafioPress(1)}>
@@ -624,7 +642,10 @@ export default function Home() {
                   />
                 </Svg>
               </DesafioIcon>
-              <DesafioText> <Text> Desafio Semanal </Text></DesafioText>
+              <DesafioText>
+                {" "}
+                <Text> Desafio Semanal </Text>
+              </DesafioText>
             </DesafioCard>
           </DesafioContainer>
         </>
@@ -699,7 +720,7 @@ const styles = StyleSheet.create({
   },
   tinyImage: {
     width: 85,
-    height:85,
+    height: 85,
     marginBottom: 45,
   },
   modalTitle: {

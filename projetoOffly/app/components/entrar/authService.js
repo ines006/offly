@@ -12,7 +12,7 @@ export const refreshAccessToken = async () => {
       refreshToken,
     });
 
-    const { token, expiresIn } = response.data;
+    const { token } = response.data;
     await AsyncStorage.setItem("accessToken", token);
 
     return token;
@@ -22,9 +22,6 @@ export const refreshAccessToken = async () => {
   }
 };
 
-
-//Função de logout
 export const logout = async () => {
-    await AsyncStorage.multiRemove(["accessToken", "refreshToken", "user"]);
+  await AsyncStorage.multiRemove(["accessToken", "refreshToken", "user"]);
 };
-  

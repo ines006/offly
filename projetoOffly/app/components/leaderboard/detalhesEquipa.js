@@ -305,7 +305,7 @@ const DetalhesEquipa = () => {
           <TouchableOpacity
             accessibilityLabel="Botão voltar atrás"
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.push("/components/navbar")}
           >
             <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
               <Circle

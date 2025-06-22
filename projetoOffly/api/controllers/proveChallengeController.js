@@ -1,4 +1,5 @@
 const { OpenAI } = require("openai");
+const sharp = require("sharp");
 const {
   Participants,
   Teams,
@@ -8,6 +9,35 @@ const {
 const { sequelize } = require("../config/database");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Função para comprimir imagem até no máximo 64 KB se não ao guardar com mais capacidade acaba por cortar a imagem e não renderiza toda
+const compressImageTo64KB = async (inputBuffer) => {
+  let quality = 80;
+
+  while (quality >= 20) {
+    const buffer = await sharp(inputBuffer)
+      .jpeg({ quality })
+      .toBuffer();
+
+    if (buffer.length <= 64 * 1024) {
+      return buffer;
+    }
+
+    quality -= 10;
+  }
+
+  // Tenta redimensionar se não conseguiu só com qualidade
+  const buffer = await sharp(inputBuffer)
+    .resize({ width: 600 }) // Ajusta conforme necessário
+    .jpeg({ quality: 40 })
+    .toBuffer();
+
+  if (buffer.length <= 64 * 1024) {
+    return buffer;
+  }
+
+  throw new Error("Não foi possível comprimir a imagem abaixo de 64 KB");
+};
 
 const validateChallengeImage = async (imageBuffer, challengeDescription) => {
   const prompt = `
@@ -93,9 +123,12 @@ exports.validateChallengeUpload = async (req, res) => {
       return res.status(404).json({ error: "Equipa não encontrada." });
     }
 
+    // Comprimir imagem para no máximo 64 KB 
+    const compressedImageBuffer = await compressImageTo64KB(image.buffer);
+
     // Validar imagem com OpenAI
     const validationResponse = await validateChallengeImage(
-      image.buffer,
+      compressedImageBuffer,
       challengeDescription
     );
 
@@ -128,12 +161,12 @@ exports.validateChallengeUpload = async (req, res) => {
           }
         );
 
-        // Marca desafio como concluído e guarda a imagem
+        // Marca desafio como concluído e guarda a imagem comprimida
         await ParticipantsHasChallenges.update(
           {
             completed_date: new Date(),
             validated: 1,
-            user_img: image.buffer,
+            user_img: compressedImageBuffer,
           },
           {
             where: {

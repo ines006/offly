@@ -14,6 +14,7 @@ const { sequelize } = require("../config/database");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 exports.discoverWeeklyChallenge = async (req, res) => {
+  console.log("✅ discoverWeeklyChallenge foi chamado");
   const { userId } = req.body;
 
   try {

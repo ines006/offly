@@ -1,16 +1,21 @@
-import React, { useState, useContext, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useContext, useEffect, useRef } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, AccessibilityInfo } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSequence,
+  withRepeat,
+  withDelay,
+  runOnJS,
   Easing,
-  runOnJS
 } from "react-native-reanimated";
+import { Accelerometer } from "expo-sensors";
 import axios from "axios";
 import { AuthContext } from "../../components/entrar/AuthContext";
 import { baseurl } from "../../api-config/apiConfig";
+import shakeMeSemanal from "../../imagens/shakeMeSemanal.png"; 
 
 export default function Descobrir() {
   const router = useRouter();
@@ -18,11 +23,80 @@ export default function Descobrir() {
   const [teamId, setTeamId] = useState("");
   const scaleAnimation = useSharedValue(1);
   const rotateAnimation = useSharedValue(0);
+  const shakeAnimation = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const shakeCount = useRef(0);
+
+  // Shake animation (abanar carta suavemente)
+  useEffect(() => {
+    shakeAnimation.value = withRepeat(
+      withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(0, { duration: 50 }),
+        withDelay(2000, withTiming(0, { duration: 0 }))
+      ),
+      -1,
+      false
+    );
+  }, []);
+
+  // Shake detector
+  useEffect(() => {
+    const subscription = Accelerometer.addListener(({ x, y, z }) => {
+      const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
+      if (totalForce > 4) {
+        shakeCount.current += 1;
+
+        if (shakeCount.current >= 5 && !isNavigating && !isLoading) {
+          triggerAnimation();
+        }
+      }
+    });
+
+    Accelerometer.setUpdateInterval(100);
+
+    return () => subscription.remove();
+  }, [isNavigating, isLoading]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+
+        const userData = response.data;
+        setTeamId(userData.teams_id);
+      } catch (error) {
+        console.error("❌ Erro ao buscar dados do utilizador:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Alert.alert(
+          "Erro",
+          error.response?.data?.message ||
+            "Não foi possível carregar os dados do utilizador."
+        );
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
 
   const triggerAnimation = () => {
     if (isLoading) return;
     setIsLoading(true);
+    setIsNavigating(true);
+    AccessibilityInfo.announceForAccessibility("O Shake foi feito");
 
     rotateAnimation.value = withTiming(360, {
       duration: 1000,
@@ -44,45 +118,6 @@ export default function Descobrir() {
     });
   };
 
-  // Utilizador logado + Dados do utilizador
-  useEffect(() => {
-    const fetchUserData = async () => {
-
-      try {
-        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
-
-        const userData = response.data;
-
-        console.log("Dados do utilizador: ", userData);
-
-        const teamId = userData.teams_id;
-
-        setTeamId(teamId);
-
-      } catch (error) {
-        console.error("❌ Erro ao buscar dados do utilizador:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        Alert.alert(
-          "Erro",
-          error.response?.data?.message ||
-            "Não foi possível carregar os dados do utilizador."
-        );
-      }
-    };
-
-    fetchUserData();
-  }, [user]);
-
   const handleDiscover = async () => {
     try {
       const response = await axios.post(`${baseurl}/api/discover-weekly-challenge`, {
@@ -99,11 +134,14 @@ export default function Descobrir() {
       Alert.alert("Erro", "Não foi possível processar o desafio.");
     } finally {
       setIsLoading(false);
+      setIsNavigating(false);
+      shakeCount.current = 0;
     }
   };
 
   const animatedMainCardStyle = useAnimatedStyle(() => ({
     transform: [
+      { translateX: shakeAnimation.value },
       { scale: scaleAnimation.value },
       { rotate: `${rotateAnimation.value}deg` },
     ],
@@ -112,9 +150,12 @@ export default function Descobrir() {
   return (
     <View style={styles.background}>
       <View style={styles.container}>
-        <Animated.View style={[styles.card, animatedMainCardStyle]}>
-          <Text style={styles.cardText}>Descobre o desafio semanal</Text>
-        </Animated.View>
+        <Animated.Image
+          source={shakeMeSemanal}
+          style={[styles.cardImage, animatedMainCardStyle]}
+          resizeMode="contain"
+          accessibilityLabel="Carta para descobrir o desafio semanal"
+        />
 
         <Text style={styles.description}>
           Descobre o desafio semanal que vais fazer em equipa.
@@ -144,25 +185,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  card: {
+  cardImage: {
     width: 200,
-    height: 320,
+    height: 310,
     borderRadius: 15,
     borderColor: "#263A83",
     borderWidth: 10,
-    justifyContent: "center",
-    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 8,
-  },
-  cardText: {
-    color: "#263A83",
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
   },
   description: {
     marginTop: 40,
@@ -184,3 +217,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
+

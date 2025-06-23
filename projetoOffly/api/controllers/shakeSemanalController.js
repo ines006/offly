@@ -1,5 +1,4 @@
 const { OpenAI } = require("openai");
-const { Op } = require("sequelize");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
@@ -10,7 +9,7 @@ const Participants = require("../models/participants");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const Challenges = require("../models/challenges");
 const ChallengeLevels = require("../models/challengeLevel");
-const { sequelize } = require("../config/database"); 
+const { sequelize } = require("../config/database");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -36,7 +35,7 @@ exports.discoverWeeklyChallenge = async (req, res) => {
 
     const teamId = participant.teams_id;
 
-    // Buscar descrições de desafios já feitos pela equipa de forma a não repetir 
+    // Buscar descrições de desafios anteriores
     const previousChallenges = await sequelize.query(
       `SELECT c.description FROM challenges_has_teams cht
        JOIN challenges c ON cht.challenges_id = c.id
@@ -49,36 +48,47 @@ exports.discoverWeeklyChallenge = async (req, res) => {
 
     const descriptionsToAvoid = previousChallenges.map(c => c.description).filter(Boolean);
 
-    // Prompt para gerar desafio novo de acrodo com as categorias do upload do screen time
     const prompt = `
 Cria um único desafio semanal breve, objetivo e comprovável com base em uma destas categorias: produtividade, jogos, tempo de ecrã ou social.
+
 Requisitos:
 - Deve incentivar o utilizador a reduzir o tempo nessa categoria
 - Deve ser comprovável com o upload do screen time
 - Não pode repetir nenhuma destas descrições: ${descriptionsToAvoid.join("\n")}
 
-Formato de resposta:
+Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora do JSON):
 {
   "title": "...",
   "description": "...",
   "category": "produtividade | jogos | tempo de ecrã | social"
-}`;
+}
+`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4.1",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "user", content: "Responda apenas com JSON válido, sem explicações." },
+        { role: "user", content: prompt }
+      ],
       max_tokens: 300,
     });
 
     const content = response.choices[0].message.content.trim();
+
+    console.log("🔎 Resposta do GPT:", content);
+
     let challengeData;
 
     try {
       challengeData = JSON.parse(content);
     } catch (error) {
-      console.error("Erro ao interpretar JSON do GPT:", content);
+      console.error("❌ Erro ao interpretar JSON do GPT:", content);
       return res.status(500).json({ success: false, message: "Erro ao interpretar resposta do GPT." });
     }
+
+    console.log("📦 JSON Interpretado:", challengeData);
+
+    const categoryKey = challengeData.category?.trim().toLowerCase();
 
     const imageMap = {
       "produtividade": "https://celina05.sirv.com/desafioSemanal/semanal_produtividade.png",
@@ -87,31 +97,38 @@ Formato de resposta:
       "social": "https://celina05.sirv.com/desafioSemanal/semanal_social.png"
     };
 
-    const imageUrl = imageMap[challengeData.category.toLowerCase()] || null;
+    const imageUrl = imageMap[categoryKey] || null;
 
     if (!imageUrl) {
+      console.error("❌ Categoria inválida ou imagem não encontrada:", categoryKey);
       return res.status(400).json({ success: false, message: "Categoria inválida ou imagem não encontrada." });
     }
 
-    // Inserir novo desafio na tabela challenges
-    const [result] = await sequelize.query(
-      `INSERT INTO challenges (title, description, img, challenge_types_id, challenge_levels_id)
-       VALUES (?, ?, ?, ?, ?)`,
-      {
-        replacements: [
-          challengeData.title,
-          challengeData.description,
-          imageUrl,
-          2, // challenge_types_id
-          4  // challenge_levels_id
-        ],
-        type: sequelize.QueryTypes.INSERT
-      }
-    );
+    let challengeId;
 
-    const challengeId = result;
+    try {
+      const [result] = await sequelize.query(
+        `INSERT INTO challenges (title, description, img, challenge_types_id, challenge_levels_id)
+         VALUES (?, ?, ?, ?, ?)`,
+        {
+          replacements: [
+            challengeData.title,
+            challengeData.description,
+            imageUrl,
+            2, // challenge_types_id
+            4  // challenge_levels_id
+          ],
+          type: sequelize.QueryTypes.INSERT
+        }
+      );
 
-    // Calcular datas da semana atual
+      challengeId = result;
+    } catch (error) {
+      console.error("❌ Erro ao inserir desafio:", error);
+      return res.status(500).json({ success: false, message: "Erro ao salvar o desafio no banco de dados." });
+    }
+
+    // Datas da semana
     const now = new Date();
     const dayOfWeek = now.getDay();
     const monday = new Date(now);
@@ -122,52 +139,69 @@ Formato de resposta:
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
 
-    // Inserir em challenges_has_teams
-    await sequelize.query(
-      `INSERT INTO challenges_has_teams (challenges_id, teams_id, starting_date, end_date, validated)
-       VALUES (?, ?, ?, ?, 0)`,
-      {
-        replacements: [challengeId, teamId, monday, sunday],
-        type: sequelize.QueryTypes.INSERT
-      }
-    );
-
-    // Buscar todos os participantes da equipa
-    const participants = await sequelize.query(
-      "SELECT id FROM participants WHERE teams_id = ?",
-      {
-        replacements: [teamId],
-        type: sequelize.QueryTypes.SELECT
-      }
-    );
-
-    const insertPromises = participants.map(participant =>
-      sequelize.query(
-        `INSERT INTO participants_has_challenges 
-         (participants_id, challenges_id, starting_date, end_date, completed_date, validated, streak, challenge_levels_id_challenge_levels, challenge_types_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    try {
+      await sequelize.query(
+        `INSERT INTO challenges_has_teams (challenges_id, teams_id, starting_date, end_date, validated)
+         VALUES (?, ?, ?, ?, 0)`,
         {
-          replacements: [
-            participant.id,
-            challengeId,
-            monday,
-            sunday,
-            null,
-            0,
-            JSON.stringify(["0", "0", "0", "0", "0", "0", "0"]),
-            4,
-            2
-          ],
+          replacements: [challengeId, teamId, monday, sunday],
           type: sequelize.QueryTypes.INSERT
         }
-      )
-    );
+      );
+    } catch (error) {
+      console.error("❌ Erro ao associar desafio à equipa:", error);
+      return res.status(500).json({ success: false, message: "Erro ao associar desafio à equipa." });
+    }
 
-    await Promise.all(insertPromises);
+    // Participantes da equipa
+    let participants;
+
+    try {
+      participants = await sequelize.query(
+        "SELECT id FROM participants WHERE teams_id = ?",
+        {
+          replacements: [teamId],
+          type: sequelize.QueryTypes.SELECT
+        }
+      );
+    } catch (error) {
+      console.error("❌ Erro ao buscar participantes da equipa:", error);
+      return res.status(500).json({ success: false, message: "Erro ao buscar participantes da equipa." });
+    }
+
+    try {
+      const insertPromises = participants.map(participant =>
+        sequelize.query(
+          `INSERT INTO participants_has_challenges 
+           (participants_id, challenges_id, starting_date, end_date, completed_date, validated, streak, challenge_levels_id_challenge_levels, challenge_types_id) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          {
+            replacements: [
+              participant.id,
+              challengeId,
+              monday,
+              sunday,
+              null,
+              0,
+              JSON.stringify(["0", "0", "0", "0", "0", "0", "0"]),
+              4,
+              2
+            ],
+            type: sequelize.QueryTypes.INSERT
+          }
+        )
+      );
+
+      await Promise.all(insertPromises);
+    } catch (error) {
+      console.error("❌ Erro ao associar participantes ao desafio:", error);
+      return res.status(500).json({ success: false, message: "Erro ao associar participantes ao desafio." });
+    }
 
     return res.json({ success: true, message: "Desafio semanal gerado e atribuído com sucesso." });
+
   } catch (err) {
-    console.error("Erro interno no controller discoverWeeklyChallenge:", err);
+    console.error("❌ Erro inesperado no controller discoverWeeklyChallenge:", err);
     return res.status(500).json({ success: false, message: "Erro interno do servidor." });
   }
 };

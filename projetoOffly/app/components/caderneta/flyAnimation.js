@@ -28,7 +28,7 @@ const FlyAnimation = () => {
 
   return (
     <Animated.Image
-      source={require("../../imagens/fly.png")}
+      source={require("../../imagens/1.png")}
       style={[styles.fly, { transform: [{ translateY }] }]}
     />
   );

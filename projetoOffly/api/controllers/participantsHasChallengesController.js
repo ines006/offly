@@ -191,12 +191,14 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
   const { participants_id } = req.params;
 
   try {
-    // Funções auxiliares para início e fim do dia de hoje
-    const today = new Date();
-    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
-    // Busca desafio diário validado concluído hoje
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    
     const challengeToday = await ParticipantsHasChallenges.findOne({
       where: {
         participants_id,
@@ -231,16 +233,16 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
       });
     }
 
-   
+    // Buscar imagem do nível (caso exista)
     const level = await ChallengeLevels.findOne({
       where: { id: challengeToday.challenge_levels_id_challenge_levels },
       attributes: ["image_level"],
     });
 
-    // Converte imagem do utilizador para base64
+    // Converter imagem do utilizador para base64, se existir
     let userImageBase64 = null;
     if (challengeToday.user_img) {
-      const mimeType = "image/jpeg"; 
+      const mimeType = "image/jpeg"; // Ajusta se tiveres outro formato
       const base64 = challengeToday.user_img.toString("base64");
       userImageBase64 = `data:${mimeType};base64,${base64}`;
     }

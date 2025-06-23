@@ -345,7 +345,7 @@ export default function PaginaPrincipal() {
 
       const newTeamId = response.data.id;
       console.log("✅ Equipa criada com ID:", newTeamId);
-      setTeamId(newTeamId); 
+      setTeamId(newTeamId);
       console.log("🆔 teamId definido no estado:", newTeamId);
 
       // Criar convite para equipa privada
@@ -371,10 +371,10 @@ export default function PaginaPrincipal() {
           console.log("🔗 Invite link criado:", newInviteLink);
           setInviteLink(newInviteLink);
           await Clipboard.setStringAsync(newInviteLink);
-          Alert.alert(
-            "Sucesso",
-            "Equipa privada criada! O link de convite foi copiado para a área de transferência."
-          );
+          // Alert.alert(
+          //   "Sucesso",
+          //   "Equipa privada criada! O link de convite foi copiado para a área de transferência."
+          // );
         } catch (inviteError) {
           console.error("❌ Erro ao criar convite:", inviteError);
           let inviteErrorMessage = "Não foi possível gerar o link de convite.";
@@ -390,7 +390,7 @@ export default function PaginaPrincipal() {
           );
         }
       } else {
-        Alert.alert("Sucesso", "Equipa pública criada com sucesso!");
+        // Alert.alert("Sucesso", "Equipa pública criada com sucesso!");
         setModalVisible(false);
         console.log(
           "🔄 Redirecionando para /EquipaCriada com teamId:",
@@ -405,7 +405,7 @@ export default function PaginaPrincipal() {
           console.error("❌ Erro ao redirecionar (pública):", error);
           Alert.alert(
             "Erro",
-            "Não foi possível redirecionar para a página da equipe."
+            "Não foi possível redirecionar para a página da equipa."
           );
         }
       }
@@ -460,7 +460,7 @@ export default function PaginaPrincipal() {
       );
 
       console.log("✅ Sucesso:", response.data);
-      Alert.alert("Sucesso", "Você entrou na equipa com sucesso!");
+      // Alert.alert("Sucesso", "Você entrou na equipa com sucesso!");
 
       if (typeof setModalEquipa === "function") {
         setModalEquipa(false);
@@ -551,7 +551,7 @@ export default function PaginaPrincipal() {
 
       console.log("✅ Sucesso:", response.data);
       const teamId = response.data.teamId || response.data.id;
-      Alert.alert("Sucesso", "Você entrou na equipa privada com sucesso!");
+      // Alert.alert("Sucesso", "Você entrou na equipa privada com sucesso!");
 
       setModalJoinByInvite(false);
       router.push({
@@ -693,7 +693,7 @@ export default function PaginaPrincipal() {
 
   function copyToClipboard(text) {
     Clipboard.setStringAsync(text);
-    Alert.alert("Sucesso", "Link copiado para a área de transferência!");
+    // Alert.alert("Sucesso", "Link copiado para a área de transferência!");
   }
 
   const stars = useMemo(() => {
@@ -797,6 +797,19 @@ export default function PaginaPrincipal() {
 
         {totalPages > 1 && (
           <View style={styles.paginationContainer}>
+            {/* Botão Anterior */}
+            {currentPage > 1 && (
+              <TouchableOpacity
+                style={styles.paginationNavButton}
+                onPress={() => setCurrentPage(currentPage - 1)}
+                accessibilityLabel="Página anterior"
+                accessibilityRole="button"
+              >
+                <Text style={styles.paginationNavText}>‹</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Primeira página */}
             <TouchableOpacity
               style={[
                 styles.paginationButton,
@@ -819,123 +832,122 @@ export default function PaginaPrincipal() {
                 1
               </Text>
             </TouchableOpacity>
-            {totalPages > 2 && currentPage <= 3 && (
+
+            {/* Reticências à esquerda */}
+            {currentPage > 3 && totalPages > 4 && (
               <TouchableOpacity
-                style={[
-                  styles.paginationButton,
-                  currentPage === 2
-                    ? styles.paginationButtonActive
-                    : styles.paginationButtonInactive,
-                ]}
-                onPress={() => setCurrentPage(2)}
-                accessibilityLabel="Página 2"
+                style={styles.ellipsisButton}
+                onPress={() => setCurrentPage(Math.max(1, currentPage - 3))}
+                accessibilityLabel="Páginas anteriores"
                 accessibilityRole="button"
-                accessibilityState={{ selected: currentPage === 2 }}
               >
-                <Text
-                  style={
-                    currentPage === 2
-                      ? styles.paginationTextActive
-                      : styles.paginationTextInactive
-                  }
-                >
-                  2
-                </Text>
+                <Text style={styles.ellipsis}>...</Text>
               </TouchableOpacity>
             )}
-            {totalPages > 2 &&
-              (currentPage === 3 || (totalPages <= 4 && currentPage === 4)) && (
-                <TouchableOpacity
-                  style={[
-                    styles.paginationButton,
-                    currentPage === 3
-                      ? styles.paginationButtonActive
-                      : styles.paginationButtonInactive,
-                  ]}
-                  onPress={() => setCurrentPage(3)}
-                  accessibilityLabel="Página 3"
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: currentPage === 3 }}
-                >
-                  <Text
-                    style={
-                      currentPage === 3
-                        ? styles.paginationTextActive
-                        : styles.paginationTextInactive
-                    }
+
+            {/* Páginas do meio */}
+            {(() => {
+              const pages = [];
+              let startPage, endPage;
+
+              if (totalPages <= 4) {
+                // Se temos 4 ou menos páginas, mostra todas
+                startPage = 2;
+                endPage = totalPages - 1;
+              } else {
+                // Lógica para mostrar páginas ao redor da atual
+                if (currentPage <= 3) {
+                  startPage = 2;
+                  endPage = 3;
+                } else if (currentPage >= totalPages - 2) {
+                  startPage = totalPages - 2;
+                  endPage = totalPages - 1;
+                } else {
+                  startPage = currentPage - 1;
+                  endPage = currentPage + 1;
+                }
+              }
+
+              for (let i = startPage; i <= endPage && i < totalPages; i++) {
+                pages.push(
+                  <TouchableOpacity
+                    key={i}
+                    style={[
+                      styles.paginationButton,
+                      currentPage === i
+                        ? styles.paginationButtonActive
+                        : styles.paginationButtonInactive,
+                    ]}
+                    onPress={() => setCurrentPage(i)}
+                    accessibilityLabel={`Página ${i}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: currentPage === i }}
                   >
-                    3
-                  </Text>
-                </TouchableOpacity>
-              )}
-            {totalPages > 4 && currentPage > 4 && (
-              <TouchableOpacity
-                style={[
-                  styles.paginationButton,
-                  styles.paginationButtonInactive,
-                ]}
-                onPress={() => setCurrentPage(currentPage - 1)}
-                accessibilityLabel={`Página ${currentPage - 1}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: false }}
-              >
-                <Text style={styles.paginationTextInactive}>
-                  {currentPage - 1}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {totalPages > 3 && currentPage >= 4 && (
+                    <Text
+                      style={
+                        currentPage === i
+                          ? styles.paginationTextActive
+                          : styles.paginationTextInactive
+                      }
+                    >
+                      {i}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }
+
+              return pages;
+            })()}
+
+            {/* Reticências à direita */}
+            {currentPage < totalPages - 2 && totalPages > 4 && (
               <TouchableOpacity
                 style={styles.ellipsisButton}
                 onPress={() =>
-                  setCurrentPage(currentPage - 2 > 1 ? currentPage - 2 : 2)
+                  setCurrentPage(Math.min(totalPages, currentPage + 3))
                 }
-                accessibilityLabel={`Ir para página ${
-                  currentPage - 2 > 1 ? currentPage - 2 : 2
-                }`}
+                accessibilityLabel="Próximas páginas"
                 accessibilityRole="button"
-                accessibilityHint="Navega para a página anterior"
               >
                 <Text style={styles.ellipsis}>...</Text>
               </TouchableOpacity>
             )}
-            {totalPages > 3 && currentPage <= 2 && (
-              <TouchableOpacity
-                style={styles.ellipsisButton}
-                onPress={() => setCurrentPage(3)}
-                accessibilityLabel="Ir para página 3"
-                accessibilityRole="button"
-                accessibilityHint="Navega para a página 3"
-              >
-                <Text style={styles.ellipsis}>...</Text>
-              </TouchableOpacity>
-            )}
-            {totalPages > 2 && (
+
+            {/* Última página */}
+            {totalPages > 1 && (
               <TouchableOpacity
                 style={[
                   styles.paginationButton,
-                  currentPage === (totalPages <= 4 ? 4 : totalPages)
+                  currentPage === totalPages
                     ? styles.paginationButtonActive
                     : styles.paginationButtonInactive,
                 ]}
-                onPress={() => setCurrentPage(totalPages <= 4 ? 4 : totalPages)}
-                accessibilityLabel={`Página ${
-                  totalPages <= 4 ? 4 : totalPages
-                }`}
+                onPress={() => setCurrentPage(totalPages)}
+                accessibilityLabel={`Página ${totalPages}`}
                 accessibilityRole="button"
-                accessibilityState={{
-                  selected: currentPage === (totalPages <= 4 ? 4 : totalPages),
-                }}
+                accessibilityState={{ selected: currentPage === totalPages }}
               >
                 <Text
                   style={
-                    currentPage === (totalPages <= 4 ? 4 : totalPages)
+                    currentPage === totalPages
                       ? styles.paginationTextActive
                       : styles.paginationTextInactive
                   }
                 >
-                  {totalPages <= 4 ? 4 : totalPages}
+                  {totalPages}
                 </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Botão Próximo */}
+            {currentPage < totalPages && (
+              <TouchableOpacity
+                style={styles.paginationNavButton}
+                onPress={() => setCurrentPage(currentPage + 1)}
+                accessibilityLabel="Próxima página"
+                accessibilityRole="button"
+              >
+                <Text style={styles.paginationNavText}>›</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -1163,7 +1175,7 @@ export default function PaginaPrincipal() {
                         console.error("❌ Erro ao redirecionar:", error);
                         Alert.alert(
                           "Erro",
-                          "Não foi possível redirecionar para a página da equipe."
+                          "Não foi possível redirecionar para a página da equipa."
                         );
                       }
                     } else {
@@ -1483,5 +1495,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 15,
+  },
+  paginationNavButton: {
+    width: 35,
+    height: 35,
+    borderRadius: 16,
+    backgroundColor: "#263A83",
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 4,
+  },
+  paginationNavText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  paginationButton: {
+    width: 50,
+    height: 35,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 4,
+    overflow: "visible",
   },
 });

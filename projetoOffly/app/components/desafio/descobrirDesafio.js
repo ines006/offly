@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, {
@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   Easing,
-  runOnJS,
+  runOnJS
 } from "react-native-reanimated";
 import axios from "axios";
 import { AuthContext } from "../../components/entrar/AuthContext";
@@ -14,7 +14,8 @@ import { baseurl } from "../../api-config/apiConfig";
 
 export default function Descobrir() {
   const router = useRouter();
-  const { user } = useContext(AuthContext);
+  const { user, accessToken } = useContext(AuthContext);
+  const [teamId, setTeamId] = useState("");
   const scaleAnimation = useSharedValue(1);
   const rotateAnimation = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +44,45 @@ export default function Descobrir() {
     });
   };
 
+  // Utilizador logado + Dados do utilizador
+  useEffect(() => {
+    const fetchUserData = async () => {
+
+      try {
+        const response = await axios.get(`${baseurl}/participants/${user.id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+
+        const userData = response.data;
+
+        console.log("Dados do utilizador: ", userData);
+
+        const teamId = userData.teams_id;
+
+        setTeamId(teamId);
+
+      } catch (error) {
+        console.error("❌ Erro ao buscar dados do utilizador:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Alert.alert(
+          "Erro",
+          error.response?.data?.message ||
+            "Não foi possível carregar os dados do utilizador."
+        );
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
   const handleDiscover = async () => {
     try {
       const response = await axios.post(`${baseurl}/api/discover-weekly-challenge`, {
@@ -50,7 +90,7 @@ export default function Descobrir() {
       });
 
       if (response.data.success) {
-        router.push("../desafio/desafioSemanal");
+        router.push(`../desafio/desafioSemanal?teamId=${teamId}`);
       } else {
         Alert.alert("Erro", response.data.message || "Erro desconhecido.");
       }

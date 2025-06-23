@@ -7,10 +7,11 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  FlatList,
 } from "react-native";
 import { Alert } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   Container_Pagina_Equipa_Criada,
   Sub_Titulos_Criar_Equipa,
@@ -24,7 +25,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { AuthContext } from "./components/entrar/AuthContext";
 import { baseurl } from "./api-config/apiConfig";
 import axios from "axios";
-import { useRef } from "react";
 
 export default function EquipaCriada() {
   const [fontsLoaded] = useFonts({
@@ -33,9 +33,9 @@ export default function EquipaCriada() {
 
   const hasRedirectedRef = useRef(false);
   const intervalIdRef = useRef(null);
+  const isJoiningTournamentRef = useRef(false); 
 
   const { user, accessToken } = useContext(AuthContext);
-
   const { teamId } = useLocalSearchParams();
 
   const [loading, setLoading] = useState(true);
@@ -47,7 +47,7 @@ export default function EquipaCriada() {
   const [teamName, setTeamName] = useState("");
   const [teamDescription, setTeamDescription] = useState("");
   const [teamMembers, setTeamMembers] = useState([]);
-  const [teamCapacity, setteamCapacity] = useState();
+  const [teamCapacity, setTeamCapacity] = useState();
   const [isAdmin, setIsAdmin] = useState(false);
 
   const router = useRouter();
@@ -85,7 +85,7 @@ export default function EquipaCriada() {
   // Utilizador logado + Dados do utilizador
   useEffect(() => {
     const fetchUserData = async () => {
-      console.log("🔍 Depurando dados do utilizador...");
+      //console.log("🔍 Depurando dados do utilizador...");
       console.log("👤 User:", user);
       console.log("🔑 AccessToken:", accessToken);
 
@@ -97,9 +97,9 @@ export default function EquipaCriada() {
       }
 
       try {
-        console.log(
-          `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
-        );
+        //console.log(
+        //  `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
+        //);
         const response = await axios.get(`${baseurl}/participants/${user.id}`, {
           headers: {
             "Content-Type": "application/json",
@@ -109,17 +109,16 @@ export default function EquipaCriada() {
           },
         });
 
-        console.log("✅ Resposta da API:", response.data);
+        console.log("Dados do utilizador:", response.data);
 
         const userData = response.data;
-        const name = userData.name || userData.fullName;
+        const username = userData.username || userData.name;
         const image = userData.image || null;
 
         setUserId(user.id);
-        setUserName(name);
+        setUserName(username);
         setProfileImage(image ? { uri: image } : null);
 
-        console.log("✅ Dados processados:", { name, image });
       } catch (error) {
         console.error("❌ Erro ao buscar dados do utilizador:", {
           message: error.message,
@@ -149,23 +148,17 @@ export default function EquipaCriada() {
         },
       });
 
-      console.log("📥 Dados completos da equipa:", response.data);
+      console.log("Dados da equipa:", response.data);
 
       const teamData = response.data;
       setTeamName(teamData.name);
       setTeamMembers(teamData.participants);
-      setteamCapacity(teamData.capacity);
+      setTeamCapacity(teamData.capacity);
       setTeamDescription(teamData.description);
 
       // Verifica se o user é o admin da equipa
-      if (teamData.team_admin.id == userId) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-
-      // console.log("📌 team admin id:", teamData.team_admin.id);
-      // console.log("🔁 O user é admin da equipa?", isAdmin);
+      const isUserAdmin = teamData.team_admin.id == userId;
+      setIsAdmin(isUserAdmin);
 
       setTeamDataLoaded(true);
 
@@ -175,19 +168,13 @@ export default function EquipaCriada() {
 
       setHasCompetition(hasComp);
 
-      // 🚫 Se já redirecionou, não faz mais nada
-      if (hasRedirectedRef.current) return;
-
-      // ✅ Redireciona e marca que já foi
-      if (hasComp && !isAdmin) {
+      // Evitar redirecionamento automático para o admin se ele acabou de entrar no torneio
+      if (hasComp && !isUserAdmin && !hasRedirectedRef.current) {
         hasRedirectedRef.current = true;
-
-        // ❌ Limpa o setInterval
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);
         }
-
-        console.log("🚀 Redirecionando para a navbar...");
+        console.log("🚀 Redirecionando para Home...");
         router.push("./components/navbar");
       }
     } catch (error) {
@@ -202,7 +189,7 @@ export default function EquipaCriada() {
   // Carrega os dados da equipa ao entrar + atualização automática
   useEffect(() => {
     if (userId && teamId) {
-      teamData(); // chamada inicial
+      teamData(); 
 
       intervalIdRef.current = setInterval(teamData, 10000); // polling a cada 10s
 
@@ -212,42 +199,20 @@ export default function EquipaCriada() {
     }
   }, [userId, teamId]);
 
-  // if (loading) {
-  //   return (
-  //     <View style={styles.loaderContainer}>
-  //       <ActivityIndicator size="large" color="#263A83" />
-  //     </View>
-  //   );
-  // }
-
-  if (!teamDataLoaded) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#263A83" />
-      </View>
-    );
-  }
-
-  if (!teamName && !teamDescription) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>
-          Detalhes da equipa não encontrados.
-        </Text>
-      </View>
-    );
-  }
-
   // Função para entrar no torneio
   const handleTorneio = async () => {
     try {
-      // Mostrar animação de loading
-      //setLoading(true);
+      // Indica que o admin está a entrar no torneio
+      isJoiningTournamentRef.current = true;
+      setLoading(true);
 
-      // 1. Obter as competições disponíveis
+      // 1. Obter as competições disponíveis com base na capacidade da equipa
       const responseCompetitions = await axios.get(
         `${baseurl}/teams/competition/available`,
         {
+          params: {
+            players: teamCapacity,
+          },
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -256,19 +221,21 @@ export default function EquipaCriada() {
         }
       );
 
-      console.log("✅ Resposta da API:", responseCompetitions.data);
+      console.log("Competições disponíveis: ", responseCompetitions.data);
 
       const availableCompetitions = responseCompetitions.data;
 
-      console.log(
-        "Length competições disponíveis: ",
-        availableCompetitions.length
-      );
+      // console.log(
+      //   "Length competições disponíveis: ",
+      //   availableCompetitions.length
+      // );
 
       // 2. Escolher uma competição aleatória
-
       if (availableCompetitions.length === 0) {
-        Alert.alert("Erro", "Não há competições disponíveis no momento.");
+        Alert.alert(
+          "Erro",
+          "Não há competições disponíveis no momento para equipes com esta capacidade."
+        );
         return;
       }
 
@@ -276,11 +243,11 @@ export default function EquipaCriada() {
         availableCompetitions[
           Math.floor(Math.random() * availableCompetitions.length)
         ];
-      console.log("Random id: ", randomCompetition);
+      console.log("Random competition: ", randomCompetition);
 
-      // 3. Atualizar a equipe com a competição escolhida
+      // 3. Atualizar a equipa com a competição escolhida
       const updatedTeamData = {
-        competitions_id: randomCompetition.id, // O ID da competição aleatória
+        competitions_id: randomCompetition.id,
       };
 
       const responseUpdateTeam = await axios.put(
@@ -309,15 +276,16 @@ export default function EquipaCriada() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
           },
         }
       );
 
       const newPassbookId = passbookResponse.data.team_passbook_id;
-
       console.log("✅ Caderneta criada com ID:", newPassbookId);
 
       // 5. Redirecionar para a navbar após atualização
+      hasRedirectedRef.current = true; 
       router.push("./components/navbar");
     } catch (error) {
       console.error("❌ Erro ao entrar no torneio:", error);
@@ -325,12 +293,74 @@ export default function EquipaCriada() {
         "Erro",
         error.response?.data?.message || "Não foi possível entrar no torneio."
       );
+    } finally {
+      isJoiningTournamentRef.current = false;
+      setLoading(false);
     }
-    // finally {
-    //   // 5. Remover animação de loading
-    //   //setLoading(false);
-    // }
   };
+
+  // Função para lidar com a saída da equipa
+  const handleLeaveTeam = async () => {
+    try {
+     await axios.put(
+          `${baseurl}/participants/${userId}`,
+          { teams_id: null },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+
+      router.push("/PaginaPrincipal");
+    } catch (error) {
+      console.error("❌ Erro ao sair da equipa:", error);
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message || "Não foi possível sair da equipa."
+      );
+    }
+  };
+
+  // Função para exibir o alerta de confirmação
+  const confirmLeaveTeam = () => {
+    Alert.alert(
+      "Sair da Equipa",
+      "Tem certeza que deseja sair da equipa?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: handleLeaveTeam, 
+        },
+      ]
+    );
+  };
+  
+  if (!teamDataLoaded) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#263A83" />
+      </View>
+    );
+  }
+
+  if (!teamName && !teamDescription) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>
+          Detalhes da equipa não encontrados.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={{ backgroundColor: "#fff" }}>
@@ -356,6 +386,17 @@ export default function EquipaCriada() {
             />
           </Svg>
         </TouchableOpacity>
+
+        {/* Botão de Sair da Equipa */}
+        <TouchableOpacity
+          style={styles.leaveButton}
+          onPress={confirmLeaveTeam}
+          accessibilityLabel="Sair da equipa"
+        >
+          <Text style={styles.leaveButtonText}>Sair</Text>
+        </TouchableOpacity>
+
+
         <Titulos_Equipa_Criada
           accessibilityRole="text"
           accessibilityLabel={teamName}
@@ -370,35 +411,39 @@ export default function EquipaCriada() {
         </Sub_Titulos_Criar_Equipa>
 
         <View style={styles.remainingTeamsContainer}>
-          {Array.from({ length: teamCapacity }).map((_, index) => {
-            const participant = teamMembers[index];
-            const isEmptySlot = !participant;
-
-            return (
-              <View
-                key={index}
-                style={[styles.card, isEmptySlot && styles.cardVazio]}
-              >
-                <Image
-                  source={{
-                    uri: isEmptySlot
-                      ? "https://celina05.sirv.com/icones/empty-user.png"
-                      : participant.image || getRandomImage(),
-                  }}
-                  style={styles.peopleImage}
-                />
-                <Text
-                  style={[
-                    styles.participantText,
-                    isEmptySlot && styles.participantTextVazio,
-                  ]}
+          <FlatList
+            data={Array.from({ length: teamCapacity })}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ index }) => {
+              const participant = teamMembers[index];
+              const isEmptySlot = !participant;
+              return (
+                <View
+                  style={[styles.card, isEmptySlot && styles.cardVazio]}
                 >
-                  {isEmptySlot ? ". . ." : participant.name}
-                </Text>
-              </View>
-            );
-          })}
-
+                  <Image
+                    source={{
+                      uri: isEmptySlot
+                        ? "https://celina05.sirv.com/icones/empty-user.png"
+                        : participant.image || getRandomImage(),
+                    }}
+                    style={styles.peopleImage}
+                  />
+                  <Text
+                    style={[
+                      styles.participantText,
+                      isEmptySlot && styles.participantTextVazio,
+                    ]}
+                  >
+                    {isEmptySlot ? ". . ." : participant.username}
+                  </Text>
+                </View>
+              );
+            }}
+            showsVerticalScrollIndicator={true}
+            style={{ width: "100%" }}
+            contentContainerStyle={{ alignItems: "center" }}
+          />
           {teamMembers.length === teamCapacity ? (
             isAdmin ? (
               <Botoes_Pagina_principal onPress={handleTorneio}>
@@ -515,4 +560,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  leaveButton: {
+    position: "absolute",
+    right: 25,
+    backgroundColor: "#FFE6E6", 
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#FF3B30",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  leaveButtonText: {
+    color: "#FF3B30",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    fontSize: 15,
+    fontWeight: "600",
+  },
 });
+

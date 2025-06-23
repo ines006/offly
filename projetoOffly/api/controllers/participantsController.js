@@ -117,10 +117,10 @@ exports.createParticipant = async (req, res) => {
   }
 };
 
-// Atualizar os dados de um participante
+//Atualizar os dados de um participant
 exports.updateParticipant = async (req, res) => {
   try {
-    const { name, username, email, password, challenge_count } = req.body;
+    const { name, username, email, password, upload_data, challenge_count, teams_id } = req.body;
     const { id } = req.params;
 
     // Verificar se o utilizador está autenticado
@@ -144,7 +144,15 @@ exports.updateParticipant = async (req, res) => {
     }
 
     // Verificar se pelo menos um campo foi fornecido
-    if (!name && !username && !email && !password && challenge_count === undefined) {
+    if (
+      !name &&
+      !username &&
+      !email &&
+      !password &&
+      upload_data === undefined &&
+      challenge_count === undefined &&
+      teams_id === undefined
+    ) {
       return res.status(422).json({
         message: "At least one field must be provided for update",
       });
@@ -164,12 +172,40 @@ exports.updateParticipant = async (req, res) => {
       return res.status(422).json({ message: "Password cannot be empty" });
     }
 
+    // Validar upload_data, se fornecido
+    if (upload_data !== undefined) {
+      if (upload_data !== null) {
+        const isValidDate = moment(upload_data, "YYYY-MM-DD HH:mm:ss", true).isValid();
+        if (!isValidDate) {
+          return res.status(422).json({
+            message: "upload_data must be a valid DATETIME string (e.g., '2025-06-20 17:16:00') or null",
+          });
+        }
+      }
+    }
+
     // Validar challenge_count, se fornecido
     if (challenge_count !== undefined) {
       if (!Number.isInteger(challenge_count) || challenge_count < 0) {
         return res.status(422).json({
           message: "Challenge count must be a non-negative integer",
         });
+      }
+    }
+
+    // Validar teams_id, se fornecido
+    if (teams_id !== undefined) {
+      if (teams_id !== null) {
+        if (!Number.isInteger(teams_id)) {
+          return res.status(422).json({
+            message: "teams_id must be an integer or null",
+          });
+        }
+        // Verificar se a equipa existe
+        const team = await Teams.findByPk(teams_id);
+        if (!team) {
+          return res.status(404).json({ message: "Team not found" });
+        }
       }
     }
 
@@ -227,7 +263,9 @@ exports.updateParticipant = async (req, res) => {
     if (password) {
       updateData.password_hash = await bcrypt.hash(password, 10);
     }
+    if (upload_data !== undefined) updateData.upload_data = upload_data;
     if (challenge_count !== undefined) updateData.challenge_count = challenge_count;
+    if (teams_id !== undefined) updateData.teams_id = teams_id;
 
     // Atualizar participante
     const [updated] = await Participants.update(updateData, {
@@ -244,7 +282,9 @@ exports.updateParticipant = async (req, res) => {
           name: updatedParticipant.name,
           username: updatedParticipant.username,
           email: updatedParticipant.email,
+          upload_data: updatedParticipant.upload_data,
           challenge_count: updatedParticipant.challenge_count,
+          teams_id: updatedParticipant.teams_id,
         },
       });
     }

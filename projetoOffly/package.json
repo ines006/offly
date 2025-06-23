@@ -17,6 +17,8 @@
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "dayjs": "^1.11.13",
+    "dayjs-plugin-utc": "^0.1.2",
     "dotenv": "^16.5.0",
     "expo": "53.0.11",
     "expo-blur": "~14.1.5",
@@ -47,15 +49,18 @@
     "react-native": "0.79.3",
     "react-native-background-timer": "^2.4.1",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-web": "^0.20.0",
     "sequelize": "^6.37.7",
+    "sharp": "^0.34.2",
     "styled-components": "^6.1.19",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "timezone": "^1.0.23"
   },
   "devDependencies": {
     "@types/react": "~19.0.10",

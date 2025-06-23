@@ -31,7 +31,7 @@ const DarkBackground = styled.View`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 99;
 `;
 
@@ -40,10 +40,10 @@ const CookieOverlay = styled.View`
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
-  padding: 24px 16px 16px 16px;
+  padding: 24px 16px 40px 16px;
   align-items: center;
   z-index: 100;
 `;
@@ -67,6 +67,9 @@ const CookieButtons = styled.View`
 const CookieButton = styled.TouchableOpacity`
   flex: 1;
   padding: 10px;
+  justify-content: center;
+  align-items: center;
+  padding-vertical: 12px;
   border-radius: 8px;
   background: ${({ primary }) => (primary ? "#263a83" : "transparent")};
   border-width: ${({ primary }) => (primary ? "0px" : "1px")};
@@ -78,6 +81,7 @@ const CookieButtonText = styled.Text`
   color: ${({ primary }) => (primary ? "#fff" : "#263a83")};
   text-align: center;
   font-weight: bold;
+  font-size: 16px;
 `;
 
 const Container = styled.View`
@@ -2218,26 +2222,37 @@ const App = () => {
         </ButtonsContainer>
       </Footer>
       {showCookieBanner && (
-  <>
-    <DarkBackground />
-    <CookieOverlay>
-      <CookieIcon>
-        <Text style={{ fontSize: 32 }}>🍪</Text>
-      </CookieIcon>
-      <CookieText>
-        Preocupamo-nos com os seus dados e gostaríamos de utilizar cookies para melhorar a sua experiência.
-      </CookieText>
-      <CookieButtons>
-        <CookieButton onPress={() => setShowCookieBanner(false)}>
-          <CookieButtonText>Aceitar obrigatórios</CookieButtonText>
-        </CookieButton>
-        <CookieButton primary onPress={() => setShowCookieBanner(false)}>
-          <CookieButtonText primary>Aceitar todos</CookieButtonText>
-        </CookieButton>
-      </CookieButtons>
-    </CookieOverlay>
-  </>
-)}
+        <>
+          <DarkBackground />
+          <CookieOverlay>
+            <CookieIcon>
+              <Text style={{ fontSize: 32 }}>🍪</Text>
+            </CookieIcon>
+            <CookieText>
+              Preocupamo-nos com os seus dados e gostaríamos de utilizar cookies
+              para melhorar a sua experiência.
+            </CookieText>
+            <CookieButtons>
+              <CookieButton onPress={() => { 
+                // router.push("components/entrar/login"); 
+                setShowCookieBanner(false)
+              }}>
+                <CookieButtonText>Rejeitar</CookieButtonText>
+              </CookieButton>
+
+              <CookieButton primary onPress={() => setShowCookieBanner(false)}>
+                <CookieButtonText primary>Aceitar</CookieButtonText>
+              </CookieButton>
+
+              {/* <CookieButton primary onPress={() => { setShowCookieBanner(false); }}>
+                <CookieButtonText primary>
+                  Aceitar obrigatórios
+                </CookieButtonText>
+              </CookieButton> */}
+            </CookieButtons>
+          </CookieOverlay>
+        </>
+      )}
     </Container>
   );
 };

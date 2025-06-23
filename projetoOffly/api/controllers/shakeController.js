@@ -1,10 +1,16 @@
 const { OpenAI } = require("openai");
 const { Op } = require("sequelize");
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const Participants = require("../models/participants");
 const Answers = require("../models/answers");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
 const Challenges = require("../models/challenges");
-const ChallengeLevels = require("../models/challengeLevel"); 
+const ChallengeLevels = require("../models/challengeLevel");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -95,7 +101,6 @@ Responde apenas com o JSON.
       return res.status(500).json({ error: "Estrutura de desafio inválida." });
     }
 
-    // 🔽 Mapeia nível textual para ID numérico
     const levelMap = {
       "fácil": 1,
       "intermédio": 2,
@@ -146,13 +151,17 @@ exports.saveSelectedChallenge = async (req, res) => {
       title,
       description,
       img: null,
-      challenge_types_id: 1, // shake
+      challenge_types_id: 1, 
       challenge_levels_id: levelId,
     });
 
-    const now = new Date();
-    const endDate = new Date(now);
-    endDate.setDate(now.getDate() + 1);
+    // Obter hora atual e datas em timezone de Lisboa
+    const nowLisbon = dayjs().tz("Europe/Lisbon");
+    const startDate = nowLisbon.startOf('day').toDate();
+    const endDate = nowLisbon.add(1, 'day').startOf('day').toDate();
+
+    console.log("📆 Data início (Lisboa):", startDate);
+    console.log("📆 Data fim (Lisboa):", endDate);
 
     const participation = await ParticipantsHasChallenges.create({
       participants_id: userId,
@@ -163,7 +172,7 @@ exports.saveSelectedChallenge = async (req, res) => {
       validated: 0,
       streak: 0,
       completed_date: null,
-      starting_date: now,
+      starting_date: startDate,
       end_date: endDate,
       description: challenge.description,
     });
@@ -176,5 +185,33 @@ exports.saveSelectedChallenge = async (req, res) => {
   } catch (error) {
     console.error("❌ Erro em saveSelectedChallenge:", error);
     return res.status(500).json({ error: "Erro ao guardar seleção" });
+  }
+};
+
+exports.validateChallengeTimeOut = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const challengeId = parseInt(req.params.challengeId);
+
+    const challengeEntry = await ParticipantsHasChallenges.findOne({
+      where: {
+        participants_id: userId,
+        challenges_id: challengeId,
+        challenge_types_id: 1,
+        validated: 0,
+      },
+    });
+
+    if (!challengeEntry) {
+      return res.status(404).json({ error: "Registo não encontrado" });
+    }
+
+    challengeEntry.validated = 1;
+    await challengeEntry.save();
+
+    return res.status(200).json({ message: "Desafio validado automaticamente com sucesso." });
+  } catch (error) {
+    console.error("❌ Erro ao validar desafio automaticamente:", error);
+    return res.status(500).json({ error: "Erro ao validar desafio." });
   }
 };

@@ -345,10 +345,10 @@ export default function PaginaPrincipal() {
 
       const newTeamId = response.data.id;
       console.log("✅ Equipa criada com ID:", newTeamId);
-      setTeamId(newTeamId); // Armazena teamId no estado
+      setTeamId(newTeamId); 
       console.log("🆔 teamId definido no estado:", newTeamId);
 
-      // Criar convite para equipe privada
+      // Criar convite para equipa privada
       let newInviteLink = null;
       if (activeButton === "private") {
         try {

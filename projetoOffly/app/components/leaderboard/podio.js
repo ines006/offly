@@ -398,6 +398,9 @@ const PodioPontuacao = () => {
           Nenhuma equipa adicional encontrada
         </Text>
       )}
+      horizontal={false}
+      style={{ width: "100%" }}
+      contentContainerStyle={{ alignItems: "center" }}
     />
   );
 
@@ -463,12 +466,13 @@ const styles = StyleSheet.create({
     color: "#263A83",
     textAlign: "center",
     marginVertical: height * 0.02,
-    marginTop: height * 0.1,
+    marginTop: height * 0.08,
   },
   podiumWrapper: {
     position: "relative",
     alignItems: "center",
-    height: height * 0.6,
+    height: height * 0.61,
+    marginTop: height * 0.01,
   },
   circlesContainer: {
     position: "absolute",
@@ -534,14 +538,14 @@ const styles = StyleSheet.create({
     marginHorizontal: width * 0.01,
   },
   firstPlaceSection: {
-    marginBottom: height * 0.03,
+    marginBottom: height * 0.05,
     padding: width * 0.035,
   },
   secondPlaceSection: {
-    marginBottom: height * -0.05,
+    marginBottom: height * -0.01,
   },
   thirdPlaceSection: {
-    marginBottom: height * -0.1,
+    marginBottom: height * -0.05,
   },
   podiumTeam: {
     fontSize: width * 0.04,
@@ -569,10 +573,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     alignItems: "center",
     paddingTop: height * 0.015,
+    paddingBottom: height * 0.12,
     width: width * 0.95,
     alignSelf: "center",
     marginTop: height * -0.17,
     paddingHorizontal: 10,
+    minHeight: height * 0.30,
   },
   card: {
     flexDirection: "row",

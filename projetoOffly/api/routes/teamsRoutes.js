@@ -733,8 +733,8 @@ router.post("/", authenticateToken, teamsController.createTeam);
  * @swagger
  * /teams/{id}:
  *   put:
- *     summary: Update team's competition
- *     description: Allows a team admin to update the competition ID associated with their team. The competition must exist.
+ *     summary: Update team's details
+ *     description: Allows a team admin to update the team's competition ID, points, passbook ID, and last points variation. At least one field must be provided. Setting competitions_id to null is allowed only after the competition's end date.
  *     tags: [Teams]
  *     security:
  *       - bearerAuth: []
@@ -751,13 +751,24 @@ router.post("/", authenticateToken, teamsController.createTeam);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - competitions_id
  *             properties:
  *               competitions_id:
  *                 type: integer
  *                 description: The ID of the competition to associate with the team
  *                 example: 2
+ *               points:
+ *                 type: integer
+ *                 description: The team's total points (can be positive, negative, or zero)
+ *                 example: 100
+ *               team_passbooks_id:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: The ID of the passbook associated with the team, or null
+ *                 example: 16
+ *               last_variation:
+ *                 type: integer
+ *                 description: The last variation of the team's points (can be positive, negative, or zero)
+ *                 example: -50
  *     responses:
  *       200:
  *         description: Team competition updated successfully

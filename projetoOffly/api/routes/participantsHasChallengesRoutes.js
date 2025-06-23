@@ -83,4 +83,10 @@ router.get("/active/:participants_id", participantsHasChallengesController.getAc
 
 router.put("/complete/:participants_id", controller.completeActiveChallenge);
 
+router.get("/completed-today/:participants_id", controller.getChallengeOfToday);
+
+router.get("/active-with-image/:participants_id",controller.getActiveChallengeWithUserImage);
+
+
 module.exports = router;
+

@@ -49,7 +49,7 @@ const DetalhesEquipa = () => {
         const participants = Array.isArray(response.data.participants)
           ? response.data.participants.map((p) => ({
               id: p.id?.toString() || "",
-              name: p.name || "Desconhecido",
+              username: p.username || "Desconhecido",
               image: p.image,
             }))
           : [];
@@ -63,7 +63,7 @@ const DetalhesEquipa = () => {
           participants,
           team_admin: {
             id: response.data.team_admin?.id?.toString() || "",
-            name: response.data.team_admin?.name || "Desconhecido",
+            username: response.data.team_admin?.username || "Desconhecido",
           },
           competition_name:
             response.data.competition_name || "Competição Sem Nome",
@@ -127,9 +127,9 @@ const DetalhesEquipa = () => {
         source={{ uri: item.image }}
         style={styles.participantImage}
         accessible={true}
-        accessibilityLabel={`Imagem de ${item.name}`}
+        accessibilityLabel={`Imagem de ${item.username}`}
       />
-      <Text style={styles.participantName}>{item.name}</Text>
+      <Text style={styles.participantName}>{item.username}</Text>
       {item.id === team?.team_admin?.id && (
         <Text style={styles.adminBadge}>Administrador</Text>
       )}
@@ -277,14 +277,14 @@ const DetalhesEquipa = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     paddingHorizontal: width * 0.04,
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between", // Garante que o centro seja realmente o centro
-    marginTop: height * 0.05,
+    marginTop: height * 0.1,
     marginBottom: height * 0.02,
   },
   backButton: {

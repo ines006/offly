@@ -147,7 +147,7 @@ export default function Shake() {
         accessibilityRole="header"
         accessibilityLabel="Título: Shake"
       >
-        <TittlePagina> Shake </TittlePagina>
+        {/* <TittlePagina> Shake </TittlePagina> */}
       </View>
       <View style={styles.container}>
         <Animated.View style={[styles.card, combinedStyle]}>

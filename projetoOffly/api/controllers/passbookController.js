@@ -1,9 +1,10 @@
 const Participants = require("../models/participants");
 const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
-const Challenge = require("../models/challenges"); // <--- Certifica-te que está importado
+const ChallengesHasTeams = require("../models/challengesHasTeams");
+const Challenge = require("../models/challenges"); 
 const { Op } = require("sequelize");
 
-const getPassbookData = async (req, res) => {
+exports.getPassbookData = async (req, res) => {
   const { id } = req.query;
 
   if (!id) {
@@ -57,6 +58,66 @@ const getPassbookData = async (req, res) => {
   }
 };
 
-module.exports = {
-  getPassbookData,
+exports.getValidatedChallengeImages = async (req, res) => {
+  const { id } = req.query;
+
+  if (!id) {
+    return res.status(400).json({ error: "É necessário fornecer o id do utilizador." });
+  }
+
+  try {
+  
+    const participant = await Participants.findOne({ where: { id } });
+
+    if (!participant) {
+      return res.status(404).json({ error: "Participante não encontrado." });
+    }
+
+    // Obter o teams_id
+    const teamId = participant.teams_id;
+
+    if (!teamId) {
+      return res.status(404).json({ error: "Participante não pertence a nenhuma equipa." });
+    }
+
+    // Buscar os desafios validados da equipa
+    const validatedChallenges = await ChallengesHasTeams.findAll({
+      where: {
+        teams_id: teamId,
+        validated: 1,
+      },
+      include: [
+        {
+          model: Challenge,
+          as: "challenge", 
+          attributes: ["id", "title", "img"],
+        },
+      ],
+    });
+
+    // Extrair imagens em base64 porque na nossa base de dados está em blob
+    const images = validatedChallenges
+      .map(entry => {
+        const imageBuffer = entry.challenge?.img;
+        if (imageBuffer) {
+          const base64Image = Buffer.from(imageBuffer).toString("base64");
+          return {
+            challengeId: entry.challenge.id,
+            title: entry.challenge.title,
+            base64Image: `data:image/jpeg;base64,${base64Image}`, 
+          };
+        }
+        return null;
+      })
+      .filter(img => img !== null);
+
+    // 5. Responder com as imagens
+    return res.status(200).json({ images });
+
+  } catch (error) {
+    console.error("❌ Erro ao buscar imagens dos desafios validados:", error);
+    return res.status(500).json({ error: "Erro ao buscar imagens dos desafios validados." });
+  }
 };
+
+module.exports = exports;

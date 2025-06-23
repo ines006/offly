@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { baseurl } from "./api-config/apiConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Svg, { Path } from "react-native-svg";
+import { logout as authLogout } from "../app/components/entrar/authService";
 
 const ProfileScreen = () => {
   const { user, accessToken, refreshToken, loading, logout } =
@@ -24,6 +25,7 @@ const ProfileScreen = () => {
   const [editedValue, setEditedValue] = useState("");
   const [editError, setEditError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const router = useRouter();
 
@@ -165,17 +167,14 @@ const ProfileScreen = () => {
 
   // Função de logout
   const handleLogout = useCallback(async () => {
+    if (isLoggingOut) return;
+
     try {
+      setIsLoggingOut(true);
+
       if (!refreshToken) {
-        console.warn("⚠️ Refresh token não disponível");
-        Alert.alert(
-          "Erro",
-          "Sessão inválida. Por favor, faça login novamente."
-        );
-        if (logout) {
-          await logout();
-          router.replace("/");
-        }
+        await authLogout();
+        router.replace("/components/entrar/login");
         return;
       }
 
@@ -190,22 +189,20 @@ const ProfileScreen = () => {
 
       console.log("🔓 Sessão terminada com sucesso");
 
-      if (logout) {
-        await logout();
-      } else {
-        console.warn("⚠️ Função logout não definida no AuthContext");
-      }
+      await authLogout();
 
-      router.replace("/");
+      router.replace("/components/entrar/login");
     } catch (err) {
-      console.error("❌ Erro ao terminar sessão:", err.message);
       if (err.response) {
         console.log("📡 Status:", err.response.status);
         console.log("📡 Data:", err.response.data);
+      } else {
+        console.log("❌ Erro ao fazer logout:", err.message);
       }
-      Alert.alert("Erro", "Falha ao terminar a sessão. Tente novamente.");
+    } finally {
+      setIsLoggingOut(false);
     }
-  }, [refreshToken, logout, router]);
+  }, [refreshToken, router, isLoggingOut]);
 
   // Log para depurar o refreshToken
   useEffect(() => {
@@ -249,7 +246,6 @@ const ProfileScreen = () => {
   if (loading || isLoading) {
     return <LoadingText>A carregar...</LoadingText>;
   }
-
 
   return (
     <Container>
@@ -477,11 +473,10 @@ const ProfileScreen = () => {
           </InputRow>
         </Row>
 
-        <LogoutButton onPress={handleLogout}>
+        <LogoutButton onPress={handleLogout} disabled={isLoggingOut}>
           <LogoutText>Terminar Sessão</LogoutText>
         </LogoutButton>
       </Form>
-
     </Container>
   );
 };

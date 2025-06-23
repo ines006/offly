@@ -32,13 +32,20 @@ export default function DetalhesDia() {
   };
 
   useEffect(() => {
+    console.log("🚩 DetalhesDia dia param:", dia);
     async function fetchDetalhesDoDia() {
       try {
         const response = await axios.get(`${baseurl}/api/desafios-do-dia`, {
           params: { dia, participanteId: user.id },
         });
+        console.log("URL fetch:", `${baseurl}/api/desafios-do-dia?dia=${dia}&participanteId=${user.id}`);
 
         const { teamMembers, completedChallenges, flys } = response.data;
+        console.log("🗓 Lista de desafios recebidos:");
+        completedChallenges.forEach(({ challenge, participant }, index) => {
+          console.log(`  🔹 [${index + 1}] ${participant.name} - ${challenge.title}`);
+          console.log(`     starting_date: ${challenge?.starting_date}`);
+        });
 
         const desafiosPorParticipante = {};
         completedChallenges.forEach(({ participant, challenge }) => {

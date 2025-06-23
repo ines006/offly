@@ -90,8 +90,10 @@ exports.getDesafiosDoDia = async (req, res) => {
     const diaFormatado = String(dia).padStart(2, '0');
     const mesFormatado = String(mes).padStart(2, '0');
 
-    const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00`);
-    const fimDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T23:59:59`);
+    // Cria o intervalo de data do dia exato
+    const inicioDia = new Date(`${ano}-${mesFormatado}-${diaFormatado}T00:00:00.000Z`);
+    const proximoDia = new Date(inicioDia);
+    proximoDia.setDate(proximoDia.getDate() + 1); // Dia seguinte às 00:00
 
     const teamMembers = await Participants.findAll({
       where: {
@@ -102,8 +104,9 @@ exports.getDesafiosDoDia = async (req, res) => {
 
     const completedChallenges = await ParticipantsHasChallenges.findAll({
       where: {
-        starting_date: {
-          [Op.between]: [inicioDia, fimDia],
+        completed_date: {
+          [Op.gte]: inicioDia,
+          [Op.lt]: proximoDia,
         },
       },
       include: [
@@ -133,7 +136,7 @@ exports.getDesafiosDoDia = async (req, res) => {
           ],
         },
       ],
-      order: [["starting_date", "ASC"]],
+      order: [["completed_date", "ASC"]],
     });
 
     res.status(200).json({
@@ -168,6 +171,7 @@ exports.verificarDesafioRealizado = async (req, res) => {
       SELECT challenges_id
       FROM challenges_has_teams cht
       WHERE teams_id = :teamsId
+       AND validated = 0
       LIMIT 1
       `,
       {
@@ -196,7 +200,7 @@ exports.discoverWeeklyChallenge = async (req, res) => {
       return res.status(400).json({ success: false, message: "userId é obrigatório" });
     }
 
-  
+    // Buscar teamId do participante
     const [participant] = await sequelize.query(
       "SELECT teams_id FROM participants WHERE id = ?",
       {
@@ -211,28 +215,95 @@ exports.discoverWeeklyChallenge = async (req, res) => {
 
     const teamId = participant.teams_id;
 
-    const [challenges] = await sequelize.query(
-      "SELECT id FROM challenges WHERE challenge_types_id = 2 ORDER BY RAND() LIMIT 1",
+    // Selecionar todos os desafios semanais disponíveis
+    const challenges = await sequelize.query(
+      "SELECT id FROM challenges WHERE challenge_types_id = 2 ORDER BY RAND()",
       { type: sequelize.QueryTypes.SELECT }
     );
 
-    if (!challenges) {
+    if (challenges.length === 0) {
       return res.status(404).json({ success: false, message: "Nenhum desafio disponível." });
     }
 
-    const challengeId = challenges.id;
-    const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 dias depois
+    // Calcular segunda-feira e domingo da semana atual
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 (Domingo) - 6 (Sábado)
+    const monday = new Date(now);
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    monday.setDate(now.getDate() - diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
 
+    let challengeId = null;
+
+    // Loop para encontrar desafio que ainda não foi validado pela equipe
+    for (const challenge of challenges) {
+      // aqui é onde verifica se a equipa já tem algum desafio com o validated = 1 para não voltar a aparecer á equipa
+      const [existing] = await sequelize.query(
+        "SELECT * FROM challenges_has_teams WHERE teams_id = ? AND challenges_id = ? AND validated = 1",
+        {
+          replacements: [teamId, challenge.id],
+          type: sequelize.QueryTypes.SELECT,
+        }
+      );
+
+      if (!existing) {
+        challengeId = challenge.id;
+        break;
+      }
+    }
+
+    if (!challengeId) {
+      return res.status(409).json({ success: false, message: "Todos os desafios já foram atribuídos e validados para esta equipe." });
+    }
+
+    // Inserir desafio para a equipe
     await sequelize.query(
       "INSERT INTO challenges_has_teams (challenges_id, teams_id, starting_date, end_date, validated) VALUES (?, ?, ?, ?, ?)",
       {
-        replacements: [challengeId, teamId, startDate, endDate, 0],
+        replacements: [challengeId, teamId, monday, sunday, 0],
         type: sequelize.QueryTypes.INSERT,
       }
     );
 
-    return res.json({ success: true });
+    // Buscar todos os participantes da equipe
+    const participants = await sequelize.query(
+      "SELECT id FROM participants WHERE teams_id = ?",
+      {
+        replacements: [teamId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    // Inserir desafio para cada participante
+    const insertPromises = participants.map(participant =>
+      sequelize.query(
+        `INSERT INTO participants_has_challenges 
+          (participants_id, challenges_id, starting_date, end_date, completed_date, validated, streak, challenge_levels_id_challenge_levels, challenge_types_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        {
+          replacements: [
+            participant.id,
+            challengeId,
+            monday,
+            sunday,
+            null,
+            0,
+            JSON.stringify(["0", "0", "0", "0", "0", "0", "0"]),
+            0,
+            2
+          ],
+          type: sequelize.QueryTypes.INSERT,
+        }
+      )
+    );
+
+    await Promise.all(insertPromises);
+
+    return res.json({ success: true, message: "Desafio semanal atribuído com sucesso." });
+
   } catch (err) {
     console.error("Erro interno no controller discoverWeeklyChallenge:", err);
     return res.status(500).json({ success: false, message: "Erro interno do servidor." });
@@ -384,3 +455,132 @@ exports.getParticipantsByTeam = async (req, res) => {
     });
   }
 };
+
+
+exports.validateTeamChallenge = async (req, res) => {
+  const { teamId } = req.params;
+
+  try {
+    if (!teamId) {
+      return res.status(400).json({ message: "teamId é obrigatório." });
+    }
+
+    const teamIdInt = parseInt(teamId, 10);
+    if (isNaN(teamIdInt)) {
+      return res.status(400).json({ message: "teamId inválido." });
+    }
+
+    // Buscar o desafio ativo (não validado ainda) mais recente da equipe
+    const [challengeRecord] = await sequelize.query(
+      `SELECT challenges_id FROM challenges_has_teams 
+       WHERE teams_id = ? AND validated = 0 
+       ORDER BY starting_date DESC LIMIT 1`,
+      {
+        replacements: [teamIdInt],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!challengeRecord) {
+      return res.status(404).json({ message: "Desafio não encontrado ou já validado." });
+    }
+
+    const challengeId = challengeRecord.challenges_id;
+
+    // Marcar o desafio como validado na tabela challenges_has_teams
+    await sequelize.query(
+      `UPDATE challenges_has_teams 
+       SET validated = 1 
+       WHERE teams_id = ? AND challenges_id = ?`,
+      {
+        replacements: [teamIdInt, challengeId],
+        type: sequelize.QueryTypes.UPDATE,
+      }
+    );
+
+    // Validar também para os participantes da equipa
+    await sequelize.query(
+      `UPDATE participants_has_challenges 
+       SET validated = 1 
+       WHERE challenges_id = ? 
+       AND participants_id IN (
+         SELECT id FROM participants WHERE teams_id = ?
+       )`,
+      {
+        replacements: [challengeId, teamIdInt],
+        type: sequelize.QueryTypes.UPDATE,
+      }
+    );
+
+    // Buscar os streaks dos participantes da equipa
+    const participantes = await sequelize.query(
+  `
+        SELECT phc.streak 
+        FROM participants_has_challenges phc
+        JOIN participants p ON p.id = phc.participants_id
+        WHERE p.teams_id = ? AND phc.challenges_id = ?
+        `,
+        {
+          replacements: [teamId, challengeId], 
+          type: sequelize.QueryTypes.SELECT,
+        }
+      );
+
+    let totalBolinhasAzuis = 0;
+    const totalPossivel = participantes.length * 7;
+
+    participantes.forEach(p => {
+      try {
+        const parsedStreak = JSON.parse(p.streak);
+        totalBolinhasAzuis += parsedStreak.filter(val => val === "1" || val === 1).length;
+      } catch (e) {
+        console.warn("Erro ao fazer parse do streak:", p.streak);
+      }
+    });
+
+    let progresso = 0;
+    if (totalPossivel > 0) {
+      progresso = Math.round((totalBolinhasAzuis / totalPossivel) * 100);
+    }
+
+    // Buscar pontos atuais da equipa
+    const [team] = await sequelize.query(
+      `SELECT points FROM teams WHERE id = ?`,
+      {
+        replacements: [teamIdInt],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!team) {
+      return res.status(404).json({ message: "Equipe não encontrada." });
+    }
+
+    const pontosAtuais = team.points || 0;
+    const novosPontos = pontosAtuais + progresso;
+
+    // Atualizar pontos da equipa
+    const [updateResult] = await sequelize.query(
+      `UPDATE teams SET points = ? WHERE id = ?`,
+      {
+        replacements: [novosPontos, teamIdInt],
+        type: sequelize.QueryTypes.UPDATE,
+      }
+    );
+
+    if (updateResult === 0) {
+      console.warn("Nenhuma linha foi atualizada na tabela teams.");
+    }
+
+    return res.json({
+      message: "Desafio da equipe e dos participantes validado com sucesso.",
+      pontosGanhos: progresso,
+      pontosTotais: novosPontos,
+    });
+
+  } catch (error) {
+    console.error("Erro ao validar desafio:", error);
+    return res.status(500).json({ message: "Erro interno do servidor." });
+  }
+};
+

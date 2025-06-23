@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   StyleSheet,
   Text,
+  Modal,
+  Button,
+  Image,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -44,6 +47,7 @@ import {
 import { AuthContext } from "../entrar/AuthContext";
 import { baseurl } from "../../api-config/apiConfig";
 import axios from "axios";
+import imagemPalmas from "../../imagens/clapping-hands.png";
 
 export default function Home() {
   const router = useRouter();
@@ -60,24 +64,27 @@ export default function Home() {
   const [teamPoints, setTeamPoints] = useState();
   const [teamMembers, setTeamMembers] = useState();
   const [teamCapacity, setTeamCapacity] = useState();
+  const [teamAdmin, setTeamAdmin] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [teamImage, setTeamImage] = useState(null);
+  const [tournamentId, setTournamentId] = useState(null);
   const [tournamentName, setTournamentName] = useState(null);
   const [tournamentStart, setTournamentStart] = useState(null);
   const [tournamentEnd, setTournamentEnd] = useState(null);
   const [competitionDay, setCompetitionDay] = useState(null);
   const [competitionDaysTotal, setCompetitionDaysTotal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [showTournamentEndModal, setShowTournamentEndModal] = useState(false);
+  const [hasMadeTournamentEndChoice, setHasMadeTournamentEndChoice] =
+    useState(false);
 
   const getTodayInWEST = () => {
-  return moment().tz("Europe/Lisbon").format("YYYY-MM-DD");
-};
 
+    return moment().tz("Europe/Lisbon").format("YYYY-MM-DD");
+  };
 
   const fetchUserData = async () => {
     if (!user?.id || !accessToken) {
-      Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
       router.push("./login");
       return;
     }
@@ -116,12 +123,114 @@ export default function Home() {
     }
   };
 
+  // Função para atualizar a equipa quando competição acaba (admin)
+  const updateTeamCompetition = async () => {
+    try {
+      await axios.put(
+        `${baseurl}/teams/${teamId}`,
+        { 
+          competitions_id: null,
+          points: 100, //predefinido
+          team_passbooks_id: null,
+          last_variation: 0,
+         },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error updating team competition:", error.message);
+      Alert.alert("Erro", "Não foi possível atualizar a competição da equipa.");
+    }
+  };
+
+  // função para lidar com escolha de ficar ou não na equipa quando competição termina
+  const handleTournamentEndChoice = async (stayWithTeam) => {
+    try {
+      console.log(
+        "Handling tournament end choice for user ID:",
+        userId,
+        "Stay with team:",
+        stayWithTeam
+      );
+      if (!userId || userId !== user.id) {
+        throw new Error("Invalid user ID");
+      }
+
+      if (!stayWithTeam) {
+        const response = await axios.put(
+          `${baseurl}/participants/${userId}`,
+          { 
+            teams_id: null,
+            upload_data: null,
+            challenge_count: 0,          
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+        //console.log("Participant without team updated:", response.data);
+        setTeamId(null);
+        setDataUpload(null);
+        setUserChallenges(0);
+        setShowTournamentEndModal(false);
+        setHasMadeTournamentEndChoice(true);
+        router.push("/PaginaPrincipal");
+      } else {
+        const response = await axios.put(
+          `${baseurl}/participants/${userId}`,
+          { 
+            upload_data: null,
+            challenge_count: 0,          
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+        //console.log("Participant with team updated:", response.data);
+        setDataUpload(null);
+        setUserChallenges(0);
+        setShowTournamentEndModal(false);
+        setHasMadeTournamentEndChoice(true);
+        router.push({ pathname: "/EquipaCriada", params: { teamId } });
+      }
+    } catch (error) {
+      console.error(
+        "Error handling tournament end choice:",
+        error.response?.data || error.message
+      );
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message ||
+          "Não foi possível processar a sua escolha."
+      );
+    }
+  };
+
+  // carrega dados do utilizador
   useEffect(() => {
     fetchUserData();
   }, [user, accessToken]);
 
+  // carrega dados da equipa e verfica a competição 
+
   useEffect(() => {
-    if (!teamId || !userId) return;
+    if (!teamId || !userId || hasMadeTournamentEndChoice) return;
 
     const fetchTeamData = async () => {
       try {
@@ -140,17 +249,59 @@ export default function Home() {
         setTeamMembers(teamData.participants.length);
         setTeamCapacity(teamData.capacity);
         setTeamPoints(teamData.points);
+        setTournamentId(teamData.competition_id);
         setTournamentName(teamData.competition_name);
         setTournamentStart(teamData.competition_start_date);
         setTournamentEnd(teamData.competition_end_date);
+        setTeamAdmin(teamData.team_admin.id);
+
+        // Check if tournament has ended and user is admin - LÓGICA ADMIN PARA DESFAZER EQUIPA DO TORNEIO
+        if (
+          teamData.competition_end_date &&
+          parseInt(response.data.team_admin.id) === parseInt(userId)
+        ) {
+          const now = moment().tz("Europe/Lisbon");
+          const endDate = moment(teamData.competition_end_date).tz(
+            "Europe/Lisbon"
+          );
+          if (now.isAfter(endDate)) {
+            await updateTeamCompetition();
+            setShowTournamentEndModal(true);
+          }
+        }
+
+        // Check if tournament id is null - LÓGICA DE REDIRECIONAMENTO DO PARTICIPANTE DA EQUIPA PÓS TÉRMINO DO TORNEIO
+        if (
+          teamData.competition_id === null &&
+          parseInt(teamData.team_admin) !== parseInt(userId)
+        ) {
+          setShowTournamentEndModal(true);
+        }
       } catch (error) {
         Alert.alert("Erro", "Não foi possível carregar os dados da equipa.");
       }
     };
 
     fetchTeamData();
-  }, [teamId, userId]);
 
+    // Poll team data every 30 seconds if tournament end date has passed
+    if (tournamentEnd) {
+      const now = moment().tz("Europe/Lisbon");
+      const endDate = moment(tournamentEnd).tz("Europe/Lisbon");
+      if (now.isAfter(endDate)) {
+        console.log("Tournament end date passed, starting polling");
+        const pollInterval = setInterval(() => {
+          if (!hasMadeTournamentEndChoice) {
+            console.log("Polling team data to check competition_id");
+            fetchTeamData();
+          }
+        }, 30000); 
+        return () => clearInterval(pollInterval);
+      }
+    }
+  }, [teamId, userId, tournamentId, hasMadeTournamentEndChoice, tournamentEnd]);
+
+  // carrega e monta os dados da página
   useEffect(() => {
     if (
       userId !== null &&
@@ -177,21 +328,24 @@ export default function Home() {
     teamCapacity,
   ]);
 
+  // carrega dias da competição
   useEffect(() => {
     if (tournamentStart && tournamentEnd) {
-      const day = getCompetitionDay(tournamentStart, tournamentEnd) + 1;
+      const day = getCompetitionDay(tournamentStart, tournamentEnd);
       const totalDays = getCompetitionDaysTotal(tournamentStart, tournamentEnd);
       setCompetitionDay(day);
       setCompetitionDaysTotal(totalDays);
     }
   }, [tournamentStart, tournamentEnd]);
 
+  // função que valida a data
   const isValidDate = (dateString) => {
     if (!dateString) return false;
     const date = new Date(dateString);
     return date instanceof Date && !isNaN(date.getTime());
   };
 
+  // função que verifica a data do upload
   const isUploadedToday = () => {
     if (!dataUpload || !isValidDate(dataUpload)) {
       return false;
@@ -202,33 +356,31 @@ export default function Home() {
   };
 
 
+  // função que define o temporizador
   const calculateTimeUntilMidnight = () => {
   const now = moment().tz("Europe/Lisbon");
   const midnight = now.clone().endOf("day");
   return midnight.diff(now);
 };
 
+  // Reset e lógica do countdown
 
-  // Midnight reset and countdown logic
   useEffect(() => {
     if (!userId) return;
 
-    // Initialize countdown
     setTimeRemaining(calculateTimeUntilMidnight());
 
-    // Update countdown every second
     const countdownInterval = setInterval(() => {
       setTimeRemaining(calculateTimeUntilMidnight());
     }, 1000);
 
-    // Schedule re-fetch at midnight
     const scheduleMidnightFetch = () => {
       const timeToMidnight = calculateTimeUntilMidnight();
       const timeoutId = setTimeout(() => {
         console.log("Midnight reached, re-fetching data:", getTodayInWEST());
         fetchUserData();
-        scheduleMidnightFetch(); // Reschedule for next midnight
-      }, timeToMidnight + 1000); // Add 1s buffer
+        scheduleMidnightFetch(); 
+      }, timeToMidnight + 1000); 
       return timeoutId;
     };
 
@@ -240,6 +392,7 @@ export default function Home() {
     };
   }, [userId]);
 
+  // formato do datetime
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -250,6 +403,7 @@ export default function Home() {
       .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  // dias da competição
   const getCompetitionDay = (start_date, end_date) => {
     const start = new Date(start_date);
     const end = new Date(end_date);
@@ -287,9 +441,11 @@ export default function Home() {
     return duration;
   };
 
+  // redirecionamentos
   const handleCirclePress = async () => {
-    await router.push("../components/uploadScreenTime/UploadScreen");
-    // Re-fetch user data after navigating back from upload screen
+
+    await router.push("/components/uploadScreenTime/UploadScreen");
+
     fetchUserData();
   };
 
@@ -313,6 +469,39 @@ export default function Home() {
         </View>
       ) : (
         <>
+          {/* Modal de término de torneio */}
+          <Modal
+            visible={showTournamentEndModal}
+            transparent={true}
+            animationType="none"
+            onRequestClose={() => setShowTournamentEndModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Torneio Terminou!</Text>
+                <Text style={styles.modalSubtitle}>
+                  Parabéns pelas tuas conquistas.
+                </Text>
+                <Image style={styles.tinyImage} source={imagemPalmas} />
+                <Text style={styles.modalText}>
+                  Desejas continuar com a equipa {teamName}?
+                </Text>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => handleTournamentEndChoice(true)}
+                >
+                  <Text style={styles.modalButtonText}>Ficar com a Equipa</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleTournamentEndChoice(false)}
+                >
+                  <Text style={styles.removeText}>Sair da Equipa</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
           <TittlePagina
             accessible={true}
             accessibilityRole="header"
@@ -326,58 +515,22 @@ export default function Home() {
               <UserName>{userName}</UserName>
               <UserLevel> Nível {userLevel} </UserLevel>
               <StarsContainer>
-                <Svg
-                  accessibilityLabel="estrela nível 1"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#263A83"
-                  />
-                </Svg>
-                <Svg
-                  accessibilityLabel="estrela nível 2"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#BEC4DA"
-                  />
-                </Svg>
-                <Svg
-                  accessibilityLabel="estrela nível 3"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#BEC4DA"
-                  />
-                </Svg>
-                <Svg
-                  accessibilityLabel="estrela nível 4"
-                  width="13"
-                  height="11"
-                  viewBox="0 0 13 11"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <Path
-                    d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
-                    fill="#BEC4DA"
-                  />
-                </Svg>
+                {[...Array(4)].map((_, index) => (
+                  <Svg
+                    key={index}
+                    accessibilityLabel={`estrela nível ${index + 1}`}
+                    width="13"
+                    height="11"
+                    viewBox="0 0 13 11"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <Path
+                      d="M6.6912 0.0515331C6.7894 0.1 6.86889 0.179489 6.91736 0.277695L8.37335 3.22785L11.629 3.70093C11.9012 3.74048 12.0898 3.99317 12.0502 4.26533C12.0345 4.3737 11.9834 4.47387 11.905 4.55031L9.54918 6.84668L10.1053 10.0892C10.1518 10.3603 9.96976 10.6177 9.69869 10.6642C9.59076 10.6827 9.47973 10.6651 9.38279 10.6142L6.47081 9.08325L3.55884 10.6142C3.31541 10.7421 3.01432 10.6485 2.88635 10.4051C2.83538 10.3082 2.8178 10.1972 2.83631 10.0892L3.39245 6.84668L1.03661 4.55031C0.839673 4.35834 0.835643 4.04307 1.02761 3.84613C1.10405 3.76771 1.20421 3.71668 1.31259 3.70093L4.56828 3.22785L6.02427 0.277695C6.14598 0.0310749 6.44458 -0.0701811 6.6912 0.0515331Z"
+                      fill={index < userLevel ? "#263A83" : "#BEC4DA"}
+                    />
+                  </Svg>
+                ))}
               </StarsContainer>
             </ProfileTextContainer>
           </ProfileContainer>
@@ -409,10 +562,14 @@ export default function Home() {
               <Stats accessibilityRole="summary">
                 <StatItem accessible={true}>
                   <StatText accessibilityLabel="Dias em competição">
-                    Dias em competição
+                    <Text>Dias em competição</Text>
                   </StatText>
-                  <StatValue accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal} da competição`}>
-                    <Text>{competitionDay}/{competitionDaysTotal}  </Text>
+                  <StatValue
+                    accessibilityLabel={`Dia ${competitionDay} de ${competitionDaysTotal} da competição`}
+                  >
+                    <Text>
+                      {competitionDay}/{competitionDaysTotal}{" "}
+                    </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -423,10 +580,14 @@ export default function Home() {
                 </StatItem>
                 <StatItem accessible={true}>
                   <StatText accessibilityLabel="Desafios completos">
-                    Desafios completos
+                    <Text> Desafios completos </Text>
                   </StatText>
-                  <StatValue accessibilityLabel={`${userChallenges} de ${competitionDaysTotal} de desafios completos`}>
-                    <Text>{userChallenges}/{competitionDaysTotal}  </Text>
+                  <StatValue
+                    accessibilityLabel={`${userChallenges} de ${competitionDaysTotal} de desafios completos`}
+                  >
+                    <Text>
+                      {userChallenges}/{competitionDaysTotal}{" "}
+                    </Text>
                     <FontAwesome
                       name="calendar"
                       size={14}
@@ -445,7 +606,9 @@ export default function Home() {
                 <FooterText
                   accessibilityLabel={`${teamMembers} de ${teamCapacity} membros`}
                 >
-                  {teamMembers}/{teamCapacity}
+                  <Text>
+                    {teamMembers}/{teamCapacity}
+                  </Text>
                 </FooterText>
                 <FontAwesome
                   name="group"
@@ -493,7 +656,10 @@ export default function Home() {
                   />
                 </Svg>
               </DesafioIcon>
-              <DesafioText>Caderneta</DesafioText>
+              <DesafioText>
+                {" "}
+                <Text>Caderneta</Text>
+              </DesafioText>
             </DesafioCard>
 
             <DesafioCard onPress={() => handleDesafioPress(1)}>
@@ -519,7 +685,10 @@ export default function Home() {
                   />
                 </Svg>
               </DesafioIcon>
-              <DesafioText>Desafio Semanal</DesafioText>
+              <DesafioText>
+                {" "}
+                <Text> Desafio Semanal </Text>
+              </DesafioText>
             </DesafioCard>
           </DesafioContainer>
         </>
@@ -554,5 +723,95 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    marginTop: 35,
+  },
+  title: {
+    width: 172,
+    color: "#263A83",
+    textAlign: "center",
+    fontFamily: "Poppins",
+    fontSize: 20,
+    fontWeight: "600",
+    lineHeight: 25,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: 350,
+    height: 490,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    padding: 25,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tinyImage: {
+    width: 85,
+    height: 85,
+    marginBottom: 45,
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#263A83",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: "#7C8191",
+    marginBottom: 20,
+    width: 200,
+    textAlign: "center",
+    lineHeight: 23,
+  },
+  modalText: {
+    width: 250,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#414141",
+    textAlign: "center",
+  },
+  modalButton: {
+    backgroundColor: "#263A83",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 47,
+    marginTop: 20,
+  },
+  modalButtonText: {
+    color: "#FFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  removeButton: {
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 47,
+    marginTop: 20,
+    borderColor: "#FF3B30",
+    backgroundColor: "#FFE6E6",
+  },
+  removeText: {
+    color: "#FF3B30",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

@@ -6,6 +6,7 @@ export const Container = styled.View`
   padding: 60px;
   align-items: center;
   background-color: #263a83;
+  padding-top: 120px;
 `;
 
 // Container da Barra de Progresso
@@ -415,6 +416,7 @@ export const ProfileContainer = styled.TouchableOpacity`
   padding: 20px;
   width: 100%;
   align-self: center;
+  padding-top: 50px;
 `;
 
 export const Avatar = styled.Image.attrs({
@@ -651,7 +653,7 @@ export const Titulos_Equipa_Criada = styled.Text`
   color: #263a83;
   font-family: Poppins-regular;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 600;
   margin-top: 20px;
   align-self: center;
   font-family: poppins-regular;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   Image,
   Alert,
+  Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -21,88 +22,119 @@ export default function Cards() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [scaleAnimations, setScaleAnimations] = useState([]);
   const [revealedCards, setRevealedCards] = useState([]);
+  const [loadingModalVisible, setLoadingModalVisible] = useState(false);
+
+  const rotateAnims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
   const { user } = useContext(AuthContext);
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchGeneratedCards() {
-      try {
-        if (!user || !user.id) {
-          Alert.alert("Erro", "Utilizador não autenticado.");
-          return;
-        }
-
-        const response = await axios.post(`${baseurl}/api/shake/generate-challenges`, {
-          userId: user.id,
-        });
-
-        const challengesArray = response.data.challenges.map((item, index) => ({
-          id: index + 1,
-          title: item.title.trim(),
-          description: item.description.trim(),
-          level: item.level,
-          levelId: item.levelId,
-          image: item.image, // 🔹 Imagem vinda do backend
-        }));
-
-        setCards(challengesArray);
-        setSelectedCard(null);
-        setScaleAnimations(challengesArray.map(() => new Animated.Value(1)));
-        setRevealedCards(challengesArray.map(() => false));
-      } catch (error) {
-        console.error("❌ Erro ao gerar desafios:", error);
-        Alert.alert("Erro", "Não foi possível gerar os desafios.");
-      }
-    }
-
+    animateLoadingCards();
     fetchGeneratedCards();
   }, []);
 
-  const handleCardSelect = (index) => {
-    setSelectedCard(cards[index]);
-
-    setRevealedCards((prev) =>
-      prev.map((isRevealed, i) => (i === index ? true : isRevealed))
+  function animateLoadingCards() {
+    const rotates = rotateAnims.map((anim, idx) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 800 + idx * 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ])
+      )
     );
 
-    scaleAnimations.forEach((anim, i) => {
+    const floatLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -20,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 20,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    Animated.parallel([...rotates, floatLoop]).start();
+  }
+
+  async function fetchGeneratedCards() {
+    try {
+      if (!user?.id) {
+        Alert.alert("Erro", "Utilizador não autenticado.");
+        return;
+      }
+      setLoadingModalVisible(true);
+      const response = await axios.post(`${baseurl}/api/shake/generate-challenges`, { userId: user.id });
+      const arr = response.data.challenges.map((item, i) => ({
+        id: i + 1,
+        title: item.title.trim(),
+        description: item.description.trim(),
+        level: item.level,
+        levelId: item.levelId,
+        image: item.image,
+      }));
+      setCards(arr);
+      setSelectedCard(null);
+      setScaleAnimations(arr.map(() => new Animated.Value(1)));
+      setRevealedCards(arr.map(() => false));
+    } catch (error) {
+      console.error("❌ Erro ao gerar desafios:", error);
+      Alert.alert("Erro", "Não foi possível gerar os desafios.");
+    } finally {
+      setLoadingModalVisible(false);
+    }
+  }
+
+  function handleCardSelect(i) {
+    setSelectedCard(cards[i]);
+    setRevealedCards(prev => prev.map((r, idx) => idx === i || r));
+    scaleAnimations.forEach((anim, idx) =>
       Animated.timing(anim, {
-        toValue: i === index ? 1.2 : 1,
+        toValue: idx === i ? 1.2 : 1,
         duration: 300,
         useNativeDriver: true,
-      }).start();
-    });
-  };
+      }).start()
+    );
+  }
 
-  const handleSelectButton = async () => {
-    if (!user || !user.id) {
+  async function handleSelectButton() {
+    if (!user?.id) {
       Alert.alert("Erro", "É necessário estar autenticado.");
       return;
     }
-
     if (!selectedCard) {
       Alert.alert("Erro", "Nenhuma carta selecionada.");
       return;
     }
-
     try {
-      const payload = {
+      const resp = await axios.post(`${baseurl}/api/shake/save-challenge`, {
         userId: user.id,
         title: selectedCard.title,
         description: selectedCard.description,
         levelId: selectedCard.levelId,
-      };
-
-      const response = await axios.post(`${baseurl}/api/shake/save-challenge`, payload);
-
-      if (response.data?.challenge?.id) {
-        const selectedIndex = cards.indexOf(selectedCard);
+      });
+      if (resp.data?.challenge?.id) {
         router.push({
           pathname: "./cartaSelecionada",
-          params: {
-            card: JSON.stringify(selectedCard),
-            cardNumber: selectedIndex + 1,
-          },
+          params: { card: JSON.stringify(selectedCard), cardNumber: cards.indexOf(selectedCard) + 1 },
         });
       } else {
         Alert.alert("Erro", "Desafio não foi guardado corretamente.");
@@ -111,28 +143,53 @@ export default function Cards() {
       console.error("❌ Erro ao guardar seleção:", error);
       Alert.alert("Erro", "Não foi possível registar a carta.");
     }
-  };
+  }
+
+  const getRotateStyle = anim =>
+    anim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
 
   return (
     <View style={styles.background}>
+      <Modal transparent visible={loadingModalVisible} animationType="fade">
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalText}>A baralhar as cartas...</Text>
+          <View style={styles.deckContainer}>
+            {rotateAnims.map((anim, idx) => (
+              <Animated.Image
+                key={idx}
+                source={require("../../imagens/shakeMeDiario.png")}
+                style={[
+                  styles.loadingCard,
+                  {
+                    transform: [
+                      { rotate: getRotateStyle(anim) },
+                      { translateY: floatAnim },
+                      { scale: 1 - idx * 0.05 },
+                    ],
+                    position: 'absolute',
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.container}>
         <Text style={styles.infoText}>Três cartas, um desafio</Text>
         <Text style={styles.questionText}>Qual vais escolher?</Text>
-
         <View style={styles.topCards}>
-          {cards.map((card, index) => (
-            <TouchableOpacity key={index} onPress={() => handleCardSelect(index)}>
-              <Animated.View
-                style={[
-                  styles.smallCard,
-                  {
-                    transform: [{ scale: scaleAnimations[index] || 1 }],
-                    borderColor: selectedCard === card ? "white" : "#535E88",
-                    backgroundColor: revealedCards[index] ? "white" : "#2E3A8C",
-                  },
-                ]}
-              >
-                {revealedCards[index] && card.image && (
+          {cards.map((card, i) => (
+            <TouchableOpacity key={i} onPress={() => handleCardSelect(i)}>
+              <Animated.View style={[
+                styles.smallCard,
+                {
+                  transform: [{ scale: scaleAnimations[i] }],
+                  borderColor: selectedCard === card ? "white" : "#535E88",
+                  backgroundColor: revealedCards[i] ? "#FFF" : "#2E3A8C",
+                },
+              ]}>
+                {revealedCards[i] && card.image && (
                   <Image
                     source={{ uri: card.image }}
                     style={styles.cardImage}
@@ -144,7 +201,6 @@ export default function Cards() {
             </TouchableOpacity>
           ))}
         </View>
-
         {selectedCard && (
           <View style={styles.mainCard}>
             {selectedCard.image && (
@@ -161,7 +217,6 @@ export default function Cards() {
             </View>
           </View>
         )}
-
         <TouchableOpacity style={styles.selectButton} onPress={handleSelectButton}>
           <Text style={styles.selectButtonText}>Selecionar</Text>
         </TouchableOpacity>
@@ -169,7 +224,6 @@ export default function Cards() {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   background: {
@@ -193,8 +247,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#4C4B49",
     fontWeight: "bold",
-    marginBottom: 20,
-    marginTop: -20,
   },
   topCards: {
     flexDirection: "row",
@@ -204,16 +256,11 @@ const styles = StyleSheet.create({
   smallCard: {
     width: 100,
     height: 150,
-    backgroundColor: "white",
     borderRadius: 10,
     borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
-  },
-  smallCardImage: {
-    width: "100%",
-    height: "100%",
   },
   mainCard: {
     width: 210,
@@ -225,7 +272,6 @@ const styles = StyleSheet.create({
     padding: 10,
     overflow: "hidden",
   },
-  // esta propriedade pode estar estragada
   cardImage: {
     width: "100%",
     height: 230,
@@ -242,7 +288,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 5,
   },
   mainDescription: {
     color: "#2E3A8C",
@@ -250,7 +295,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   selectButton: {
-    marginTop: 20,
     backgroundColor: "#2E3A8C",
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -261,4 +305,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#BFE0FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalText: {
+    color: "white",
+    fontSize: 20,
+    marginBottom: 20,
+    fontWeight: "bold",
+  },
+  deckContainer: {
+    width: 140,
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingCard: {
+    width: 120,
+    height: 180,
+    borderRadius: 8,
+  },
 });
+

@@ -94,7 +94,6 @@ router.get("/desafios-do-dia", challengeController.getDesafiosDoDia);
 
 router.get("/verificar/:id", challengeController.verificarDesafioRealizado);
 
-router.post("/discover-weekly-challenge", challengeController.discoverWeeklyChallenge);
 
 router.get("/:teamsId", challengeController.getChallengeForTeam);
 

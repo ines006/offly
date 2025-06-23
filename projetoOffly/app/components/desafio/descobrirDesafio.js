@@ -120,7 +120,7 @@ export default function Descobrir() {
 
   const handleDiscover = async () => {
     try {
-      const response = await axios.post(`${baseurl}/api/discover-weekly-challenge`, {
+      const response = await axios.post(`${baseurl}/api/shakeSemanal/discover-weekly`, {
         userId: user.id,
       });
 

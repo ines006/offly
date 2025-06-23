@@ -14,6 +14,7 @@ const teamPassbooksRoutes = require("./routes/teamsPassbooksRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const shakeRoutes = require ("./routes/shakeRoutes")
 const validationRoutes = require ("./routes/proveChallengeRoutes")
+const shakeSemanalRoutes = require ("./routes/shakeSemanalRoutes")
 
 require("dotenv").config();
 
@@ -79,7 +80,8 @@ app.use("/api", challengeRoutes);
 app.use("/touchs", touchRoutes);
 app.use("/api/shake", shakeRoutes);
 app.use("/api/validation", validationRoutes );
-
+app.use("/api/shakeSemanal", shakeSemanalRoutes);
+shakeSemanalRoutes
 
 // Testar conexão e iniciar servidor
 testConnection()

@@ -191,40 +191,19 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
   const { participants_id } = req.params;
 
   try {
-    // Busca o desafio mais recente e validado do tipo diário
-    const challenge = await ParticipantsHasChallenges.findOne({
-      where: {
-        participants_id,
-        validated: 1,
-        challenge_types_id: 1,
-      },
-      order: [["starting_date", "DESC"]],
-    });
+    // Funções auxiliares para início e fim do dia de hoje
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
-    if (!challenge) {
-      return res.status(404).json({ error: "Nenhum desafio diário validado encontrado." });
-    }
-
-    const startDate = new Date(challenge.starting_date);
-    const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // +1 dia
-
-    const startOfDay = (date) => new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = (date) => new Date(date.setHours(23, 59, 59, 999));
-
-    const filteredChallenge = await ParticipantsHasChallenges.findOne({
+    // Busca desafio diário validado concluído hoje
+    const challengeToday = await ParticipantsHasChallenges.findOne({
       where: {
         participants_id,
         validated: 1,
         challenge_types_id: 1,
         completed_date: {
-          [Op.or]: [
-            {
-              [Op.between]: [startOfDay(new Date(startDate)), endOfDay(new Date(startDate))],
-            },
-            {
-              [Op.between]: [startOfDay(new Date(endDate)), endOfDay(new Date(endDate))],
-            },
-          ],
+          [Op.between]: [startOfToday, endOfToday],
         },
       },
       attributes: [
@@ -235,7 +214,7 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
         "challenge_levels_id_challenge_levels",
         "challenge_types_id",
         "validated",
-        "user_img", // Blob da imagem do usuário
+        "user_img",
       ],
       include: [
         {
@@ -246,48 +225,48 @@ exports.getActiveChallengeWithUserImage = async (req, res) => {
       ],
     });
 
-    if (!filteredChallenge) {
+    if (!challengeToday) {
       return res.status(404).json({
-        error: "Nenhuma carta encontrada com a data concluída esperada.",
+        error: "Nenhum desafio diário concluído hoje foi encontrado.",
       });
     }
 
-    // Pega imagem de nível
+   
     const level = await ChallengeLevels.findOne({
-      where: { id: filteredChallenge.challenge_levels_id_challenge_levels },
+      where: { id: challengeToday.challenge_levels_id_challenge_levels },
       attributes: ["image_level"],
     });
 
-    // Convertendo blob em base64 (se existir)
+    // Converte imagem do utilizador para base64
     let userImageBase64 = null;
-    if (filteredChallenge.user_img) {
-      const mimeType = "image/jpeg"; // ou image/png dependendo do tipo real
-      const base64 = filteredChallenge.user_img.toString("base64");
+    if (challengeToday.user_img) {
+      const mimeType = "image/jpeg"; 
+      const base64 = challengeToday.user_img.toString("base64");
       userImageBase64 = `data:${mimeType};base64,${base64}`;
     }
 
-    // Resposta final
     return res.json({
-      participants_id: filteredChallenge.participants_id,
-      challenges_id: filteredChallenge.challenges_id,
-      starting_date: filteredChallenge.starting_date,
-      completed_date: filteredChallenge.completed_date,
-      user_img: userImageBase64, 
+      participants_id: challengeToday.participants_id,
+      challenges_id: challengeToday.challenges_id,
+      starting_date: challengeToday.starting_date,
+      completed_date: challengeToday.completed_date,
+      user_img: userImageBase64,
       challenge: {
-        id: filteredChallenge.challenge?.id,
-        titulo: filteredChallenge.challenge?.title,
-        imagem: filteredChallenge.challenge?.img,
-        carta: filteredChallenge.challenge?.description,
+        id: challengeToday.challenge?.id,
+        titulo: challengeToday.challenge?.title,
+        imagem: challengeToday.challenge?.img,
+        carta: challengeToday.challenge?.description,
         imagem_nivel: level?.image_level || null,
       },
     });
   } catch (error) {
-    console.error("❌ Erro ao buscar carta ativa com imagem:", error);
+    console.error("❌ Erro ao buscar desafio diário de hoje:", error);
     return res.status(500).json({
-      error: "Erro ao buscar carta ativa.",
+      error: "Erro ao buscar desafio diário de hoje.",
       details: error.message,
     });
   }
 };
+
 
   module.exports = exports;

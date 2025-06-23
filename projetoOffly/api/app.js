@@ -81,7 +81,7 @@ app.use("/touchs", touchRoutes);
 app.use("/api/shake", shakeRoutes);
 app.use("/api/validation", validationRoutes );
 app.use("/api/shakeSemanal", shakeSemanalRoutes);
-shakeSemanalRoutes
+
 
 // Testar conexão e iniciar servidor
 testConnection()

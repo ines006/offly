@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
-  FlatList,
 } from "react-native";
 import { Alert } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -85,7 +84,6 @@ export default function EquipaCriada() {
   // Utilizador logado + Dados do utilizador
   useEffect(() => {
     const fetchUserData = async () => {
-      //console.log("🔍 Depurando dados do utilizador...");
       console.log("👤 User:", user);
       console.log("🔑 AccessToken:", accessToken);
 
@@ -97,9 +95,6 @@ export default function EquipaCriada() {
       }
 
       try {
-        //console.log(
-        //  `🌐 Fazendo requisição para ${baseurl}/participants/${user.id}`
-        //);
         const response = await axios.get(`${baseurl}/participants/${user.id}`, {
           headers: {
             "Content-Type": "application/json",
@@ -224,11 +219,6 @@ export default function EquipaCriada() {
       console.log("Competições disponíveis: ", responseCompetitions.data);
 
       const availableCompetitions = responseCompetitions.data;
-
-      // console.log(
-      //   "Length competições disponíveis: ",
-      //   availableCompetitions.length
-      // );
 
       // 2. Escolher uma competição aleatória
       if (availableCompetitions.length === 0) {
@@ -363,7 +353,7 @@ export default function EquipaCriada() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: "#fff" }}>
+    <ScrollView style={{ backgroundColor: "#fff" }} showsVerticalScrollIndicator={false}>
       <Container_Pagina_Equipa_Criada>
         {/* Botão de Voltar atrás */}
         <TouchableOpacity
@@ -396,7 +386,6 @@ export default function EquipaCriada() {
           <Text style={styles.leaveButtonText}>Sair</Text>
         </TouchableOpacity>
 
-
         <Titulos_Equipa_Criada
           accessibilityRole="text"
           accessibilityLabel={teamName}
@@ -411,39 +400,34 @@ export default function EquipaCriada() {
         </Sub_Titulos_Criar_Equipa>
 
         <View style={styles.remainingTeamsContainer}>
-          <FlatList
-            data={Array.from({ length: teamCapacity })}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ index }) => {
-              const participant = teamMembers[index];
-              const isEmptySlot = !participant;
-              return (
-                <View
-                  style={[styles.card, isEmptySlot && styles.cardVazio]}
+          {Array.from({ length: teamCapacity }).map((_, index) => {
+            const participant = teamMembers[index];
+            const isEmptySlot = !participant;
+            return (
+              <View
+                key={index.toString()}
+                style={[styles.card, isEmptySlot && styles.cardVazio]}
+              >
+                <Image
+                  source={{
+                    uri: isEmptySlot
+                      ? "https://celina05.sirv.com/icones/empty-user.png"
+                      : participant.image || getRandomImage(),
+                  }}
+                  style={styles.peopleImage}
+                />
+                <Text
+                  style={[
+                    styles.participantText,
+                    isEmptySlot && styles.participantTextVazio,
+                  ]}
                 >
-                  <Image
-                    source={{
-                      uri: isEmptySlot
-                        ? "https://celina05.sirv.com/icones/empty-user.png"
-                        : participant.image || getRandomImage(),
-                    }}
-                    style={styles.peopleImage}
-                  />
-                  <Text
-                    style={[
-                      styles.participantText,
-                      isEmptySlot && styles.participantTextVazio,
-                    ]}
-                  >
-                    {isEmptySlot ? ". . ." : participant.username}
-                  </Text>
-                </View>
-              );
-            }}
-            showsVerticalScrollIndicator={true}
-            style={{ width: "100%" }}
-            contentContainerStyle={{ alignItems: "center" }}
-          />
+                  {isEmptySlot ? ". . ." : participant.username}
+                </Text>
+              </View>
+            );
+          })}
+          
           {teamMembers.length === teamCapacity ? (
             isAdmin ? (
               <Botoes_Pagina_principal onPress={handleTorneio}>
@@ -580,4 +564,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

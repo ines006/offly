@@ -371,10 +371,10 @@ export default function PaginaPrincipal() {
           console.log("🔗 Invite link criado:", newInviteLink);
           setInviteLink(newInviteLink);
           await Clipboard.setStringAsync(newInviteLink);
-          Alert.alert(
-            "Sucesso",
-            "Equipa privada criada! O link de convite foi copiado para a área de transferência."
-          );
+          // Alert.alert(
+          //   "Sucesso",
+          //   "Equipa privada criada! O link de convite foi copiado para a área de transferência."
+          // );
         } catch (inviteError) {
           console.error("❌ Erro ao criar convite:", inviteError);
           let inviteErrorMessage = "Não foi possível gerar o link de convite.";
@@ -390,7 +390,7 @@ export default function PaginaPrincipal() {
           );
         }
       } else {
-        Alert.alert("Sucesso", "Equipa pública criada com sucesso!");
+        // Alert.alert("Sucesso", "Equipa pública criada com sucesso!");
         setModalVisible(false);
         console.log(
           "🔄 Redirecionando para /EquipaCriada com teamId:",
@@ -405,7 +405,7 @@ export default function PaginaPrincipal() {
           console.error("❌ Erro ao redirecionar (pública):", error);
           Alert.alert(
             "Erro",
-            "Não foi possível redirecionar para a página da equipe."
+            "Não foi possível redirecionar para a página da equipa."
           );
         }
       }
@@ -460,7 +460,7 @@ export default function PaginaPrincipal() {
       );
 
       console.log("✅ Sucesso:", response.data);
-      Alert.alert("Sucesso", "Você entrou na equipa com sucesso!");
+      // Alert.alert("Sucesso", "Você entrou na equipa com sucesso!");
 
       if (typeof setModalEquipa === "function") {
         setModalEquipa(false);
@@ -551,7 +551,7 @@ export default function PaginaPrincipal() {
 
       console.log("✅ Sucesso:", response.data);
       const teamId = response.data.teamId || response.data.id;
-      Alert.alert("Sucesso", "Você entrou na equipa privada com sucesso!");
+      // Alert.alert("Sucesso", "Você entrou na equipa privada com sucesso!");
 
       setModalJoinByInvite(false);
       router.push({
@@ -693,7 +693,7 @@ export default function PaginaPrincipal() {
 
   function copyToClipboard(text) {
     Clipboard.setStringAsync(text);
-    Alert.alert("Sucesso", "Link copiado para a área de transferência!");
+    // Alert.alert("Sucesso", "Link copiado para a área de transferência!");
   }
 
   const stars = useMemo(() => {
@@ -1175,7 +1175,7 @@ export default function PaginaPrincipal() {
                         console.error("❌ Erro ao redirecionar:", error);
                         Alert.alert(
                           "Erro",
-                          "Não foi possível redirecionar para a página da equipe."
+                          "Não foi possível redirecionar para a página da equipa."
                         );
                       }
                     } else {

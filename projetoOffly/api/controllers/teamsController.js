@@ -203,7 +203,7 @@ exports.createTeam = async (req, res) => {
   }
 };
 
-// Atualização da equipa via ID 
+// Atualização da equipa via ID
 exports.updateTeam = async (req, res) => {
   try {
     if (!req.user) {
@@ -211,7 +211,8 @@ exports.updateTeam = async (req, res) => {
     }
 
     const teamId = parseInt(req.params.id, 10);
-    const { competitions_id, points, team_passbooks_id, last_variation } = req.body;
+    const { competitions_id, points, team_passbooks_id, last_variation } =
+      req.body;
 
     if (!Number.isInteger(teamId)) {
       return res.status(400).json({ message: "Valid team ID is required" });
@@ -225,7 +226,9 @@ exports.updateTeam = async (req, res) => {
 
     // Verify if the user is admin of the team
     if (team.team_admin !== req.user.id) {
-      return res.status(403).json({ message: "You are not the admin of this team" });
+      return res
+        .status(403)
+        .json({ message: "You are not the admin of this team" });
     }
 
     // Initialize update fields
@@ -242,7 +245,8 @@ exports.updateTeam = async (req, res) => {
             const endDate = moment(competition.end_date).tz("Europe/Lisbon");
             if (!now.isAfter(endDate)) {
               return res.status(400).json({
-                message: "Cannot set competitions_id to null before competition end date",
+                message:
+                  "Cannot set competitions_id to null before competition end date",
               });
             }
           }
@@ -302,7 +306,9 @@ exports.updateTeam = async (req, res) => {
 
     // Check if there are fields to update
     if (Object.keys(updateFields).length === 0) {
-      return res.status(400).json({ message: "No valid fields provided for update" });
+      return res
+        .status(400)
+        .json({ message: "No valid fields provided for update" });
     }
 
     // Update team with provided fields
@@ -435,7 +441,11 @@ exports.getAvailableCompetitions = async (req, res) => {
 
     // Validação do parâmetro 'players'
     const validPlayers = [3, 4, 5];
-    if (!players || isNaN(players) || !validPlayers.includes(parseInt(players))) {
+    if (
+      !players ||
+      isNaN(players) ||
+      !validPlayers.includes(parseInt(players))
+    ) {
       return res.status(422).json({
         message: "Parameter 'players' must be 3, 4 or 5.",
       });
@@ -447,9 +457,9 @@ exports.getAvailableCompetitions = async (req, res) => {
     // 1. Buscar competições com menos de 10 equipas, players = X e dentro do intervalo de datas
     const competitionsWithCounts = await Competitions.findAll({
       where: {
-        players: parsedPlayers, 
-        starting_date: { [Sequelize.Op.lte]: currentDate }, 
-        end_date: { [Sequelize.Op.gte]: currentDate }, 
+        players: parsedPlayers,
+        starting_date: { [Sequelize.Op.lte]: currentDate },
+        end_date: { [Sequelize.Op.gte]: currentDate },
       },
       attributes: [
         "id",
@@ -515,7 +525,6 @@ exports.getAvailableCompetitions = async (req, res) => {
     });
   }
 };
-
 
 //Desafios diários validados dos participantes de uma equipa
 exports.getTeamChallenges = async (req, res) => {
@@ -874,10 +883,6 @@ exports.searchTeamsByName = async (req, res) => {
         },
       ],
     });
-
-    if (!teams.length) {
-      return res.status(404).json({ message: "No teams found with this name" });
-    }
 
     res.json(
       teams.map((team) => ({

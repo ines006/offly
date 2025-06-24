@@ -1,3 +1,18 @@
+const { OpenAI } = require("openai");
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const Participants = require("../models/participants");
+const ParticipantsHasChallenges = require("../models/participantsHasChallenges");
+const Challenges = require("../models/challenges");
+const ChallengeLevels = require("../models/challengeLevel");
+const { sequelize } = require("../config/database");
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 exports.discoverWeeklyChallenge = async (req, res) => {
   console.log("✅ discoverWeeklyChallenge foi chamado");
   const { userId } = req.body;
@@ -21,6 +36,7 @@ exports.discoverWeeklyChallenge = async (req, res) => {
 
     const teamId = participant.teams_id;
 
+    // Buscar descrições de desafios anteriores
     const previousChallenges = await sequelize.query(
       `SELECT c.description FROM challenges_has_teams cht
        JOIN challenges c ON cht.challenges_id = c.id
@@ -113,8 +129,9 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
       return res.status(500).json({ success: false, message: "Erro ao salvar o desafio no banco de dados." });
     }
 
+    // Datas da semana
     const now = new Date();
-    const dayOfWeek = now.getDay(); 
+    const dayOfWeek = now.getDay();
     const monday = new Date(now);
     const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     monday.setDate(now.getDate() - diffToMonday);
@@ -125,8 +142,8 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
 
     try {
       await sequelize.query(
-        `INSERT INTO challenges_has_teams (challenges_id, teams_id, starting_date, end_date)
-         VALUES (?, ?, ?, ?)`,
+        `INSERT INTO challenges_has_teams (challenges_id, teams_id, starting_date, end_date, validated)
+         VALUES (?, ?, ?, ?, 0)`,
         {
           replacements: [challengeId, teamId, monday, sunday],
           type: sequelize.QueryTypes.INSERT
@@ -137,6 +154,7 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
       return res.status(500).json({ success: false, message: "Erro ao associar desafio à equipa." });
     }
 
+    // Participantes da equipa
     let participants;
 
     try {
@@ -156,15 +174,16 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
       const insertPromises = participants.map(participant =>
         sequelize.query(
           `INSERT INTO participants_has_challenges 
-           (participants_id, challenges_id, starting_date, end_date, completed_date, streak, challenge_levels_id_challenge_levels, challenge_types_id) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+           (participants_id, challenges_id, starting_date, end_date, completed_date, validated, streak, challenge_levels_id_challenge_levels, challenge_types_id) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           {
             replacements: [
               participant.id,
               challengeId,
               monday,
               sunday,
-              null,
+              0,
+              0,
               JSON.stringify(["0", "0", "0", "0", "0", "0", "0"]),
               0, 
               2

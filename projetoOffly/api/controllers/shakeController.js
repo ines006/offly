@@ -51,13 +51,14 @@ exports.generateShakeChallenges = async (req, res) => {
       Cria exatamente 3 desafios personalizados para uma pessoa com estas características:
       ${userCharacteristics}
 
-      Evita repetir os seguintes desafios já concluídos:
+      Não repetir nem gerar desafios semelhantes aos seguintes desafios já concluídos:
       ${completedDescriptions.join("\n")}
+
 
       Requisitos dos desafios:
       - Um deve ser nível "fácil", outro "intermédio" e outro "difícil"
       - Os três desafios devem ser diferentes entre si (não versões do mesmo desafio com dificuldade ajustada)
-      - Devem ser originais e criativos
+      - Devem ser originais, criativos e não redundantes
       - O de nível difícil deve ser fora do comum, divertido e desafiador
       - Todos os desafios devem de ser comprovados com uma só fotografia
       - Todos devem ser seguros, gratuitos (preferencialmente), fora do ecrã e realizáveis no mesmo dia

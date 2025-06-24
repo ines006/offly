@@ -53,9 +53,11 @@ exports.discoverWeeklyChallenge = async (req, res) => {
       Cria um único desafio semanal breve, objetivo e comprovável com base em uma destas categorias: produtividade, jogos, tempo de ecrã ou social.
 
       Requisitos:
-      - Deve incentivar o utilizador a reduzir o tempo nessa categoria
+      - Deve incentivar o utilizador a reduzir o tempo nessa categoria durante uma semana
+      - Deve de ser validado por dia, se foi realizado ou não
       - Deve ser facilmente comprovável com o upload do screen time
-      - A descrição deve ter no máximo 200 caracteres
+      - A descrição deve ter no máximo 190 caracteres
+      - o titulo deve ser muito curto, duas a três palavras
       - Não pode repetir nenhuma destas descrições: ${descriptionsToAvoid.join("\n")}
 
       Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora do JSON):
@@ -72,7 +74,7 @@ exports.discoverWeeklyChallenge = async (req, res) => {
         { role: "user", content: "Responda apenas com JSON válido, sem explicações." },
         { role: "user", content: prompt }
       ],
-      max_tokens: 200,
+      max_tokens: 400,
     });
 
     const content = response.choices[0].message.content.trim();

@@ -143,8 +143,23 @@ export default function PaginaPrincipal() {
   const router = useRouter();
 
   const imageTeamUrls = [
-    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.50.14-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Group%20300%20(1).png",
+    "https://celina05.sirv.com/equipasFinal/Group%2013959.png",
+    "https://celina05.sirv.com/equipasFinal/Group%2013960.png",
+    "https://celina05.sirv.com/equipasFinal/Group%2013961.png",
+    "https://celina05.sirv.com/equipasFinal/Group%2013962.png",
+    "https://celina05.sirv.com/equipasFinal/Group%2013963.png",
     "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.51.27-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.50.14-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.52.12-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.52.12-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.52.51-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.53.23-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.53.56-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.54.27-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.54.56-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.55.24-removebg-preview.png",
+    "https://celina05.sirv.com/equipasFinal/Screenshot_2025-01-16_at_01.56.03-removebg-preview.png",
   ];
 
   const getRandomImage = (tipo) => {

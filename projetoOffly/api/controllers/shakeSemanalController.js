@@ -50,15 +50,19 @@ exports.discoverWeeklyChallenge = async (req, res) => {
     const descriptionsToAvoid = previousChallenges.map(c => c.description).filter(Boolean);
 
     const prompt = `
-      Cria um único desafio semanal breve, objetivo e comprovável com base em uma destas categorias: produtividade, jogos, tempo de ecrã ou social.
+      Cria um único desafio semanal breve, objetivo e comprovável com base numa destas categorias: produtividade, jogos, tempo de ecrã ou social.
 
       Requisitos:
-      - Deve incentivar o utilizador a reduzir o tempo nessa categoria durante uma semana
-      - Deve de ser validado por dia, se foi realizado ou não
+      - Deve incentivar o utilizador a reduzir o tempo 
+      - Deve de ser validado por dia, sendo feito ao longo da semana
       - Deve ser facilmente comprovável com o upload do screen time
-      - A descrição deve ter no máximo 190 caracteres constituida apenas com frases acabadas
-      - o titulo deve ser muito curto, duas a três palavras
+      - A descrição deve ser objetiva e ter no máximo 190 caracteres 
+      - A descrição deve de ser constituida apenas com frases de preferencia numa unica frase breve. 
+      - A descrição não pode ter palavras soltas. Se usares duas frases acaba as frases ate ao fim
+      - O titulo deve ser muito curto, duas a três palavras
       - Não pode repetir nenhuma destas descrições: ${descriptionsToAvoid.join("\n")}
+      - Deves de ser tu a dar o tempo que podem estar na categoria e não o utilizador a escolher
+      - Se a categoria não estiver na imagem do upload do screen time considera tempo 0
 
       Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora do JSON):
       {

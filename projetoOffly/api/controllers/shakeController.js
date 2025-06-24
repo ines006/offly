@@ -58,9 +58,10 @@ exports.generateShakeChallenges = async (req, res) => {
       - Um deve ser nível "fácil", outro "intermédio" e outro "difícil"
       - Os três desafios devem ser diferentes entre si (não versões do mesmo desafio com dificuldade ajustada)
       - Devem ser originais e criativos
-      - O de nível difícil deve ser fora do comum mas fácil de comprovar com uma só fotografia
+      - O de nível difícil deve ser fora do comum, divertido e desafiador
+      - Todos os desafios devem de ser comprovados com uma só fotografia
       - Todos devem ser seguros, gratuitos (preferencialmente), fora do ecrã e realizáveis no mesmo dia
-      - Cada descrição deve ter no máximo 200 caracteres
+      - Cada descrição deve ter no máximo 210 caracteres
 
       Formato da resposta:
       JSON válido com esta estrutura:

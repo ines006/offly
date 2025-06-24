@@ -41,12 +41,15 @@ const compressImageTo64KB = async (inputBuffer) => {
 
 const validateChallengeImage = async (imageBuffer, challengeDescription) => {
   const prompt = `
-Com base na imagem submetida pelo utilizador, valida com detalhe se a pessoa realizou o desafio personalizado que escolheu: "${challengeDescription}".
-Não é necessário seres específico em situações que em imagens não são possíveis de serem confirmadas, por exemplo, não precisas de confirmar se um bairro é desconhecido ou não ao utilizador.
-Retorne apenas:
-- "válido"
-- "inválido: <justificação>"
-  `;
+    Com base na imagem submetida pelo utilizador, valida com detalhe se a pessoa realizou pelo menos uma das tarefas do desafio personalizado que escolheu: "${challengeDescription}".
+
+    É suficiente que apenas uma das partes do desafio tenha sido cumprida, desde que esteja claramente relacionada com o desafio proposto.
+
+    Não é necessário seres específico em situações que em imagens não são possíveis de serem confirmadas, por exemplo, não precisas de confirmar se um bairro é desconhecido ou não ao utilizador.
+    Retorne apenas:
+    - "válido"
+    - "inválido: <justificação>"
+      `;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4.1",

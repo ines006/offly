@@ -210,7 +210,6 @@ const DesafioSemanal = () => {
       clearInterval(intervaloRef.current);
     };
   }, [desafio]);
-  
 
   const valorPorBolinha = participantes.length
     ? 100 / (7 * participantes.length)

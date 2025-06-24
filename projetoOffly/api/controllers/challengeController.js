@@ -59,15 +59,17 @@ exports.getChallengeImage = async (req, res) => {
     );
 
     if (!result || !result.img) {
-      return res.status(404).json({ error: "Imagem não encontrada." });
+      return res.status(404).send("Imagem não encontrada.");
     }
 
-    res.json({ imageUrl: result.img });
+    // Redireciona para a URL da imagem
+    return res.redirect(result.img);
   } catch (error) {
-    console.error("Erro ao obter link da imagem:", error);
-    res.status(500).json({ error: "Erro ao obter link da imagem." });
+    console.error("Erro ao redirecionar para imagem:", error);
+    return res.status(500).send("Erro interno ao obter imagem.");
   }
 };
+
 
 
 exports.getDesafiosDoDia = async (req, res) => {
@@ -250,9 +252,10 @@ exports.getChallengeDates = async (req, res) => {
   try {
     const [result] = await sequelize.query(
       `SELECT starting_date, end_date, validated 
-      FROM challenges_has_teams 
-      WHERE teams_id = :teamId 
-      LIMIT 1`,
+        FROM challenges_has_teams 
+        WHERE teams_id = :teamId 
+        ORDER BY starting_date DESC
+        LIMIT 1`,
       {
         replacements: { teamId },
         type: sequelize.QueryTypes.SELECT,

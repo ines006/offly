@@ -99,7 +99,7 @@ export default function CartaSelecionada() {
           </Svg>
         </TouchableOpacity>
 
-        {/* <TouchableOpacity
+         <TouchableOpacity
           style={styles.homeButton}
           onPress={() => router.push("../navbar")}
         >
@@ -118,7 +118,7 @@ export default function CartaSelecionada() {
               </G>
             </G>
           </Svg>
-        </TouchableOpacity> */}
+        </TouchableOpacity> 
 
         {selectedCard ? (
           <>

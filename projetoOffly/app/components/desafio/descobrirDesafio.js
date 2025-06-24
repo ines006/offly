@@ -1,5 +1,14 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, AccessibilityInfo } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  AccessibilityInfo,
+  Modal,
+  Dimensions,
+} from "react-native";
 import { useRouter } from "expo-router";
 import Animated, {
   useSharedValue,
@@ -15,20 +24,24 @@ import { Accelerometer } from "expo-sensors";
 import axios from "axios";
 import { AuthContext } from "../../components/entrar/AuthContext";
 import { baseurl } from "../../api-config/apiConfig";
-import shakeMeSemanal from "../../imagens/shakeMeSemanal.png"; 
+import shakeMeSemanal from "../../imagens/shakeMeSemanal.png";
+
+const { width, height } = Dimensions.get("window");
 
 export default function Descobrir() {
   const router = useRouter();
   const { user, accessToken } = useContext(AuthContext);
   const [teamId, setTeamId] = useState("");
-  const scaleAnimation = useSharedValue(1);
-  const rotateAnimation = useSharedValue(0);
-  const shakeAnimation = useSharedValue(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const shakeCount = useRef(0);
 
-  // Shake animation (abanar carta suavemente)
+  const shakeAnimation = useSharedValue(0);
+  const scaleAnimation = useSharedValue(1);
+  const rotateAnimation = useSharedValue(0);
+  const loadingRotate = useSharedValue(0);
+
+  // Shake card idle animation
   useEffect(() => {
     shakeAnimation.value = withRepeat(
       withSequence(
@@ -49,7 +62,6 @@ export default function Descobrir() {
       const totalForce = Math.abs(x) + Math.abs(y) + Math.abs(z);
       if (totalForce > 4) {
         shakeCount.current += 1;
-
         if (shakeCount.current >= 5 && !isNavigating && !isLoading) {
           triggerAnimation();
         }
@@ -57,10 +69,10 @@ export default function Descobrir() {
     });
 
     Accelerometer.setUpdateInterval(100);
-
     return () => subscription.remove();
   }, [isNavigating, isLoading]);
 
+  // Fetch team ID
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -72,20 +84,10 @@ export default function Descobrir() {
             "ngrok-skip-browser-warning": "true",
           },
         });
-
-        const userData = response.data;
-        setTeamId(userData.teams_id);
+        setTeamId(response.data.teams_id);
       } catch (error) {
-        console.error("❌ Erro ao buscar dados do utilizador:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        Alert.alert(
-          "Erro",
-          error.response?.data?.message ||
-            "Não foi possível carregar os dados do utilizador."
-        );
+        console.error("❌ Erro ao buscar dados do utilizador:", error);
+        Alert.alert("Erro", "Não foi possível carregar os dados do utilizador.");
       }
     };
 
@@ -97,6 +99,16 @@ export default function Descobrir() {
     setIsLoading(true);
     setIsNavigating(true);
     AccessibilityInfo.announceForAccessibility("O Shake foi feito");
+
+    // Start loading animation
+    loadingRotate.value = withRepeat(
+      withTiming(360, {
+        duration: 1000,
+        easing: Easing.linear,
+      }),
+      -1,
+      false
+    );
 
     rotateAnimation.value = withTiming(360, {
       duration: 1000,
@@ -123,7 +135,6 @@ export default function Descobrir() {
       const response = await axios.post(`${baseurl}/api/shakeSemanal/discover-weekly`, {
         userId: user.id,
       });
-      console.log("🔗 POST para", `${baseurl}/api/shakeSemanal/discover-weekly`);
 
       if (response.data.success) {
         router.push(`../desafio/desafioSemanal?teamId=${teamId}`);
@@ -131,28 +142,27 @@ export default function Descobrir() {
         Alert.alert("Erro", response.data.message || "Erro desconhecido.");
       }
     } catch (err) {
-        console.error("❌ Erro ao descobrir desafio:", err);
-        if (err.response) {
-          console.error("📡 Status:", err.response.status);
-          console.error("🧾 Data:", err.response.data);
-        } else if (err.request) {
-          console.error("📡 Request feito mas sem resposta:", err.request);
-        } else {
-          console.error("❌ Erro desconhecido:", err.message);
-        }
-        Alert.alert("Erro", "Não foi possível processar o desafio.");
-      } finally {
-            setIsLoading(false);
-            setIsNavigating(false);
-            shakeCount.current = 0;
-          }
-        };
+      console.error("❌ Erro ao descobrir desafio:", err);
+      Alert.alert("Erro", "Não foi possível processar o desafio.");
+    } finally {
+      setIsLoading(false);
+      setIsNavigating(false);
+      shakeCount.current = 0;
+      loadingRotate.value = 0;
+    }
+  };
 
   const animatedMainCardStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: shakeAnimation.value },
       { scale: scaleAnimation.value },
       { rotate: `${rotateAnimation.value}deg` },
+    ],
+  }));
+
+  const animatedLoadingStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: `${loadingRotate.value}deg` },
     ],
   }));
 
@@ -180,6 +190,20 @@ export default function Descobrir() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Modal de carregamento */}
+      <Modal visible={isLoading} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Animated.Image
+              source={shakeMeSemanal}
+              style={[styles.loadingCard, animatedLoadingStyle]}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>A gerar desafio semanal...</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -224,6 +248,34 @@ const styles = StyleSheet.create({
     color: "black",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 30,
+    borderRadius: 20,
+    alignItems: "center",
+    width: width * 0.8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  loadingCard: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: "center",
+    fontWeight: "600",
   },
 });
 

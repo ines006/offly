@@ -50,20 +50,21 @@ exports.discoverWeeklyChallenge = async (req, res) => {
     const descriptionsToAvoid = previousChallenges.map(c => c.description).filter(Boolean);
 
     const prompt = `
-Cria um único desafio semanal breve, objetivo e comprovável com base em uma destas categorias: produtividade, jogos, tempo de ecrã ou social.
+      Cria um único desafio semanal breve, objetivo e comprovável com base em uma destas categorias: produtividade, jogos, tempo de ecrã ou social.
 
-Requisitos:
-- Deve incentivar o utilizador a reduzir o tempo nessa categoria
-- Deve ser comprovável com o upload do screen time
-- Não pode repetir nenhuma destas descrições: ${descriptionsToAvoid.join("\n")}
+      Requisitos:
+      - Deve incentivar o utilizador a reduzir o tempo nessa categoria
+      - Deve ser facilmente comprovável com o upload do screen time
+      - A descrição deve ter no máximo 200 caracteres
+      - Não pode repetir nenhuma destas descrições: ${descriptionsToAvoid.join("\n")}
 
-Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora do JSON):
-{
-  "title": "...",
-  "description": "...",
-  "category": "produtividade | jogos | tempo de ecrã | social"
-}
-`;
+      Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora do JSON):
+      {
+        "title": "...",
+        "description": "...",
+        "category": "produtividade | jogos | tempo de ecrã | social"
+      }
+      `;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4.1",
@@ -71,7 +72,7 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
         { role: "user", content: "Responda apenas com JSON válido, sem explicações." },
         { role: "user", content: prompt }
       ],
-      max_tokens: 300,
+      max_tokens: 200,
     });
 
     const content = response.choices[0].message.content.trim();

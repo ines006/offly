@@ -48,30 +48,30 @@ exports.generateShakeChallenges = async (req, res) => {
       .filter(Boolean);
 
     const prompt = `
-Cria exatamente 3 desafios personalizados para uma pessoa com estas características:
-${userCharacteristics}
+      Cria exatamente 3 desafios personalizados para uma pessoa com estas características:
+      ${userCharacteristics}
 
-Evita repetir os seguintes desafios já concluídos:
-${completedDescriptions.join("\n")}
+      Evita repetir os seguintes desafios já concluídos:
+      ${completedDescriptions.join("\n")}
 
-Requisitos dos desafios:
-- Um deve ser nível "fácil", outro "intermédio" e outro "difícil"
-- Devem ser seguros
-- Gratuitos (preferencialmente)
-- Fora do ecrã
-- Realizáveis no mesmo dia
-- Comprováveis com uma só fotografia
+      Requisitos dos desafios:
+      - Um deve ser nível "fácil", outro "intermédio" e outro "difícil"
+      - Os três desafios devem ser diferentes entre si (não versões do mesmo desafio com dificuldade ajustada)
+      - Devem ser originais e criativos
+      - O de nível difícil deve ser fora do comum mas fácil de comprovar com uma só fotografia
+      - Todos devem ser seguros, gratuitos (preferencialmente), fora do ecrã e realizáveis no mesmo dia
+      - Cada descrição deve ter no máximo 200 caracteres
 
-Formato da resposta:
-JSON válido com esta estrutura:
-[
-  { "title": "Título do desafio 1", "description": "Descrição curta", "level": "fácil" },
-  { "title": "Título do desafio 2", "description": "Descrição curta", "level": "intermédio" },
-  { "title": "Título do desafio 3", "description": "Descrição curta", "level": "difícil" }
-]
+      Formato da resposta:
+      JSON válido com esta estrutura:
+      [
+        { "title": "Título do desafio 1", "description": "Descrição curta", "level": "fácil" },
+        { "title": "Título do desafio 2", "description": "Descrição curta", "level": "intermédio" },
+        { "title": "Título do desafio 3", "description": "Descrição curta", "level": "difícil" }
+      ]
 
-Responde apenas com o JSON.
-    `.trim();
+      Responde apenas com o JSON.
+      `.trim();
 
     const response = await openai.chat.completions.create({
       model: "gpt-4.1",

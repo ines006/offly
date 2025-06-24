@@ -10,11 +10,12 @@ const participantsHasChallengesRoutes = require("./routes/participantsHasChallen
 const cadernetaRoutes = require("./routes/passbookRoutes");
 const touchRoutes = require("./routes/touchsRoutes");
 const { swaggerUi, specs } = require("./config/swagger");
+const validationRoutes = require ("./routes/proveChallengeRoutes")
+const shakeSemanalRoutes = require ("./routes/shakeSemanalRoutes")
 const teamPassbooksRoutes = require("./routes/teamsPassbooksRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const shakeRoutes = require ("./routes/shakeRoutes")
-const validationRoutes = require ("./routes/proveChallengeRoutes")
-const shakeSemanalRoutes = require ("./routes/shakeSemanalRoutes")
+
 
 require("dotenv").config();
 

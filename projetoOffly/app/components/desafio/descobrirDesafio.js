@@ -120,9 +120,10 @@ export default function Descobrir() {
 
   const handleDiscover = async () => {
     try {
-      const response = await axios.post(`${baseurl}/api/shakeSemanal/discoverWeeklyChallenge`, {
+      const response = await axios.post(`${baseurl}/api/shakeSemanal/discover-weekly`, {
         userId: user.id,
       });
+      console.log("🔗 POST para", `${baseurl}/api/shakeSemanal/discover-weekly`);
 
       if (response.data.success) {
         router.push(`../desafio/desafioSemanal?teamId=${teamId}`);
@@ -130,14 +131,22 @@ export default function Descobrir() {
         Alert.alert("Erro", response.data.message || "Erro desconhecido.");
       }
     } catch (err) {
-      console.error("Erro ao descobrir desafio:", err);
-      Alert.alert("Erro", "Não foi possível processar o desafio.");
-    } finally {
-      setIsLoading(false);
-      setIsNavigating(false);
-      shakeCount.current = 0;
-    }
-  };
+        console.error("❌ Erro ao descobrir desafio:", err);
+        if (err.response) {
+          console.error("📡 Status:", err.response.status);
+          console.error("🧾 Data:", err.response.data);
+        } else if (err.request) {
+          console.error("📡 Request feito mas sem resposta:", err.request);
+        } else {
+          console.error("❌ Erro desconhecido:", err.message);
+        }
+        Alert.alert("Erro", "Não foi possível processar o desafio.");
+      } finally {
+            setIsLoading(false);
+            setIsNavigating(false);
+            shakeCount.current = 0;
+          }
+        };
 
   const animatedMainCardStyle = useAnimatedStyle(() => ({
     transform: [

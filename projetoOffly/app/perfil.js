@@ -58,7 +58,7 @@ const ProfileScreen = () => {
 
       setProfileData(response.data);
     } catch (err) {
-      console.error("❌ Erro ao carregar dados do perfil:", err.message);
+
       if (err.response) {
         console.log("📡 Status:", err.response.status);
         console.log("📡 Data:", err.response.data);
@@ -133,7 +133,7 @@ const ProfileScreen = () => {
         setEditedValue("");
         Alert.alert("Sucesso", "Campo atualizado com sucesso!");
       } catch (err) {
-        console.error("❌ Erro ao salvar campo:", err.message);
+ 
         if (err.response) {
           console.log("📡 Status:", err.response.status);
           console.log("📡 Data:", err.response.data);

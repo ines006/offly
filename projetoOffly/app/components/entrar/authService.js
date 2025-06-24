@@ -17,7 +17,6 @@ export const refreshAccessToken = async () => {
 
     return token;
   } catch (err) {
-    console.error("Erro ao fazer refresh do token:", err.message);
     return null;
   }
 };

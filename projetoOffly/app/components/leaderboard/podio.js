@@ -30,7 +30,7 @@ const PodioPontuacao = () => {
       try {
         setIsLoading(true);
         if (!user?.id || !accessToken) {
-          console.error("Utilizador ou token não disponíveis.");
+
           setCompetitionName("Erro: Utilizador não autenticado");
           setIsLoading(false);
           return;
@@ -52,7 +52,7 @@ const PodioPontuacao = () => {
         console.log("teams_id obtido:", teamsId);
 
         if (!teamsId) {
-          console.error("Utilizador não está associado a nenhuma equipa.");
+
           setCompetitionName("Erro: Nenhuma equipa associada");
           setIsLoading(false);
           return;
@@ -97,10 +97,7 @@ const PodioPontuacao = () => {
         ) {
           teamsData = teamsResponse.data.teams;
         } else {
-          console.error(
-            "Resposta não contém um array de equipas:",
-            teamsResponse.data
-          );
+ 
           setCompetitionName("Erro: Nenhuma equipa encontrada");
           setTeams([]);
           setIsLoading(false);
@@ -138,10 +135,7 @@ const PodioPontuacao = () => {
         setTeams(formattedTeams.sort((a, b) => b.totalPoints - a.totalPoints));
         setCompetitionName(teamsResponse.data.competition_name || compName);
       } catch (error) {
-        console.error(
-          "Erro ao buscar dados da competição:",
-          error.response || error
-        );
+  
         setCompetitionName("Erro ao carregar competição");
         setTeams([]);
       } finally {

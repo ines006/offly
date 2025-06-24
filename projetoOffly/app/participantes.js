@@ -26,7 +26,7 @@ const EcraParticipantes = () => {
           setParticipants(response.data);
         }
       } catch (error) {
-        console.error("Erro ao carregar os dados:", error);
+
         setError("Falha ao carregar dados, tente novamente mais tarde."); 
         Alert.alert("Erro", "Falha ao carregar dados");
       } finally {

@@ -79,7 +79,6 @@ export default function DetalhesDia() {
         setParticipantesComDesafios(resultado);
         setFlysAtivos(flyStatusMap);
       } catch (error) {
-        console.error("Erro ao buscar detalhes do dia:", error);
       } finally {
         setLoading(false);
       }
@@ -102,7 +101,6 @@ export default function DetalhesDia() {
         setFlysAtivos((prev) => ({ ...prev, [receiverId]: true }));
       }
     } catch (err) {
-      console.error("Erro ao mandar fly:", err);
     }
   };
 

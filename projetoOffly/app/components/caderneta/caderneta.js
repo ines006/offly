@@ -52,7 +52,6 @@ const Caderneta = () => {
 
         setCompletedDaysSet(completedDays);
       } catch (error) {
-        console.error('❌ Erro ao buscar dados do passbook:', error);
       }
     };
 
@@ -62,7 +61,6 @@ const Caderneta = () => {
         const data = await response.json();
         setWeeklyChallenges(data.images || []);
       } catch (error) {
-        console.error('❌ Erro ao buscar desafios semanais:', error);
       }
     };
 

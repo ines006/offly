@@ -56,7 +56,7 @@ exports.discoverWeeklyChallenge = async (req, res) => {
       - Deve incentivar o utilizador a reduzir o tempo nessa categoria durante uma semana
       - Deve de ser validado por dia, se foi realizado ou não
       - Deve ser facilmente comprovável com o upload do screen time
-      - A descrição deve ter no máximo 190 caracteres
+      - A descrição deve ter no máximo 190 caracteres constituida apenas com frases acabadas
       - o titulo deve ser muito curto, duas a três palavras
       - Não pode repetir nenhuma destas descrições: ${descriptionsToAvoid.join("\n")}
 

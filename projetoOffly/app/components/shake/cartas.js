@@ -96,8 +96,6 @@ export default function Cards() {
       setScaleAnimations(arr.map(() => new Animated.Value(1)));
       setRevealedCards(arr.map(() => false));
     } catch (error) {
-      console.error("❌ Erro ao gerar desafios:", error);
-      Alert.alert("Erro", "Não foi possível gerar os desafios.");
     } finally {
       setLoadingModalVisible(false);
     }
@@ -140,8 +138,7 @@ export default function Cards() {
         Alert.alert("Erro", "Desafio não foi guardado corretamente.");
       }
     } catch (error) {
-      console.error("❌ Erro ao guardar seleção:", error);
-      Alert.alert("Erro", "Não foi possível registar a carta.");
+
     }
   }
 
@@ -195,7 +192,7 @@ export default function Cards() {
                 {revealedCards[i] && card.image && (
                   <Image
                     source={{ uri: card.image }}
-                    style={styles.cardImage}
+                    style={styles.cardImageSmall}
                     resizeMode="cover"
                     accessibilityLabel={`Carta nível ${card.levelId}`}
                   />
@@ -240,6 +237,10 @@ const styles = StyleSheet.create({
     height: screenHeight,
     width: screenWidth,
   },
+  cardWrapper: {
+  alignItems: 'center', 
+  marginTop: 40, 
+},
   header: {
     flexDirection: "column",
     alignItems: "center",
@@ -286,9 +287,16 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: "100%",
+    height: 170,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  cardImageSmall: {
+    width: "100%",
     height: 100,
     borderRadius: 10,
     marginBottom: 10,
+    marginLeft: 3,
   },
   cardContent: {
     flex: 1,
@@ -297,9 +305,10 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     color: "#2E3A8C",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+    marginBottom: 10,
   },
   mainDescription: {
     color: "#2E3A8C",

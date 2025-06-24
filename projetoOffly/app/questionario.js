@@ -193,11 +193,7 @@ export default function Questionario() {
       console.log("🚀 Redirecionando para PaginaPrincipal...");
       router.push("./PaginaPrincipal");
     } catch (err) {
-      console.error("❌ Erro ao enviar respostas:", {
-        status: err.response?.status,
-        data: err.response?.data,
-        message: err.message,
-      });
+
       if (err.response?.status === 401) {
         setError("Sessão inválida. Faça login novamente.");
         router.push("./login");

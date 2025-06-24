@@ -88,7 +88,6 @@ export default function EquipaCriada() {
       console.log("🔑 AccessToken:", accessToken);
 
       if (!user?.id || !accessToken) {
-        console.error("❌ user.id ou accessToken estão indefinidos");
         Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
         router.push("./login");
         return;
@@ -115,11 +114,6 @@ export default function EquipaCriada() {
         setProfileImage(image ? { uri: image } : null);
 
       } catch (error) {
-        console.error("❌ Erro ao buscar dados do utilizador:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
         Alert.alert(
           "Erro",
           error.response?.data?.message ||
@@ -278,7 +272,6 @@ export default function EquipaCriada() {
       hasRedirectedRef.current = true; 
       router.push("./components/navbar");
     } catch (error) {
-      console.error("❌ Erro ao entrar no torneio:", error);
       Alert.alert(
         "Erro",
         error.response?.data?.message || "Não foi possível entrar no torneio."
@@ -307,7 +300,6 @@ export default function EquipaCriada() {
 
       router.push("/PaginaPrincipal");
     } catch (error) {
-      console.error("❌ Erro ao sair da equipa:", error);
       Alert.alert(
         "Erro",
         error.response?.data?.message || "Não foi possível sair da equipa."

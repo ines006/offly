@@ -96,7 +96,6 @@ const DesafioSemanal = () => {
   useEffect(() => {
     const fetchDesafio = async () => {
       if (!teamId) {
-        console.error("Parâmetro teamId não fornecido.");
         setLoading(false);
         return;
       }
@@ -147,7 +146,6 @@ const DesafioSemanal = () => {
 
         setParticipantes(formatted);
       } catch (error) {
-        console.error("Erro ao carregar dados:", error);
       } finally {
         setLoading(false);
       }
@@ -187,7 +185,6 @@ const DesafioSemanal = () => {
           });
           setModalVisible(true);
         } catch (error) {
-          console.error("Erro ao validar desafio:", error);
         }
       } else {
         const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));

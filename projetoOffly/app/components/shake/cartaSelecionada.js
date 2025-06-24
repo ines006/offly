@@ -15,6 +15,16 @@ import { AuthContext } from "../entrar/AuthContext";
 import axios from "axios";
 import { baseurl } from "../../api-config/apiConfig";
 
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const pad = (n) => n.toString().padStart(2, "0");
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
 export default function CartaSelecionada() {
   const router = useRouter();
   const { user } = useContext(AuthContext);
@@ -43,8 +53,7 @@ export default function CartaSelecionada() {
           Alert.alert("Erro", "Nenhuma carta ativa encontrada.");
         }
       } catch (error) {
-        console.error("Erro ao buscar carta ativa:", error);
-        Alert.alert("Erro", "Não foi possível obter a carta.");
+
       }
     };
 
@@ -54,26 +63,27 @@ export default function CartaSelecionada() {
   }, [user]);
 
   useEffect(() => {
-    let timer;
-    if (timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => Math.max(prev - 1000, 0));
-      }, 1000);
-    } else if (timeLeft === 0 && selectedCard) {
-      Alert.alert("Tempo Esgotado", "O tempo para validar esta carta acabou.");
-    }
+  let timer;
+  if (timeLeft > 0) {
+    timer = setInterval(() => {
+      setTimeLeft((prev) => Math.max(prev - 1000, 0));
+    }, 1000);
+  } else if (timeLeft === 0 && selectedCard) {
+    Alert.alert("Tempo Esgotado", "O tempo para validar esta carta acabou.");
 
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+    const updateValidation = async () => {
+      try {
+        await axios.put(`${baseurl}/api/shake/validate-time/${user.id}/${selectedCard.challenge.id}`);
+        console.log("✅ Validação marcada automaticamente.");
+      } catch (err) {
+      }
+    };
 
-  const formatTime = (ms) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    updateValidation();
+  }
 
-    return `${hours}h ${minutes}m ${seconds}s`;
-  };
+  return () => clearInterval(timer);
+}, [timeLeft, selectedCard]);
 
   return (
     <View style={styles.background}>
@@ -99,7 +109,7 @@ export default function CartaSelecionada() {
           </Svg>
         </TouchableOpacity>
 
-         <TouchableOpacity
+        <TouchableOpacity
           style={styles.homeButton}
           onPress={() => router.push("../navbar")}
         >
@@ -128,34 +138,32 @@ export default function CartaSelecionada() {
                 <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
               </View>
             )}
+            
 
-            <Text style={styles.title}>Carta atribuída</Text>
-
-            <View style={[styles.mainCard, { marginTop: 20 }]}>
-              {selectedCard.challenge && selectedCard.challenge.imagem_nivel && (
+            <View style={styles.cardWrapper}>
+              <View style={styles.imageContainer}>
                 <Image
                   accessibilityLabel="Imagem da carta selecionada"
                   source={{ uri: selectedCard.challenge.imagem_nivel }}
                   style={styles.cardImage}
                   resizeMode="contain"
-                  onError={(e) => {
-                    console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
-                  }}
                 />
-              )}
-              <View style={styles.cardContent}>
-                <Text style={styles.mainTitle}>
-                  {selectedCard.challenge?.titulo}
-                </Text>
-                <Text style={styles.mainDescription}>
-                  {selectedCard.challenge?.carta}
-                </Text>
+              </View>
+              <View style={styles.mainCard}>
+                <View style={styles.cardContent}>
+                  <Text style={styles.mainTitle}>
+                    {selectedCard.challenge?.titulo}
+                  </Text>
+                  <Text style={styles.mainDescription}>
+                    {selectedCard.challenge?.carta}
+                  </Text>
+                </View>
               </View>
             </View>
 
             <TouchableOpacity
               style={styles.validateButton}
-              onPress={() => router.push("./uploadDesafio")}
+              onPress={() => router.push("../shake/uploadDesafio")}
             >
               <Text style={styles.validateButtonText}>
                 Comprova o teu desafio
@@ -172,7 +180,6 @@ export default function CartaSelecionada() {
   );
 }
 
-
 const styles = StyleSheet.create({
   background: {
     ...StyleSheet.absoluteFillObject,
@@ -182,11 +189,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 50,
   },
   backButton: {
     position: "absolute",
-    top: 40,
+    top: 100,
     width: 40,
     height: 40,
     left: 25,
@@ -198,7 +204,7 @@ const styles = StyleSheet.create({
   },
   homeButton: {
     position: "absolute",
-    top: 40,
+    top: 100,
     right: 20,
     width: 40,
     height: 40,
@@ -216,6 +222,7 @@ const styles = StyleSheet.create({
   timerContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: -40,
     marginBottom: 10,
     backgroundColor: "#E3FC87",
     padding: 13,
@@ -237,54 +244,87 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#263A83",
     textAlign: "center",
-    marginVertical: 20,
+    // marginVertical: 20,
     backgroundColor: "white",
     padding: 13,
     borderRadius: 12,
   },
+  cardWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 20,
+  },
   mainCard: {
-    width: 210,
-    height: 360,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 10,
-    overflow: "hidden",
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    marginTop: 60, // espaço para a imagem sobrepor
+  },
+  imageContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 2,
   },
   cardImage: {
     width: "100%",
-    aspectRatio: 1.5,
-    borderRadius: 10,
-    marginBottom: 10,
+    height: 120,
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+    marginBottom: 5,
+    paddingHorizontal: 4,
   },
   mainTitle: {
-    color: "#2E3A8C",
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 5,
+    color: '#263A83',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+    marginTop: 10,
   },
   mainDescription: {
-    color: "#2E3A8C",
-    fontSize: 12,
-    textAlign: "center",
+    color: '#263A83',
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 8,
+    
+    alignSelf: 'stretch',
   },
   validateButton: {
-    marginTop: 20,
-    backgroundColor: "#2E3A8C",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    marginTop: 30,
+    backgroundColor: '#2E3A8C',
+    paddingVertical: 16,
+    paddingHorizontal: 30,
+    borderRadius: 14,
+    alignSelf: 'center',
+    marginBottom: 10,
+    width: '80%',
   },
   validateButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

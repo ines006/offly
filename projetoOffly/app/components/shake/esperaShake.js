@@ -55,8 +55,7 @@ export default function EsperaShake() {
           Alert.alert("Erro", "Nenhuma carta ativa encontrada.");
         }
       } catch (error) {
-        console.error("Erro ao buscar carta ativa:", error);
-        Alert.alert("Erro", "Não foi possível obter a carta.");
+
       }
     };
 

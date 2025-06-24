@@ -86,7 +86,6 @@ export default function Descobrir() {
         });
         setTeamId(response.data.teams_id);
       } catch (error) {
-        console.error("❌ Erro ao buscar dados do utilizador:", error);
         Alert.alert("Erro", "Não foi possível carregar os dados do utilizador.");
       }
     };
@@ -142,7 +141,6 @@ export default function Descobrir() {
         Alert.alert("Erro", response.data.message || "Erro desconhecido.");
       }
     } catch (err) {
-      console.error("❌ Erro ao descobrir desafio:", err);
       Alert.alert("Erro", "Não foi possível processar o desafio.");
     } finally {
       setIsLoading(false);

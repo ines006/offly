@@ -201,10 +201,6 @@ const Register = () => {
       console.log("🚀 Redirecionando para onboarding...");
       router.push("onboarding");
     } catch (err) {
-      console.error("❌ Erro no processo:", {
-        message: err.message,
-        response: err.response?.data,
-      });
       if (axios.isAxiosError(err)) {
         setError(
           err.response?.data?.message ||

@@ -14,7 +14,6 @@ const VerificacaoDesafios = () => {
     const verificarDesafios = async () => {
       try {
         if (!user || !user.id) {
-          console.error("Utilizador não autenticado.");
           router.push("/components/entrar/login");
           return;
         }
@@ -32,7 +31,6 @@ const VerificacaoDesafios = () => {
         }
 
       } catch (error) {
-        console.error("Erro ao verificar desafios:", error);
         router.push({
           pathname: "/components/desafio/descobrirDesafio",
           params: { teamId: "none" },

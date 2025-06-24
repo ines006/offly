@@ -53,8 +53,6 @@ export default function CartaSelecionada() {
           Alert.alert("Erro", "Nenhuma carta ativa encontrada.");
         }
       } catch (error) {
-        console.error("Erro ao buscar carta ativa:", error);
-        Alert.alert("Erro", "Não foi possível obter a carta.");
       }
     };
 
@@ -77,7 +75,6 @@ export default function CartaSelecionada() {
         await axios.put(`${baseurl}/api/shake/validate-time/${user.id}/${selectedCard.challenge.id}`);
         console.log("✅ Validação marcada automaticamente.");
       } catch (err) {
-        console.error("❌ Erro ao validar automaticamente:", err);
       }
     };
 
@@ -149,9 +146,6 @@ export default function CartaSelecionada() {
                   source={{ uri: selectedCard.challenge.imagem_nivel }}
                   style={styles.cardImage}
                   resizeMode="contain"
-                  onError={(e) => {
-                    console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
-                  }}
                 />
               </View>
               <View style={styles.mainCard}>

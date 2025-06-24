@@ -132,7 +132,6 @@ export default function Navbar() {
           setShowPopup(true);
         }
       } catch (err) {
-        console.error("Erro ao verificar fly:", err);
       }
     };
 
@@ -144,7 +143,6 @@ export default function Navbar() {
       await axios.put(`${baseurl}/api/touchs/${touchId}/desativar`);
       setShowPopup(false);
     } catch (err) {
-      console.error("Erro ao atualizar fly:", err);
     }
   };
 

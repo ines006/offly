@@ -160,7 +160,7 @@ export default function PaginaPrincipal() {
       console.log("🔑 AccessToken:", accessToken);
 
       if (!user?.id || !accessToken) {
-        console.error("❌ user.id ou accessToken estão indefinidos");
+
         Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
         router.push("./login");
         return;
@@ -193,11 +193,6 @@ export default function PaginaPrincipal() {
 
         console.log("✅ Dados processados:", { name, image, level });
       } catch (error) {
-        console.error("❌ Erro ao buscar dados do utilizador:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
         Alert.alert(
           "Erro",
           error.response?.data?.message ||
@@ -267,11 +262,7 @@ export default function PaginaPrincipal() {
       console.log("✅ Equipas processadas:", formattedTeams);
       console.log("📄 Total de páginas:", pagination.totalPages);
     } catch (error) {
-      console.error("❌ Erro ao buscar equipas:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
+
       setEquipas([]);
       setTotalPages(1);
       Alert.alert(
@@ -302,7 +293,7 @@ export default function PaginaPrincipal() {
 
       return () => clearTimeout(debounce);
     } else {
-      console.error("❌ accessToken ou user.id não estão definidos");
+
       Alert.alert("Erro", "Sessão inválida. Faça login novamente.");
       router.push("./login");
     }
@@ -376,7 +367,7 @@ export default function PaginaPrincipal() {
           //   "Equipa privada criada! O link de convite foi copiado para a área de transferência."
           // );
         } catch (inviteError) {
-          console.error("❌ Erro ao criar convite:", inviteError);
+
           let inviteErrorMessage = "Não foi possível gerar o link de convite.";
           if (inviteError.response) {
             inviteErrorMessage =
@@ -402,7 +393,7 @@ export default function PaginaPrincipal() {
             params: { teamId: newTeamId },
           });
         } catch (error) {
-          console.error("❌ Erro ao redirecionar (pública):", error);
+  
           Alert.alert(
             "Erro",
             "Não foi possível redirecionar para a página da equipa."
@@ -410,7 +401,7 @@ export default function PaginaPrincipal() {
         }
       }
     } catch (error) {
-      console.error("❌ Erro ao criar equipa:", error);
+
       let errorMessage = "Não foi possível criar a equipa.";
       if (error.response) {
         errorMessage =
@@ -475,7 +466,7 @@ export default function PaginaPrincipal() {
         params: { teamId: selectedEquipaId },
       });
     } catch (error) {
-      console.error("❌ Erro ao entrar na equipa:", error);
+
       let errorMessage = "Não foi possível entrar na equipa.";
       if (error.response) {
         errorMessage =
@@ -559,7 +550,7 @@ export default function PaginaPrincipal() {
         params: { teamId },
       });
     } catch (error) {
-      console.error("❌ Erro ao entrar na equipa privada:", error);
+
       let errorMessage = "Não foi possível entrar na equipa privada.";
       if (error.response) {
         console.log("🔍 Resposta do backend:", error.response.data);
@@ -1172,7 +1163,7 @@ export default function PaginaPrincipal() {
                           params: { teamId },
                         });
                       } catch (error) {
-                        console.error("❌ Erro ao redirecionar:", error);
+      
                         Alert.alert(
                           "Erro",
                           "Não foi possível redirecionar para a página da equipa."

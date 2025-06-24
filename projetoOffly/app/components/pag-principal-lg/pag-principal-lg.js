@@ -118,7 +118,6 @@ export default function Home() {
       setDataUpload(dataUpload);
       setUserChallenges(challenges);
     } catch (error) {
-      console.error("Error fetching user data:", error.message);
       Alert.alert("Erro", "Não foi possível carregar os dados do utilizador.");
     }
   };
@@ -144,7 +143,6 @@ export default function Home() {
         }
       );
     } catch (error) {
-      console.error("Error updating team competition:", error.message);
       Alert.alert("Erro", "Não foi possível atualizar a competição da equipa.");
     }
   };
@@ -210,10 +208,7 @@ export default function Home() {
         router.push({ pathname: "/EquipaCriada", params: { teamId } });
       }
     } catch (error) {
-      console.error(
-        "Error handling tournament end choice:",
-        error.response?.data || error.message
-      );
+
       Alert.alert(
         "Erro",
         error.response?.data?.message ||

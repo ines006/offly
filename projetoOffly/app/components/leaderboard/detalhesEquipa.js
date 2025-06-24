@@ -105,10 +105,6 @@ const DetalhesEquipa = () => {
               console.log("Equipa excluída com sucesso:", teamId);
               router.back();
             } catch (error) {
-              console.error(
-                "Erro ao excluir equipa:",
-                error.response?.data || error.message
-              );
               Alert.alert(
                 "Erro",
                 "Não foi possível excluir a equipa. Tente novamente."
@@ -162,10 +158,7 @@ const DetalhesEquipa = () => {
         prevParticipants.filter((p) => p.id !== participantId)
       );
     } catch (error) {
-      console.error(
-        "Erro ao remover participante:",
-        error.response ? error.response.data : error.message
-      );
+
       // Usando o modal para exibir erros também
       setShowModal(true);
       setSelectedParticipant({
@@ -209,7 +202,7 @@ const DetalhesEquipa = () => {
   useEffect(() => {
     const fetchTeamDetails = async () => {
       if (!user?.id || !accessToken || !teamId || isNaN(parseInt(teamId))) {
-        console.error("Utilizador, token ou teamId inválido.");
+
         setLoading(false);
         return;
       }
@@ -247,10 +240,7 @@ const DetalhesEquipa = () => {
 
         setParticipants(participantsList);
       } catch (error) {
-        console.error(
-          "Erro ao buscar detalhes da equipa:",
-          error.response?.data || error.message
-        );
+
         setTeamDetails(null);
       } finally {
         setLoading(false);

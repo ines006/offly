@@ -35,15 +35,10 @@ export const AuthProvider = ({ children }) => {
               await AsyncStorage.clear();
             }
           } catch (parseError) {
-            console.error(
-              "❌ Erro ao parsear dados do AsyncStorage:",
-              parseError
-            );
             await AsyncStorage.clear();
           }
         }
       } catch (error) {
-        console.error("❌ Erro ao carregar dados do AsyncStorage:", error);
       } finally {
         setLoading(false);
       }
@@ -62,7 +57,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       console.log("🔓 Logout realizado no AuthContext");
     } catch (error) {
-      console.error("❌ Erro ao fazer logout no AsyncStorage:", error);
     }
   };
 

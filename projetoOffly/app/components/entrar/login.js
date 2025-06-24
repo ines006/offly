@@ -66,7 +66,6 @@ const Login = () => {
       console.log("🔑 Dados do login:", { token, refreshToken, user });
 
       if (!user?.id) {
-        console.error("❌ Erro: user.id não encontrado na resposta do login");
         throw new Error("ID do utilizador não encontrado");
       }
 
@@ -101,18 +100,15 @@ const Login = () => {
         try {
           router.push("/PaginaPrincipal");
         } catch (navError) {
-          console.error("❌ Erro de navegação para /PaginaPrincipal:", navError);
         }
         return;
       }
 
       try {
         if (!teamId) {
-          console.error("❌ teamId inválido:", teamId);
           try {
             router.push("/PaginaPrincipal");
           } catch (navError) {
-            console.error("❌ Erro de navegação para /PaginaPrincipal:", navError);
           }
           return;
         }
@@ -140,16 +136,14 @@ const Login = () => {
             try {
               router.push("/components/navbar");
             } catch (navError) {
-              console.error("❌ Erro de navegação para /components/navbar:", navError);
-              router.push("/PaginaPrincipal"); // Fallback
+              router.push("/PaginaPrincipal"); 
             }
           } else {
             console.log("🚪 Redirecionando para: /components/navbar (não admin com competição)");
             try {
               router.push("/components/navbar");
             } catch (navError) {
-              console.error("❌ Erro de navegação para /components/navbar:", navError);
-              router.push("/PaginaPrincipal"); // Fallback
+              router.push("/PaginaPrincipal"); 
             }
           }
         } else {
@@ -157,25 +151,19 @@ const Login = () => {
           try {
             router.push({ pathname: "/EquipaCriada", params: { teamId } });
           } catch (navError) {
-            console.error("❌ Erro de navegação para /EquipaCriada:", navError);
-            router.push("/PaginaPrincipal"); // Fallback
+            router.push("/PaginaPrincipal"); 
           }
         }
       } catch (teamError) {
-        console.error("❌ Erro ao buscar dados da equipa:", {
-          message: teamError.message,
-          status: teamError.response?.status,
-          data: teamError.response?.data,
-        });
         console.log("🚪 Redirecionando fallback para: /PaginaPrincipal (erro na API de equipa)");
         try {
           router.push("/PaginaPrincipal");
         } catch (navError) {
-          console.error("❌ Erro de navegação para /PaginaPrincipal:", navError);
+
         }
       }
     } catch (err) {
-      console.error("❌ Erro ao fazer login:", err.response?.data || err.message);
+
       setError(
         "O email ou a palavra-passe que preencheste não são válidos. Tenta novamente!"
       );

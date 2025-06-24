@@ -41,7 +41,7 @@ export default function Shake() {
       const response = await axios.post(url, { userId: user.id });
       setCards(response.data);
     } catch (error) {
-      console.error("❌ Erro ao gerar desafios:", error);
+
     }
   };
 

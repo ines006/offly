@@ -62,7 +62,6 @@ const UploadScreen = () => {
           setTeamsId(fetchedTeamsId);
           console.log("teams_id obtido:", fetchedTeamsId);
         } catch (error) {
-          console.error("Erro ao buscar teams_id:", error.response || error);
         }
       };
       fetchTeamsId();
@@ -155,7 +154,6 @@ const UploadScreen = () => {
       setProcessingModalVisible(false);
       setSuccessModalVisible(true);
     } catch (error) {
-      console.error("Erro ao processar upload:", error.response?.data || error);
       setProcessingModalVisible(false);
       const errorMsg =
         error.response?.data?.error ||

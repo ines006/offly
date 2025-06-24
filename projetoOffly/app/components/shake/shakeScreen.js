@@ -16,7 +16,6 @@ export default function ShakeScreen() {
   useEffect(() => {
     const fetchCartas = async () => {
       if (!user || !user.id) {
-        console.warn("❌ Utilizador não autenticado ou sem ID.");
         setLoading(false);
         return;
       }
@@ -34,7 +33,6 @@ export default function ShakeScreen() {
           setCartaAtiva(resAtiva.data);
         }
       } catch (error) {
-        console.warn("⚠️ Nenhuma carta ativa encontrada:", error.response?.status);
       }
 
       try {
@@ -46,7 +44,6 @@ export default function ShakeScreen() {
           setCartaDoDia(resDia.data);
         }
       } catch (error) {
-        console.warn("⚠️ Nenhuma carta do dia encontrada:", error.response?.status);
       }
 
       setLoading(false);

@@ -87,7 +87,6 @@ const UploadDesafio = () => {
 
       setModalVisible(true);
     } catch (error) {
-      console.error("Erro ao validar desafio:", error);
       setValidationResult("invalid");
 
       const backendErrorMessage =

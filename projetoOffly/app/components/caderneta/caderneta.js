@@ -140,7 +140,7 @@ const Caderneta = () => {
                   style={[styles.card, styles.activeCard]}
                 >
                   <Image
-                    source={{ uri: challenge.base64Image }}
+                    source={{ uri: challenge.imageUrl }}
                     style={styles.cardImageWeek}
                     resizeMode="cover"
                   />

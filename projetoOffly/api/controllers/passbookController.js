@@ -66,21 +66,18 @@ exports.getValidatedChallengeImages = async (req, res) => {
   }
 
   try {
-  
     const participant = await Participants.findOne({ where: { id } });
 
     if (!participant) {
       return res.status(404).json({ error: "Participante não encontrado." });
     }
 
-    // Obter o teams_id
     const teamId = participant.teams_id;
 
     if (!teamId) {
       return res.status(404).json({ error: "Participante não pertence a nenhuma equipa." });
     }
 
-    // Buscar os desafios validados da equipa
     const validatedChallenges = await ChallengesHasTeams.findAll({
       where: {
         teams_id: teamId,
@@ -89,29 +86,26 @@ exports.getValidatedChallengeImages = async (req, res) => {
       include: [
         {
           model: Challenge,
-          as: "challenge", 
-          attributes: ["id", "title", "img"],
+          as: "challenge",
+          attributes: ["id", "title", "img"], // agora img é URL
         },
       ],
     });
 
-    // Extrair imagens em base64 porque na nossa base de dados está em blob
     const images = validatedChallenges
       .map(entry => {
-        const imageBuffer = entry.challenge?.img;
-        if (imageBuffer) {
-          const base64Image = Buffer.from(imageBuffer).toString("base64");
+        const imageUrl = entry.challenge?.img;
+        if (imageUrl) {
           return {
             challengeId: entry.challenge.id,
             title: entry.challenge.title,
-            base64Image: `data:image/jpeg;base64,${base64Image}`, 
+            imageUrl, // já é uma URL direta
           };
         }
         return null;
       })
       .filter(img => img !== null);
 
-    // 5. Responder com as imagens
     return res.status(200).json({ images });
 
   } catch (error) {
@@ -119,5 +113,6 @@ exports.getValidatedChallengeImages = async (req, res) => {
     return res.status(500).json({ error: "Erro ao buscar imagens dos desafios validados." });
   }
 };
+
 
 module.exports = exports;

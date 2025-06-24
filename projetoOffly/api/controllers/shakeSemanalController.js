@@ -185,7 +185,7 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
               null,
               0,
               JSON.stringify(["0", "0", "0", "0", "0", "0", "0"]),
-              4,
+              0, 
               2
             ],
             type: sequelize.QueryTypes.INSERT

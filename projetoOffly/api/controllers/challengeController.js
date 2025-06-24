@@ -50,7 +50,7 @@ exports.getChallengeImage = async (req, res) => {
   const challengeId = req.params.id;
 
   try {
-    const [results] = await sequelize.query(
+    const [result] = await sequelize.query(
       "SELECT img FROM challenges WHERE id = ?",
       {
         replacements: [challengeId],
@@ -58,17 +58,17 @@ exports.getChallengeImage = async (req, res) => {
       }
     );
 
-    if (!results || !results.img) {
+    if (!result || !result.img) {
       return res.status(404).json({ error: "Imagem não encontrada." });
     }
 
-    res.set("Content-Type", "image/jpeg");
-    res.send(results.img); // ou results[0].img se necessário
+    res.json({ imageUrl: result.img });
   } catch (error) {
-    console.error("Erro ao carregar imagem:", error);
-    res.status(500).json({ error: "Erro ao carregar imagem." });
+    console.error("Erro ao obter link da imagem:", error);
+    res.status(500).json({ error: "Erro ao obter link da imagem." });
   }
 };
+
 
 exports.getDesafiosDoDia = async (req, res) => {
   const { dia, participanteId } = req.query;

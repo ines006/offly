@@ -117,7 +117,7 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
             challengeData.description,
             imageUrl,
             2, // challenge_types_id
-            4  // challenge_levels_id
+            1  // challenge_levels_id
           ],
           type: sequelize.QueryTypes.INSERT
         }

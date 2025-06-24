@@ -176,8 +176,11 @@ export default function Cards() {
       </Modal>
 
       <View style={styles.container}>
-        <Text style={styles.infoText}>Três cartas, um desafio</Text>
-        <Text style={styles.questionText}>Qual vais escolher?</Text>
+        <View style={styles.header}>
+          <Text style={styles.infoText}>Três cartas, um desafio</Text>
+          <Text style={styles.questionText}>Qual vais escolher?</Text>
+        </View>
+
         <View style={styles.topCards}>
           {cards.map((card, i) => (
             <TouchableOpacity key={i} onPress={() => handleCardSelect(i)}>
@@ -207,7 +210,7 @@ export default function Cards() {
               <Image
                 source={{ uri: selectedCard.image }}
                 style={styles.cardImage}
-                resizeMode="cover"
+                resizeMode="contain"
                 accessibilityLabel={`Imagem da carta selecionada - nível ${selectedCard.levelId}`}
               />
             )}
@@ -237,16 +240,25 @@ const styles = StyleSheet.create({
     height: screenHeight,
     width: screenWidth,
   },
+  header: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    marginTop: 35,
+  },
   infoText: {
     fontSize: 16,
     color: "#4C4B49",
     fontWeight: "bold",
-    marginTop: 60,
+    textAlign: "center",
+    marginBottom: 5,
   },
   questionText: {
     fontSize: 24,
     color: "#4C4B49",
     fontWeight: "bold",
+    textAlign: "center",
   },
   topCards: {
     flexDirection: "row",
@@ -264,7 +276,7 @@ const styles = StyleSheet.create({
   },
   mainCard: {
     width: 210,
-    height: 360,
+    minHeight: 320,
     backgroundColor: "white",
     borderRadius: 10,
     alignItems: "center",
@@ -274,7 +286,7 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: "100%",
-    height: 230,
+    height: 100,
     borderRadius: 10,
     marginBottom: 10,
   },
@@ -299,11 +311,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
+    marginBottom:10,
   },
   selectButtonText: {
     color: "#FFF",
     fontSize: 18,
     fontWeight: "bold",
+
   },
   modalContainer: {
     flex: 1,

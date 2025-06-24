@@ -99,7 +99,7 @@ export default function CartaSelecionada() {
           </Svg>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.homeButton}
           onPress={() => router.push("../navbar")}
         >
@@ -118,7 +118,7 @@ export default function CartaSelecionada() {
               </G>
             </G>
           </Svg>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {selectedCard ? (
           <>
@@ -137,7 +137,7 @@ export default function CartaSelecionada() {
                   accessibilityLabel="Imagem da carta selecionada"
                   source={{ uri: selectedCard.challenge.imagem_nivel }}
                   style={styles.cardImage}
-                  resizeMode="cover"
+                  resizeMode="contain"
                   onError={(e) => {
                     console.error("❌ Erro ao carregar imagem (CartaSelecionada):", e.nativeEvent);
                   }}
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: "100%",
-    height: 120,
+    aspectRatio: 1.5,
     borderRadius: 10,
     marginBottom: 10,
   },

@@ -246,27 +246,23 @@ const UploadScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          accessibilityLabel="Botão voltar atrás"
-        >
-          <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
-            <Circle
-              cx="18.1351"
-              cy="17.1713"
-              r="16.0177"
-              stroke="#263A83"
-              strokeWidth={2}
-            />
-            <Path
-              d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
-              stroke="#263A83"
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-          </Svg>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
+          <Circle
+            cx="18.1351"
+            cy="17.1713"
+            r="16.0177"
+            stroke="#263A83"
+            strokeWidth={2}
+          />
+          <Path
+            d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275"
+            stroke="#263A83"
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </TouchableOpacity>
         <Text style={styles.title}>Upload do tempo de ecrã</Text>
       </View>
 
@@ -314,7 +310,7 @@ const UploadScreen = () => {
         {submitVisible && selectedImage ? (
           <>
             {console.log("Renderizando botões Submeter e Remover")}
-            
+
             <TouchableOpacity
               style={styles.removeButton}
               onPress={handleRemoveImage}
@@ -328,7 +324,6 @@ const UploadScreen = () => {
             >
               <Text style={styles.submitText}>Submeter</Text>
             </TouchableOpacity>
-            
           </>
         ) : null}
       </View>
@@ -443,6 +438,7 @@ const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     left: 25,
+    marginTop: 50,
   },
   title: {
     width: 172,
@@ -452,6 +448,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     lineHeight: 25,
+    marginTop: 60,
   },
   dashedBox: {
     width: 286,

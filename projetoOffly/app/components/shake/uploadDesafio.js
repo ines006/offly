@@ -110,14 +110,17 @@ const UploadDesafio = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Svg width={36} height={35} viewBox="0 0 36 35" fill="none">
             <Circle cx="18.1351" cy="17.1713" r="16.0177" stroke="#263A83" strokeWidth={2} />
             <Path d="M21.4043 9.06396L13.1994 16.2432C12.7441 16.6416 12.7441 17.3499 13.1994 17.7483L21.4043 24.9275" stroke="#263A83" strokeWidth={2} strokeLinecap="round" />
           </Svg>
         </TouchableOpacity>
+
+        <Text style={styles.title}>Comprova o teu desafio</Text>
       </View>
-      <Text style={styles.title}>Comprova o teu desafio</Text>
+     
 
       {/* Upload Image */}
       <View style={styles.dashedBox}>
@@ -139,11 +142,16 @@ const UploadDesafio = () => {
         )}
       </View>
 
-      {/* Submit */}
+      {/* Submit e Remover */}
       {submitVisible && (
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitText}>Submeter</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.removeButton} onPress={handleRemoveImage}>
+            <Text style={styles.removeText}>Remover</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitText}>Submeter</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* Modal Resultado */}
@@ -260,7 +268,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 47,
     borderRadius: 10,
-    marginTop: 30,
     backgroundColor: "#263A83",
     justifyContent: "center",
     alignItems: "center",

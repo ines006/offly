@@ -129,9 +129,9 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
       return res.status(500).json({ success: false, message: "Erro ao salvar o desafio no banco de dados." });
     }
 
-    // Datas da semana
+    // Calcular segunda-feira e domingo da semana atual
     const now = new Date();
-    const dayOfWeek = now.getDay();
+    const dayOfWeek = now.getDay(); 
     const monday = new Date(now);
     const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     monday.setDate(now.getDate() - diffToMonday);
@@ -139,6 +139,7 @@ Formato da resposta (obrigatório JSON válido, sem comentários ou texto fora d
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
+
 
     try {
       await sequelize.query(
